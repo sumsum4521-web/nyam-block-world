@@ -211,6 +211,11 @@ function buildScenery(w){
   roads(new THREE.MeshBasicMaterial({color:0x00d9ff,polygonOffset:true,polygonOffsetFactor:-8,polygonOffsetUnits:-8}));
   const inner=new THREE.MeshLambertMaterial({color:0x14182c,polygonOffset:true,polygonOffsetFactor:-9,polygonOffsetUnits:-9});for(let a=0;a<8;a++){const m=new THREE.Mesh(new THREE.PlaneGeometry(8,WORLD_R*2),inner);m.rotation.x=-Math.PI/2;m.rotation.z=a*Math.PI/8;m.position.y=.035;deco.add(m)}
   const pc=new THREE.Mesh(new THREE.RingGeometry(10,12,48),new THREE.MeshBasicMaterial({color:0xff4fd8,polygonOffset:true,polygonOffsetFactor:-10,polygonOffsetUnits:-10}));pc.rotation.x=-Math.PI/2;pc.position.y=.05;deco.add(pc);
+  for(const ar of ARENAS[2]){const fl=new THREE.Mesh(new THREE.CircleGeometry(ar.R,72),new THREE.MeshLambertMaterial({color:0x2a1d56,polygonOffset:true,polygonOffsetFactor:-12,polygonOffsetUnits:-12}));fl.rotation.x=-Math.PI/2;fl.position.set(ar.x,.06,ar.z);fl.receiveShadow=true;deco.add(fl);
+   const ln=new THREE.Mesh(new THREE.RingGeometry(ar.R-Math.max(1.5,ar.R*.025),ar.R,96),new THREE.MeshBasicMaterial({color:0xff4fd8,polygonOffset:true,polygonOffsetFactor:-14,polygonOffsetUnits:-14}));ln.rotation.x=-Math.PI/2;ln.position.set(ar.x,.08,ar.z);deco.add(ln);
+   const mid=new THREE.Mesh(new THREE.RingGeometry(ar.R*.18,ar.R*.2,48),new THREE.MeshBasicMaterial({color:0x38f2ff,polygonOffset:true,polygonOffsetFactor:-14,polygonOffsetUnits:-14}));mid.rotation.x=-Math.PI/2;mid.position.set(ar.x,.08,ar.z);deco.add(mid);
+   const pm=new THREE.MeshBasicMaterial({color:0x38f2ff});for(let i=0;i<12;i++){const a=i/12*Math.PI*2;const pl=new THREE.Mesh(new THREE.BoxGeometry(ar.R*.03,ar.R*.12,ar.R*.03),pm);pl.position.set(ar.x+Math.cos(a)*(ar.R+ar.R*.04),ar.R*.06,ar.z+Math.sin(a)*(ar.R+ar.R*.04));deco.add(pl)}
+   const sg=nameSprite('⚔ 대결 링','#ff9fe8');sg.material.depthTest=true;sg.position.set(ar.x,ar.R*.45,ar.z);sg.scale.set(ar.R*.9,ar.R*.225,1);deco.add(sg)}
   const sea=new THREE.Mesh(new THREE.RingGeometry(WORLD_R+20,9000,64),new THREE.MeshBasicMaterial({color:0x0c0f26}));sea.rotation.x=-Math.PI/2;sea.position.y=-0.4;deco.add(sea);
   const edge=new THREE.Mesh(new THREE.RingGeometry(WORLD_R+18,WORLD_R+21,128),new THREE.MeshBasicMaterial({color:0x00d9ff}));edge.rotation.x=-Math.PI/2;edge.position.y=.06;deco.add(edge);
   const sg=new THREE.BufferGeometry();const sp=[];for(let i=0;i<1500;i++){const a=Math.random()*7,e=rnd(.05,1.4),r=4500;sp.push(Math.cos(a)*Math.cos(e)*r,Math.sin(e)*r,Math.sin(a)*Math.cos(e)*r)}sg.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));const stars=new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:2,sizeAttenuation:false,fog:false}));deco.add(stars);
@@ -328,6 +333,8 @@ const PLANS={1:[
  ['hovercar',60,232,420,1.1,1.3],['skybus',30,232,420,1,1],['neonlamp',50,232,420,1.3,1.6],['robot',50,232,420,1.5,3],['vending',35,232,420,1.5,2.5],['gtower',40,240,420,.8,1.3],['dome',30,240,420,.9,1.2],['ntower',14,260,415,.9,1.15],['billboard',20,240,420,1,1.3],['holotree',40,232,420,1.5,2.5],['capsule',20,232,420,1.5,2.5],['ecube',60,232,420,4,8],['starc',50,232,420,5,10],['ndonut',50,232,420,4,8],['crystal',40,232,420,2,5],
  ['crystal',90,432,690,3,15],['saucer',12,440,690,.9,1.3],['gbot',8,450,690,.9,1.2],['dish',12,440,690,.9,1.3],['planet',8,450,690,1,1.8],['mrocket',3,500,680,1,1.2],['gate',2,520,640,1,1.2],['mship',1,560,600,.75,.75],['robot',50,432,690,6,15],['holotree',50,432,690,3,6],['starc',60,432,690,12,30],['jelly',60,432,690,15,35],['hovercar',30,432,690,5,10],['capsule',15,432,690,3,6]
 ]};
+const ARENAS={1:[],2:[{x:Math.cos(.2)*150,z:Math.sin(.2)*150,R:60},{x:Math.cos(2.4)*330,z:Math.sin(2.4)*330,R:110},{x:Math.cos(4.3)*560,z:Math.sin(4.3)*560,R:125}]};
+function arenaAt(a){for(const ar of ARENAS[WORLD])if(Math.hypot(a.x-ar.x,a.z-ar.z)<ar.R)return ar;return null}
 const GEMSW={1:[[0,56,.9,30],[60,224,3,24],[232,420,8,18],[432,690,22,14]],2:[[0,56,1.2,30],[60,224,4,24],[232,420,10,18],[432,690,28,14]]};
 
 const GRID=25,objs=[],grid=new Map();
@@ -353,13 +360,14 @@ function buildWorld(w){
   list.used=0;meshes[k]=list}
  function place(k,r0,r1,s0,s1){const T=TYPES[k];const ims=meshes[k];for(let tries=0;tries<40;tries++){const a=Math.random()*Math.PI*2,d=Math.sqrt(rnd(r0*r0,r1*r1));const x=Math.cos(a)*d,z=Math.sin(a)*d;const s=rnd(s0,s1);const rot=ri(0,3);const w=(rot%2?T.d:T.w)*s,dd=(rot%2?T.w:T.d)*s;if(Math.hypot(x,z)+Math.max(w,dd)/2>WORLD_R)continue;const r=Math.max(w,dd)/2;
    if(d>222&&d<430&&T.cat!=='car'){const ang=((Math.atan2(z,x)%(Math.PI/8))+Math.PI/8)%(Math.PI/8);const off=Math.min(ang,Math.PI/8-ang)*d;if(off<5+r)continue}
+   let inAr=false;for(const ar of ARENAS[WORLD])if(Math.hypot(x-ar.x,z-ar.z)<ar.R+r+4){inAr=true;break}if(inAr)continue;
    if(!freeSpot(x,z,r*.9))continue;
    const o={k,T,ims,idx:ims.used++,x,z,rot,s,size:T.size*s,h:T.h*s,hw:w/2,hd:dd/2,alive:true,prog:0,eater:null,pop:1,respawn:0,qs:0,pull:0};
    o.value=Math.max(.125*Math.pow(o.size,3),o.size*.8)*(k==='gem'?1.5:1);
-   o.coin=(k==='gem'?25:1)*(w===2?3:1);
+   o.coin=(k==='gem'?25:1)*(WORLD===2?3:1);
    const tint=new THREE.Color(pick(T.tint));for(const im of ims)im.setColorAt(o.idx,tint);objs.push(o);gridAdd(o);setMat(o);return true}return false}
  const order=PLAN.slice().sort((a,b)=>TYPES[b[0]].size*b[5]-TYPES[a[0]].size*a[5]);
- for(const p of order)for(let i=0;i<p[1];i++)place(p[0],p[2],p[3],p[4],p[5]);
+ for(const p of order){let s0=p[4],s1=p[5];if(w===2){const f=p[2]<58?3:p[2]<228?2.2:p[2]<425?1.6:1.25;const T=TYPES[p[0]];s1=Math.min(s1*f,Math.max(s1,160/T.size));s0=Math.min(s0*f,s1)}for(let i=0;i<p[1];i++)place(p[0],p[2],p[3],s0,s1)}
  for(const g of GEMS)for(let i=0;i<g[3];i++)place('gem',g[0]+2,g[1],g[2]*.8,g[2]*1.2);
  for(const k in meshes)for(const im of meshes[k]){im.count=meshes[k].used;im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true}
 }
@@ -476,6 +484,7 @@ const QUESTS=[
  {t:'로켓 먹기',c:'rocket',n:1,r:20000000},
  {t:'크기 100 달성',size:100,r:100000000},
  {t:'세계 2 열기 (🌍 세계)',c:'world2',n:1,r:50000000},
+ {t:'대결 링에서 상대를 링 밖으로 밀어내기',c:'ringout',n:1,r:150000000},
  {t:'거대 로봇 먹기',c:'gbot',n:1,r:300000000},
  {t:'스타 게이트 또는 우주 모선 먹기',c:'gate',n:1,r:2000000000},
  {t:'크기 150 달성 (최대 크기)',size:150,r:10000000000}
@@ -591,12 +600,15 @@ const deadList=[];
 const tmpQ=[];
 function moveAgent(a,mx,mz,dt){
  const ml=Math.hypot(mx,mz);let sp=(4.5+a.S*1.7)*(a.isP?UP.speed.val(D.up.speed)*petB('speed')*(boostsOn.speed>0?1.6:1):a.speedB);
+ const ox0=a.x,oz0=a.z;
+ if(a.kx||a.kz){a.x+=a.kx*dt;a.z+=a.kz*dt;const dk=Math.exp(-3*dt);a.kx*=dk;a.kz*=dk;if(Math.abs(a.kx)+Math.abs(a.kz)<.05){a.kx=a.kz=0}}
  if(ml>0.01){mx/=Math.max(1,ml);mz/=Math.max(1,ml);a.x+=mx*sp*dt;a.z+=mz*sp*dt;const tf=Math.atan2(mx,mz);let df=tf-a.face;df=Math.atan2(Math.sin(df),Math.cos(df));a.face+=df*Math.min(1,dt*12);a.phase+=Math.min(1,ml)*sp*dt/(a.S*.55)}else{a.phase*=.85}
  a.vy-=a.g()*dt;a.y+=a.vy*dt;if(a.y<=0){a.y=0;a.vy=0;a.grounded=true}
  // 부딪힘 (먹을 수 없는 큰 것)
  const rad=a.S*.28;const near=query(a.x,a.z,rad+2,tmpQ);
  for(const o of near){if(!o.alive||edible(a,o)||o.pull)continue;if(a.y>o.h*.92)continue;const cw=o.hw*o.T.col,cd=o.hd*o.T.col;const dx=a.x-o.x,dz=a.z-o.z;const px=clamp(dx,-cw,cw),pz=clamp(dz,-cd,cd);let ex=dx-px,ez=dz-pz;const d=Math.hypot(ex,ez);if(d<rad){if(d<1e-4){if(cw-Math.abs(dx)<cd-Math.abs(dz)){a.x=o.x+Math.sign(dx||1)*(cw+rad)}else{a.z=o.z+Math.sign(dz||1)*(cd+rad)}}else{a.x+=ex/d*(rad-d);a.z+=ez/d*(rad-d)}if(a.isP)lockNear=o}}
- const dd=Math.hypot(a.x,a.z);if(dd>WORLD_R){a.x*=WORLD_R/dd;a.z*=WORLD_R/dd}}
+ const dd=Math.hypot(a.x,a.z);if(dd>WORLD_R){a.x*=WORLD_R/dd;a.z*=WORLD_R/dd;a.kx=a.kz=0}
+ a.vx=(a.x-ox0)/Math.max(dt,1e-3);a.vz=(a.z-oz0)/Math.max(dt,1e-3)}
 let lockNear=null;
 function agentEat(a,dt){
  const R=reachOf(a);const near=query(a.x,a.z,R+2,tmpQ);
@@ -605,7 +617,7 @@ function agentEat(a,dt){
   o.prog+=dt/eatTime(a,o);if(o.prog>=1){a.eating.splice(i,1);o.eater=null;consume(a,o)}else{const w=Math.sin(o.prog*40)*.04;setMat(o,0,0,0,(1-o.prog*.65)*(1+w));if(a.isP&&Math.random()<dt*8)sfx.chomp()}}
  a.chew=a.eating.length>0?a.chew+dt:0}
 function pullUpdate(dt){for(const o of objs){if(!o.pull)continue;const a=o.puller;o.pull+=dt/.35;const t=Math.min(1,o.pull);const pt=o.pet&&pets.includes(o.pet)?o.pet:null;const mx=pt?pt.x:a.x+Math.sin(a.face)*a.S*.3,mz=pt?pt.z:a.z+Math.cos(a.face)*a.S*.3;const ox=(mx-o.x)*t*t,oz=(mz-o.z)*t*t,oy=a.S*1.5*t*t*(1-t)*2+a.S*.6*t*t;setMat(o,ox,oy,oz,1-t*.7,t*6);if(t>=1){consume(a,o)}}}
-function bumpCheck(){const L=live();for(let i=0;i<L.length;i++)for(let j=i+1;j<L.length;j++){let a=L[i],b=L[j];if(b.S>a.S){const t=a;a=b;b=t}if(a.S<b.S*1.3)continue;const d=Math.hypot(a.x-b.x,a.z-b.z);if(d>(a.S+b.S)*.3)continue;if(b.shield>0)continue;
+function bumpCheck(){const L=live();for(let i=0;i<L.length;i++)for(let j=i+1;j<L.length;j++){let a=L[i],b=L[j];if(b.S>a.S){const t=a;a=b;b=t}if(a.arena&&b.arena)continue;if(a.S<b.S*1.3)continue;const d=Math.hypot(a.x-b.x,a.z-b.z);if(d>(a.S+b.S)*.3)continue;if(b.shield>0)continue;
  // 통! 작은 쪽이 튕겨 나가고 냠냠 별을 떨어뜨려요
  const lose=b.M*(b.isP&&!D.lose?0:.15);if(lose>0){b.M=Math.max(10,b.M-lose);dropOrbs(b.x,b.z,lose,b.S)}
  const ang=Math.atan2(b.x-a.x,b.z-a.z);b.x+=Math.sin(ang)*a.S*1.2;b.z+=Math.cos(ang)*a.S*1.2;b.vy=Math.sqrt(2*b.g()*b.S*1.5);b.grounded=false;b.shield=3;
@@ -624,16 +636,34 @@ const popping=[];
 function popUpdate(dt){for(const o of objs){if(o.pop<1&&o.alive){o.pop=Math.min(1,o.pop+dt*2.5);const t=o.pop;setMat(o,0,0,0,t<1?Math.sin(t*Math.PI*.5)*(1+Math.sin(t*Math.PI)*.15):1)}}}
 
 // 친구들 생각하기
+// ⚔ 대결 링 (세계 2): 크기와 상관없이 서로 튕기고, 링 밖으로 밀려나면 크기 10%를 상대에게
+const duelCd=new Map();
+function duelUpdate(dt,time){if(WORLD!==2)return;const L=live();
+ for(const a of L){const ar=arenaAt(a);if(ar){if(a.arena!==ar){a.arena=ar;a.hitBy=null;if(a.isP&&playing)toast('⚔ 대결 링 — 링 밖으로 밀려나면 크기 10%를 상대에게 줘요',2800)}}
+  else if(a.arena){const w=a.hitBy;if(w&&time-a.hitT<3&&!w.off&&w.arena===a.arena){const lose=a.M*.1;a.M=Math.max(10,a.M-lose);w.M=Math.min(w.maxMv(),w.M+lose);
+    feed(a.name+' 님 링 아웃 · '+w.name+' 님 승리');if(a.isP){toast('링 아웃! 크기 10%를 '+w.name+' 님에게 줬어요',2600);sfx.full()}else if(w.isP){toast('링 아웃 승리! '+a.name+' 님의 크기 10% 획득',2600);sfx.buy();count('ringout');questCheck()}
+    burst(a.x,a.S*.5,a.z,'#ff4fd8',8,Math.max(.3,a.S*.06))}
+   a.arena=null;a.hitBy=null}}
+ for(let i=0;i<L.length;i++)for(let j=i+1;j<L.length;j++){const a=L[i],b=L[j];if(!a.arena||a.arena!==b.arena)continue;let nx=b.x-a.x,nz=b.z-a.z;const d=Math.hypot(nx,nz);if(d>(a.S+b.S)*.33||d<1e-4)continue;
+  const key=a.name+'|'+b.name;if((duelCd.get(key)||0)>time)continue;duelCd.set(key,time+.35);nx/=d;nz/=d;
+  const spA=4.5+a.S*1.7,spB=4.5+b.S*1.7;const pa=1+.7*clamp(((a.vx||0)*nx+(a.vz||0)*nz)/spA,0,1),pb=1+.7*clamp(-((b.vx||0)*nx+(b.vz||0)*nz)/spB,0,1);
+  const base=(a.S+b.S)*2.4,sum=a.S+b.S;
+  b.kx=(b.kx||0)+nx*base*a.S/sum*pa;b.kz=(b.kz||0)+nz*base*a.S/sum*pa;a.kx=(a.kx||0)-nx*base*b.S/sum*pb;a.kz=(a.kz||0)-nz*base*b.S/sum*pb;
+  const push=((a.S+b.S)*.33-d)/2;a.x-=nx*push;a.z-=nz*push;b.x+=nx*push;b.z+=nz*push;
+  a.hitBy=b;a.hitT=time;b.hitBy=a;b.hitT=time;
+  if(a.isP||b.isP)sfx.boing();burst((a.x+b.x)/2,Math.min(a.S,b.S)*.6,(a.z+b.z)/2,'#38f2ff',6,Math.max(.2,Math.min(a.S,b.S)*.05))}}
 function botThink(b,dt){
- b.think-=dt;b.growT-=dt;
+ b.think-=dt;b.growT-=dt;if(b.duelT>0)b.duelT-=dt;
+ if(WORLD===2&&b.duelT>0&&b.goArena&&b.think<=0){const ar=b.goArena;b.think=.35;if(P.arena===ar&&playing&&!P.off)b.target={fake:true,chase:true,x:P.x,z:P.z,alive:true};else if(b.arena===ar){const aa=Math.random()*7,rr=rnd(0,ar.R*.6);b.target={fake:true,x:ar.x+Math.cos(aa)*rr,z:ar.z+Math.sin(aa)*rr,alive:true}}else b.target={fake:true,x:ar.x,z:ar.z,alive:true}}
+ else if(WORLD===2&&!(b.duelT>0)&&b.think<=0&&Math.random()<.07){b.goArena=pick(ARENAS[2]);b.duelT=rnd(25,45)}
  if(b.growT<=0){b.growT=b.grow;b.maxM=Math.min(b.maxM*1.7,Math.max(massOf(P.S*1.6+3),massOf(5)));b.maxM=Math.min(b.maxM,massOf(150));if(b.maxM<b.M)b.maxM=b.M}
- if(b.think<=0||!b.target||!b.target.alive||b.target.pull||(b.target.eater&&b.target.eater!==b)){b.think=rnd(.8,1.6);
+ if(!(WORLD===2&&b.duelT>0)&&(b.think<=0||!b.target||!b.target.alive||b.target.pull||(b.target.eater&&b.target.eater!==b))){b.think=rnd(.8,1.6);
   // 나보다 큰 친구가 가까우면 피하기
   let flee=null;for(const o of live()){if(o!==b&&o.S>b.S*1.3&&Math.hypot(o.x-b.x,o.z-b.z)<o.S*3+b.S*2){flee=o;break}}
   if(flee){const a=Math.atan2(b.x-flee.x,b.z-flee.z);b.target={fake:true,x:b.x+Math.sin(a)*b.S*10,z:b.z+Math.cos(a)*b.S*10,alive:true}}
   else{const R=Math.max(30,b.S*14);const near=query(b.x,b.z,R,[]);let best=null,bs=-1;for(const o of near){if(!edible(b,o)||o.eater||o.pull)continue;const d=Math.hypot(o.x-b.x,o.z-b.z)+1;const v=o.value/(d*d*0.02+1)*(o.size>b.S*.2?3:1);if(v>bs){bs=v;best=o}}
    if(best)b.target=best;else{const a=Math.random()*7;const d=clamp(Math.hypot(b.x,b.z)+rnd(-40,90),0,WORLD_R-20);const aa=Math.atan2(b.z,b.x)+rnd(-.8,.8);b.target={fake:true,x:Math.cos(aa)*d,z:Math.sin(aa)*d,alive:true}}}}
- const t=b.target;let mx=t.x-b.x,mz=t.z-b.z;const d=Math.hypot(mx,mz);if(d<(t.fake?2:reachOf(b)*.5)){mx=mz=0;if(t.fake)b.target=null}
+ const t=b.target||{fake:true,x:b.x,z:b.z,alive:true};let mx=t.x-b.x,mz=t.z-b.z;const d=Math.hypot(mx,mz);if(d<(t.fake?2:reachOf(b)*.5)&&!t.chase){mx=mz=0;if(t.fake)b.target=null}
  if(b.M>=b.maxM*0.999)b.speedB=.8;else b.speedB=.85;
  moveAgent(b,mx,mz,dt);agentEat(b,dt);if(Math.random()<dt*.15)bigMouth(b);
  if(b.bigCool>0)b.bigCool-=dt}
@@ -732,7 +762,7 @@ $('bLook').onclick=()=>openModal(lookHtml());
 $('bCode').onclick=()=>openModal(codeHtml());
 $('bQuest').onclick=()=>openModal(questHtml());
 $('bSet').onclick=()=>openModal(setHtml());
-function goWorld(w,silent){buildWorld(w);D.world=w;P.x=0;P.z=0;P.y=0;P.vy=0;P.shield=4;for(const o of P.eating)o.eater=null;P.eating.length=0;
+function goWorld(w,silent){buildWorld(w);for(const a of agents){a.arena=null;a.hitBy=null;a.kx=a.kz=0;a.duelT=0}D.world=w;P.x=0;P.z=0;P.y=0;P.vy=0;P.shield=4;for(const o of P.eating)o.eater=null;P.eating.length=0;
  for(const o of orbs){scene.remove(o.m);o.m.material.dispose()}orbs.length=0;for(const b of bots)if(!b.off)resetBot(b,true);for(const it of boostItems)placeBoost(it);lastZone=-1;for(const p of pets){p.x=0;p.z=0}
  if(!silent){toast(w===2?'🌃 세계 2 · 네온 시티 (코인 ×3)':'🏙️ 세계 1 · 블록 월드',2600);sfx.power()}save()}
 let resetAsk=false,restartAsk=0;
@@ -801,7 +831,7 @@ function loop(){requestAnimationFrame(loop);let dt=Math.min(.05,clock.getDelta()
   moveAgent(P,wx,wz,dt);agentEat(P,dt)}else{P.vy-=P.g()*dt;P.y=Math.max(0,P.y+P.vy*dt);if(P.y===0){P.vy=0;P.grounded=true}}
  if(P.bigCool>0)P.bigCool-=dt;
  for(const b of bots)if(!b.off)botThink(b,dt);
- pullUpdate(dt);bumpCheck();orbUpdate(dt);boostUpdate(dt,time);popUpdate(dt);
+ pullUpdate(dt);duelUpdate(dt,time);bumpCheck();orbUpdate(dt);boostUpdate(dt,time);popUpdate(dt);
  respT+=dt;if(respT>.25){respawnUpdate(respT);respT=0}
  for(const a of live())animAgent(a,dt,time);petUpdate(dt,time);botServer(dt);
  if(P.S>D.best)D.best=P.S;
