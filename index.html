@@ -58,6 +58,7 @@ button{font-family:inherit;cursor:pointer;border:none}
 #zoomBtns{position:absolute;right:20px;bottom:150px;display:flex;flex-direction:column;gap:8px}#zoomBtns .btn{width:56px;height:56px;padding:0;font-size:22px}
 #joy i{position:absolute;left:40px;top:40px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.75)}
 .float{position:fixed;pointer-events:none;font-size:22px;white-space:nowrap;transform:translate(-50%,-50%)}
+#hatch{position:fixed;inset:0;z-index:30;background:radial-gradient(circle,rgba(60,50,120,.92),rgba(10,12,30,.96));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center}#hatchCv{width:320px;height:320px}#hatchOk{font-size:22px;min-width:160px;margin-top:8px}
 #modal{position:fixed;inset:0;background:rgba(10,12,30,.55);display:flex;align-items:center;justify-content:center;z-index:20}
 #panel{background:#2b3166;border:4px solid #1b1f3a;border-radius:22px;width:min(640px,94vw);max-height:88vh;overflow:auto;padding:18px 20px;box-shadow:0 8px 0 #1b1f3a}
 #panel h2{font-weight:normal;font-size:30px;margin-bottom:10px}
@@ -113,7 +114,7 @@ input.t{font-family:inherit;font-size:20px;padding:8px 12px;border-radius:12px;b
   </div>
   <div id="side">
     <button class="btn gold" id="bShop">🛒 상점</button>
-    <button class="btn" id="bPet" style="background:#ff8a3d">🐾 펫</button>
+    <button class="btn" id="bPet" style="background:#ff8a3d">🥚 펫</button>
     <button class="btn" id="bWorld" style="background:#00a8c8">🌍 세계</button>
     <button class="btn pink" id="bLook">👕 꾸미기</button>
     <button class="btn purple" id="bCode">🎁 코드</button>
@@ -132,6 +133,7 @@ input.t{font-family:inherit;font-size:20px;padding:8px 12px;border-radius:12px;b
 </div>
 <div id="floats"></div>
 <div id="modal" class="hide"><div id="panel"></div></div>
+<div id="hatch" class="hide"><canvas id="hatchCv" width="320" height="320"></canvas><div id="hatchTxt"></div><button class="btn gold hide" id="hatchOk">확인</button></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -324,7 +326,7 @@ const PLANS={1:[
  ['ecube',90,4,56,.9,1.3],['ndonut',70,4,56,.9,1.3],['jelly',70,4,56,.9,1.3],['drone',45,4,56,.9,1.2],['holof',70,4,58,.9,1.4],['battery',70,4,56,.9,1.3],['starc',80,4,56,.9,1.3],['robot',10,8,56,.7,.9],['tpad',4,15,50,1,1],
  ['holof',90,60,224,1,2],['ecube',80,60,224,1.5,3],['battery',60,60,224,1.5,3],['jelly',60,60,224,1.5,3],['drone',50,60,224,2,4],['starc',60,60,224,1.5,3],['robot',70,62,224,.9,1.3],['hovercar',60,62,224,.95,1.05],['neonlamp',55,62,224,1,1.1],['vending',45,62,224,1,1.2],['holotree',110,62,224,.8,1.3],['tpad',20,62,224,1,1.3],['capsule',45,70,222,.9,1.25],['crystal',40,62,224,1,2],
  ['hovercar',60,232,420,1.1,1.3],['skybus',30,232,420,1,1],['neonlamp',50,232,420,1.3,1.6],['robot',50,232,420,1.5,3],['vending',35,232,420,1.5,2.5],['gtower',40,240,420,.8,1.3],['dome',30,240,420,.9,1.2],['ntower',14,260,415,.9,1.15],['billboard',20,240,420,1,1.3],['holotree',40,232,420,1.5,2.5],['capsule',20,232,420,1.5,2.5],['ecube',60,232,420,4,8],['starc',50,232,420,5,10],['ndonut',50,232,420,4,8],['crystal',40,232,420,2,5],
- ['crystal',90,432,690,3,15],['saucer',12,440,690,.9,1.3],['gbot',8,450,690,.9,1.2],['dish',12,440,690,.9,1.3],['planet',8,450,690,1,1.8],['mrocket',3,500,680,1,1.2],['gate',2,520,640,1,1.2],['mship',1,560,600,1,1],['robot',50,432,690,6,15],['holotree',50,432,690,3,6],['starc',60,432,690,12,30],['jelly',60,432,690,15,35],['hovercar',30,432,690,5,10],['capsule',15,432,690,3,6]
+ ['crystal',90,432,690,3,15],['saucer',12,440,690,.9,1.3],['gbot',8,450,690,.9,1.2],['dish',12,440,690,.9,1.3],['planet',8,450,690,1,1.8],['mrocket',3,500,680,1,1.2],['gate',2,520,640,1,1.2],['mship',1,560,600,.75,.75],['robot',50,432,690,6,15],['holotree',50,432,690,3,6],['starc',60,432,690,12,30],['jelly',60,432,690,15,35],['hovercar',30,432,690,5,10],['capsule',15,432,690,3,6]
 ]};
 const GEMSW={1:[[0,56,.9,30],[60,224,3,24],[232,420,8,18],[432,690,22,14]],2:[[0,56,1.2,30],[60,224,4,24],[232,420,10,18],[432,690,28,14]]};
 
@@ -410,7 +412,7 @@ function updSprite(s,text,color){const t=s.material.map;const c=t.image;const g=
 // ================= 저장 데이터 =================
 const SAVE_KEY='nyamBlockWorld_v1';
 const UP={
- belly:{n:'최대 용량',ic:'📦',d:'용량이 클수록 더 크게 성장해요',max:20,cost:l=>40*Math.pow(2.45,l),val:l=>60*Math.pow(2.2,l),show:l=>'최대 크기 '+sizeOf(60*Math.pow(2.2,l)).toFixed(1)},
+ belly:{n:'최대 용량',ic:'📦',d:'용량이 클수록 더 크게 성장해요',max:24,cost:l=>40*Math.pow(1.95,l),val:l=>60*Math.pow(1.6,l),show:l=>'최대 크기 '+sizeOf(60*Math.pow(1.6,l)).toFixed(1)},
  speed:{n:'이동 속도',ic:'👟',d:'더 빠르게 이동해요',max:15,cost:l=>60*Math.pow(2.1,l),val:l=>1+l*.12,show:l=>'×'+(1+l*.12).toFixed(2)},
  grow:{n:'성장 배율',ic:'📈',d:'같은 걸 먹어도 더 많이 성장해요',max:25,cost:l=>100*Math.pow(2.6,l),val:l=>1+l*.25,show:l=>'×'+(1+l*.25).toFixed(2)},
  eat:{n:'먹는 속도',ic:'⚡',d:'큰 것도 빠르게 먹어요',max:15,cost:l=>80*Math.pow(2.3,l),val:l=>1+l*.2,show:l=>'×'+(1+l*.2).toFixed(1)},
@@ -428,6 +430,13 @@ const PETS={
  unicorn:{n:'유니콘',r:4,cost:3e8,eff:'all',v:1},
  robo:{n:'로봇 펫',r:4,cost:2e9,eff:'all',v:2,w2:true}
 };
+const EGGS={
+ basic:{n:'기본 알',c:'#f4efe2',s:'#c9a86a',cost:1000,o:[['dog',45],['cat',35],['bunny',13],['chick',7]]},
+ wild:{n:'숲의 알',c:'#9be37a',s:'#3f8f35',cost:60000,o:[['bunny',30],['chick',30],['panda',22],['fox',15],['dino',3]]},
+ legend:{n:'전설의 알',c:'#ffd23f',s:'#ff7a1a',cost:6e6,o:[['panda',30],['fox',28],['dino',25],['dragon',15],['unicorn',2]]},
+ neon:{n:'네온 알',c:'#38f2ff',s:'#ff4fd8',cost:3e8,w2:true,o:[['dino',35],['dragon',35],['unicorn',22],['robo',8]]}
+};
+const PET_MAX=40;
 const RAR=[['일반','#c8cdd8'],['희귀','#5fc8ff'],['에픽','#c58bff'],['전설','#ffc94a'],['신화','#ff6fb5']];
 const EFFN={coin:'코인',grow:'성장',speed:'이동 속도',eat:'먹는 속도',all:'모든 능력'};
 const WORLD2_COST=1e8;
@@ -435,6 +444,7 @@ const CODES={CHAEA:'코인 1,000 + 👑 왕관',YUMMY:'2분 동안 성장 2배',
 const randName=()=>'Player'+ri(1000,9999);
 let D={name:randName(),skin:SKINS[1],shirt:SHIRTS[3],pants:PANTS[1],face:0,hat:'cap',hats:['none','cap','beanie'],coins:0,M:10,up:{belly:0,speed:0,grow:0,eat:0,reach:0},reb:0,codes:[],q:0,cnt:{},best:2,sound:true,lose:true,pets:[],eq:[],w2:false,world:1};
 try{const s=JSON.parse(lsGet(SAVE_KEY)||'null');if(s){D=Object.assign(D,s);D.up=Object.assign({belly:0,speed:0,grow:0,eat:0,reach:0},s.up||{});D.cnt=s.cnt||{};D.pets=s.pets||[];D.eq=s.eq||[]}}catch(e){}
+D.eq=D.eq.map(x=>typeof x==='string'?D.pets.indexOf(x):x).filter((x,i,a)=>x>=0&&x<D.pets.length&&a.indexOf(x)===i).slice(0,3);
 if(D.name==='채아')D.name=randName();
 D.up.belly=Math.min(D.up.belly,UP.belly.max);
 let hadSave=!!lsGet(SAVE_KEY);
@@ -442,14 +452,15 @@ soundOn=D.sound!==false;
 function save(){lsSet(SAVE_KEY,JSON.stringify(D))}
 const rebMult=()=>1+D.reb*.5;
 const maxM=()=>UP.belly.val(D.up.belly);
-function petB(eff){let t=0;for(const k of D.eq){const p=PETS[k];if(p&&(p.eff===eff||p.eff==='all'))t+=p.v}return 1+t}
+const eqKeys=()=>D.eq.map(i=>D.pets[i]).filter(Boolean);
+function petB(eff){let t=0;for(const k of eqKeys()){const p=PETS[k];if(p&&(p.eff===eff||p.eff==='all'))t+=p.v}return 1+t}
 
 // ================= 퀘스트 =================
 const QUESTS=[
  {t:'사탕·과자 20개 먹기',c:'candy',n:20,r:100},
  {t:'상점에서 최대 용량 올리기',c:'buyBelly',n:1,r:150},
  {t:'크기 5 달성',size:5,r:300},
- {t:'펫 1마리 사기',c:'pet',n:1,r:500},
+ {t:'알을 열어 펫 얻기',c:'pet',n:1,r:500},
  {t:'자동차 먹기',c:'car',n:1,r:600},
  {t:'보라 보석 3개 먹기',c:'gem',n:3,r:1200},
  {t:'나무 5그루 먹기',c:'tree',n:5,r:1500},
@@ -463,11 +474,11 @@ const QUESTS=[
  {t:'성 먹기',c:'castle',n:1,r:1000000},
  {t:'산 먹기',c:'mountain',n:1,r:5000000},
  {t:'로켓 먹기',c:'rocket',n:1,r:20000000},
- {t:'크기 150 달성',size:150,r:100000000},
+ {t:'크기 100 달성',size:100,r:100000000},
  {t:'세계 2 열기 (🌍 세계)',c:'world2',n:1,r:50000000},
  {t:'거대 로봇 먹기',c:'gbot',n:1,r:300000000},
  {t:'스타 게이트 또는 우주 모선 먹기',c:'gate',n:1,r:2000000000},
- {t:'크기 500 달성',size:500,r:10000000000}
+ {t:'크기 150 달성 (최대 크기)',size:150,r:10000000000}
 ];
 let qBase={};
 function questStart(){const Q=QUESTS[D.q];if(Q&&Q.c)qBase[Q.c]=D.cnt[Q.c]||0;D.qb=Q&&Q.c?(D.cnt[Q.c]||0):0}
@@ -512,7 +523,7 @@ const PETB={
 };
 const pets=[];
 function petModel(k){const b=PETB[k](new B());const geo=b.build(true);const m=new THREE.Mesh(geo,PETMAT);m.castShadow=true;return m}
-function refreshPets(){for(const p of pets)scene.remove(p.m);pets.length=0;D.eq.forEach((k,i)=>{if(!PETS[k])return;const m=petModel(k);scene.add(m);pets.push({k,m,x:P.x,z:P.z,face:0,cool:rnd(0,.5),slot:i,hop:0})})}
+function refreshPets(){for(const p of pets)scene.remove(p.m);pets.length=0;eqKeys().forEach((k,i)=>{if(!PETS[k])return;const m=petModel(k);scene.add(m);pets.push({k,m,x:P.x,z:P.z,face:0,cool:rnd(0,.5),slot:i,hop:0})})}
 function petUpdate(dt,time){const sc=P.vis*.42;for(const p of pets){const side=[-1,1,0][p.slot],back=[.9,.9,1.5][p.slot];const tx=P.x-Math.sin(P.face)*P.vis*back+Math.cos(P.face)*side*P.vis*.75,tz=P.z-Math.cos(P.face)*P.vis*back-Math.sin(P.face)*side*P.vis*.75;const dx=tx-p.x,dz=tz-p.z,d=Math.hypot(dx,dz);if(d>P.vis*12){p.x=tx;p.z=tz}const k=Math.min(1,dt*6);p.x+=dx*k;p.z+=dz*k;if(d>P.vis*.15){p.face=Math.atan2(dx,dz);p.hop+=dt*14}else p.hop*=.9;
   p.m.scale.setScalar(sc);p.m.position.set(p.x,Math.abs(Math.sin(p.hop))*sc*.25+P.y*.3,p.z);p.m.rotation.y=p.face;
   // 펫이 작은 먹이를 대신 먹어요
@@ -566,7 +577,7 @@ function bigMouth(a){if(a.bigCool>0)return;if(a.isP&&!playing)return;const R=a.S
 function removeEat(o){if(o.eater){const i=o.eater.eating.indexOf(o);if(i>=0)o.eater.eating.splice(i,1)}o.eater=null}
 function consume(a,o){o.alive=false;o.prog=0;o.pull=0;removeEat(o);setMat(o);o.respawn=Math.min(60,4+o.size*.7);o.pet=null;deadList.push(o);
  const gain=o.value*(a.isP?UP.grow.val(D.up.grow)*rebMult()*petB('grow')*(boostsOn.grow>0?2:1):1.2);
- const before=a.M;a.M=Math.min(a.maxMv(),a.M+gain);
+ const before=a.M;a.M=Math.min(a.maxMv(),a.M+Math.min(gain,a.M*.05+.6));
  const cx=o.x,cz=o.z;
  if(a.isP){const coin=Math.max(1,Math.ceil(o.value*3*o.coin*rebMult()*petB('coin')*(boostsOn.coin>0?2:1)));D.coins+=coin;count(o.T.cat);sfx.chomp();
   const grew=a.M-before;floatText(grew>0.0001?'+'+(grew<10?grew.toFixed(1):fmt(grew)):'💰+'+fmt(coin),cx,o.h*.7+a.S*.6,cz,grew>0?'#7dff8a':'#ffe066');
@@ -601,7 +612,7 @@ function bumpCheck(){const L=live();for(let i=0;i<L.length;i++)for(let j=i+1;j<L
  if(b.isP){sfx.boing();toast(a.name+' 에게 밀려났어요'+(lose>0?' — 오브 드롭':''),2000)}
  else if(a.isP){sfx.boing();count('bump');toast(b.name+' 밀쳐내기 성공 — 오브 드롭',1800);questCheck()}
  b.target=null}}
-function orbUpdate(dt){for(let i=orbs.length-1;i>=0;i--){const o=orbs[i];o.life-=dt;o.m.rotation.y+=dt*2;o.m.position.y=o.size/2+Math.sin(o.life*3)*o.size*.15;let eaten=false;if(o.life<=0){eaten=true}else for(const a of live()){if(a.S*1.1<o.size)continue;if(Math.hypot(a.x-o.m.position.x,a.z-o.m.position.z)<reachOf(a)+o.size*.5){a.M=Math.min(a.maxMv(),a.M+o.v*(a.isP?rebMult():1));if(a.isP){sfx.coin();D.coins+=Math.ceil(o.v*rebMult());floatText('+오브',o.m.position.x,a.S,o.m.position.z,'#ffe066')}eaten=true;break}}if(eaten){scene.remove(o.m);o.m.material.dispose();orbs.splice(i,1)}}}
+function orbUpdate(dt){for(let i=orbs.length-1;i>=0;i--){const o=orbs[i];o.life-=dt;o.m.rotation.y+=dt*2;o.m.position.y=o.size/2+Math.sin(o.life*3)*o.size*.15;let eaten=false;if(o.life<=0){eaten=true}else for(const a of live()){if(a.S*1.1<o.size)continue;if(Math.hypot(a.x-o.m.position.x,a.z-o.m.position.z)<reachOf(a)+o.size*.5){a.M=Math.min(a.maxMv(),a.M+Math.min(o.v*(a.isP?rebMult():1),a.M*.05+.6));if(a.isP){sfx.coin();D.coins+=Math.ceil(o.v*rebMult());floatText('+오브',o.m.position.x,a.S,o.m.position.z,'#ffe066')}eaten=true;break}}if(eaten){scene.remove(o.m);o.m.material.dispose();orbs.splice(i,1)}}}
 function boostUpdate(dt,time){for(const it of boostItems){if(!it.g.visible){it.t-=dt;if(it.t<=0)placeBoost(it);continue}it.g.rotation.y+=dt*1.5;it.g.position.y=it.size*(1.1+Math.sin(time*2+it.r0)*.2);if(Math.hypot(P.x-it.g.position.x,P.z-it.g.position.z)<P.S*.5+it.size){boostsOn[it.k]=20;it.g.visible=false;it.t=35;sfx.power();toast(BOOSTS[it.k].ic+' '+BOOSTS[it.k].n+' 20초',1600)}}
  for(const k in boostsOn){boostsOn[k]-=dt;if(boostsOn[k]<=0)delete boostsOn[k]}
  if(boostsOn.magnet>0){const R=P.S*4;const near=query(P.x,P.z,R,[]);let n=0;for(const o of near){if(!edible(P,o)||o.pull||o.eater||o.size>P.S*.5)continue;if(aabbDist(P.x,P.z,o)<R&&Math.random()<dt*3){o.pull=.001;o.puller=P;if(++n>6)break}}}}
@@ -615,7 +626,7 @@ function popUpdate(dt){for(const o of objs){if(o.pop<1&&o.alive){o.pop=Math.min(
 // 친구들 생각하기
 function botThink(b,dt){
  b.think-=dt;b.growT-=dt;
- if(b.growT<=0){b.growT=b.grow;b.maxM=Math.min(b.maxM*1.7,Math.max(massOf(P.S*1.6+3),massOf(5)));if(b.maxM<b.M)b.maxM=b.M}
+ if(b.growT<=0){b.growT=b.grow;b.maxM=Math.min(b.maxM*1.7,Math.max(massOf(P.S*1.6+3),massOf(5)));b.maxM=Math.min(b.maxM,massOf(150));if(b.maxM<b.M)b.maxM=b.M}
  if(b.think<=0||!b.target||!b.target.alive||b.target.pull||(b.target.eater&&b.target.eater!==b)){b.think=rnd(.8,1.6);
   // 나보다 큰 친구가 가까우면 피하기
   let flee=null;for(const o of live()){if(o!==b&&o.S>b.S*1.3&&Math.hypot(o.x-b.x,o.z-b.z)<o.S*3+b.S*2){flee=o;break}}
@@ -627,7 +638,7 @@ function botThink(b,dt){
  moveAgent(b,mx,mz,dt);agentEat(b,dt);if(Math.random()<dt*.15)bigMouth(b);
  if(b.bigCool>0)b.bigCool-=dt}
 
-function animAgent(a,dt,time){a.S=sizeOf(a.M);a.vis+=(a.S-a.vis)*Math.min(1,dt*5);const s=a.vis/2;a.A.g.scale.setScalar(s);a.A.g.position.set(a.x,a.y,a.z);a.A.g.rotation.y=a.face;
+function animAgent(a,dt,time){a.S=sizeOf(a.M);a.vis+=(a.S-a.vis)*Math.min(1,dt*1.6);const s=a.vis/2;a.A.g.scale.setScalar(s);a.A.g.position.set(a.x,a.y,a.z);a.A.g.rotation.y=a.face;
  const sw=Math.sin(a.phase)*.7*Math.min(1,Math.abs(Math.sin(a.phase))+.3);const moving=Math.abs(a.phase)>.01;
  a.A.legL.rotation.x=sw;a.A.legR.rotation.x=-sw;a.A.armL.rotation.x=-sw*.8;a.A.armR.rotation.x=sw*.8;
  if(!a.grounded){a.A.legL.rotation.x=.4;a.A.legR.rotation.x=-.3;a.A.armL.rotation.z=-.5;a.A.armR.rotation.z=.5}else{a.A.armL.rotation.z=0;a.A.armR.rotation.z=0}
@@ -666,11 +677,33 @@ const X='<button class="btn red x" data-a="close">✖</button>';
 function shopHtml(){let h=X+'<h2 class="out">🛒 상점</h2><div style="font-size:20px;color:#ffe066">💰 '+fmt(D.coins)+'</div>';
  for(const k in UP){const U=UP[k],l=D.up[k];const maxed=l>=U.max;const c=U.cost(l);h+='<div class="row"><div class="ic">'+U.ic+'</div><div class="tx"><b>'+U.n+' Lv.'+l+' / '+U.max+'</b>'+U.d+'<br>현재 '+U.show(l)+(maxed?'':' → <span style="color:#7dff8a">'+U.show(l+1)+'</span>')+'</div>'+(maxed?'<button class="btn gray">MAX</button>':'<button class="btn '+(D.coins>=c?'':'gray')+'" data-a="buy" data-k="'+k+'">💰 '+fmt(c)+'</button>')+'</div>'}
  const can=P.S>=40;h+='<div class="row" style="background:#4a2f80"><div class="ic">🌟</div><div class="tx"><b>환생 (현재 ★'+D.reb+')</b>크기 40 이상이면 환생할 수 있어요. 코인·업그레이드·크기는 초기화되지만 성장·코인 배율이 영구히 <span style="color:#7dff8a">×'+(1+(D.reb+1)*.5).toFixed(1)+'</span>가 되고 🌈 무지개 모자를 얻어요. 펫과 세계는 유지돼요.</div><button class="btn '+(can?'purple':'gray')+'" data-a="reb">'+(can?'환생하기':'크기 40 필요')+'</button></div>';return h}
-function petHtml(){let h=X+'<h2 class="out">🐾 펫</h2><div style="font-size:16px;color:#d8ddff">장착한 펫(최대 3마리)이 따라다니며 주변의 작은 물건을 대신 먹고, 능력 보너스를 줘요.</div><div style="font-size:20px;color:#ffe066;margin-top:4px">💰 '+fmt(D.coins)+' · 장착 '+D.eq.length+'/3</div>';
- for(const k in PETS){const p=PETS[k],own=D.pets.includes(k),eq=D.eq.includes(k);const R=RAR[p.r];let btn;
-  if(eq)btn='<button class="btn gray" data-a="unequip" data-k="'+k+'">해제</button>';else if(own)btn='<button class="btn blue" data-a="equip" data-k="'+k+'">장착</button>';else if(p.w2&&!D.w2)btn='<button class="btn gray">세계 2 필요</button>';else btn='<button class="btn '+(D.coins>=p.cost?'':'gray')+'" data-a="petbuy" data-k="'+k+'">💰 '+fmt(p.cost)+'</button>';
-  h+='<div class="row" style="'+(eq?'outline:3px solid #7dff8a':'')+'"><div class="ic" style="font-size:15px;color:'+R[1]+'">'+R[0]+'</div><div class="tx"><b style="color:'+R[1]+'">'+p.n+(eq?' · 장착 중':'')+'</b>'+EFFN[p.eff]+' +'+Math.round(p.v*100)+'%</div>'+btn+'</div>'}
- return h+'<div id="petMsg" style="font-size:15px;color:#ffd0d0;min-height:20px"></div>'}
+function petHtml(){let h=X+'<h2 class="out">🥚 펫</h2><div style="font-size:15px;color:#d8ddff">알을 열면 확률에 따라 펫이 나와요. 장착한 펫(최대 3마리)은 따라다니며 작은 물건을 대신 먹고 능력 보너스를 줘요.</div><div style="font-size:20px;color:#ffe066;margin-top:4px">💰 '+fmt(D.coins)+' · 펫 '+D.pets.length+'/'+PET_MAX+' · 장착 '+D.eq.length+'/3</div>';
+ h+='<h3 style="font-weight:normal;margin:8px 0 2px;color:#ffe066">알 상점</h3>';
+ for(const k in EGGS){const E=EGGS[k];const lock=E.w2&&!D.w2;const odds=E.o.map(([pk,w])=>'<span style="color:'+RAR[PETS[pk].r][1]+'">'+PETS[pk].n+' '+w+'%</span>').join(' · ');
+  h+='<div class="row"><div class="ic"><div style="width:30px;height:38px;margin:auto;border-radius:50% 50% 46% 46%/60% 60% 40% 40%;background:'+E.c+';border:3px solid #1b1f3a;box-shadow:inset -6px -6px 0 '+E.s+'"></div></div><div class="tx"><b>'+E.n+'</b>'+odds+'</div>'+(lock?'<button class="btn gray">세계 2 필요</button>':'<button class="btn '+(D.coins>=E.cost?'gold':'gray')+'" data-a="egg" data-k="'+k+'">💰 '+fmt(E.cost)+'</button>')+'</div>'}
+ h+='<div id="petMsg" style="font-size:15px;color:#ffd0d0;min-height:20px"></div><h3 style="font-weight:normal;margin:6px 0 2px;color:#ffe066">내 펫</h3>';
+ if(!D.pets.length)h+='<div style="font-size:15px;color:#b9c4ff">아직 펫이 없어요. 알을 열어 보세요.</div>';
+ const order=D.pets.map((k,i)=>i).sort((a,b)=>(D.eq.includes(b)-D.eq.includes(a))||(PETS[D.pets[b]].r-PETS[D.pets[a]].r));
+ for(const i of order){const k=D.pets[i],p=PETS[k],R=RAR[p.r],eq=D.eq.includes(i);
+  h+='<div class="row" style="padding:6px 10px;'+(eq?'outline:3px solid #7dff8a':'')+'"><div class="ic" style="font-size:14px;color:'+R[1]+'">'+R[0]+'</div><div class="tx"><b style="color:'+R[1]+';font-size:18px">'+p.n+(eq?' · 장착 중':'')+'</b>'+EFFN[p.eff]+' +'+Math.round(p.v*100)+'%</div>'+(eq?'<button class="btn gray" data-a="unequip" data-i="'+i+'">해제</button>':'<button class="btn blue" data-a="equip" data-i="'+i+'">장착</button><button class="btn red" style="min-width:60px" data-a="release" data-i="'+i+'">보내기</button>')+'</div>'}
+ return h}
+function rollEgg(E){const tot=E.o.reduce((a,x)=>a+x[1],0);let r=Math.random()*tot;for(const[k,w]of E.o){if((r-=w)<0)return k}return E.o[0][0]}
+// 알 까기 장면
+let hR=null,hS,hC,hEgg,hPet,hState=null;
+function hatchInit(){if(hR)return;hR=new THREE.WebGLRenderer({canvas:$('hatchCv'),alpha:true,antialias:true});hR.setPixelRatio(Math.min(devicePixelRatio,2));hR.setSize(320,320,false);hS=new THREE.Scene();hS.add(new THREE.HemisphereLight(0xffffff,0x445566,.9));const dl=new THREE.DirectionalLight(0xffffff,.8);dl.position.set(2,4,3);hS.add(dl);hC=new THREE.PerspectiveCamera(40,1,.1,50);hC.position.set(0,1.4,4.6);hC.lookAt(0,1,0)}
+function eggMesh(E){const g=new THREE.Group();const m=new THREE.Mesh(new THREE.SphereGeometry(.8,28,20),new THREE.MeshStandardMaterial({color:E.c,roughness:.45}));m.scale.y=1.28;g.add(m);const sm=new THREE.MeshStandardMaterial({color:E.s,roughness:.45});for(let i=0;i<9;i++){const a=i*2.3,y=-.7+((i*.37)%1.4);const r=Math.sqrt(Math.max(0,1-(y/1.02)*(y/1.02)))*.8;const sp=new THREE.Mesh(new THREE.SphereGeometry(.14+.05*(i%3),10,8),sm);sp.position.set(Math.cos(a)*r*.97,y,Math.sin(a)*r*.97);sp.scale.set(1,1,.35);sp.lookAt(0,y,0);g.add(sp)}g.position.y=1.05;return g}
+function hatch(ek){const E=EGGS[ek];const k=rollEgg(E);D.coins-=E.cost;D.pets.push(k);const idx=D.pets.length-1;if(D.eq.length<3)D.eq.push(idx);count('pet');save();
+ closeModal();modalOpen=true;hatchInit();$('hatch').classList.remove('hide');$('hatchTxt').innerHTML='';$('hatchOk').classList.add('hide');
+ if(hEgg)hS.remove(hEgg);if(hPet)hS.remove(hPet);hEgg=eggMesh(E);hS.add(hEgg);hPet=petModel(k);hPet.visible=false;hPet.scale.setScalar(1.6);hS.add(hPet);
+ hState={t:0,k,E,done:false};sfx.buy();requestAnimationFrame(hatchLoop)}
+let hLast=0;
+function hatchLoop(ts){if(!hState)return;const dt=Math.min(.1,(ts-(hLast||ts))/1000);hLast=ts;const H=hState;H.t+=dt;const t=H.t;
+ if(t<2.2){const a=Math.min(1,t/2.2);hEgg.rotation.z=Math.sin(t*(10+a*30))*.12*(.3+a);hEgg.position.y=1.05+Math.abs(Math.sin(t*6))*.05*a;if(Math.random()<dt*(2+a*10))tone(500+a*500,.05,'square',.03)}
+ else if(t<2.5){const f=(t-2.2)/.3;hEgg.scale.setScalar(1+f*.5);hEgg.traverse(o=>{if(o.material){o.material.transparent=true;o.material.opacity=1-f}});$('hatchCv').style.filter='brightness('+(1+f*3)+')'}
+ else{if(!H.done){H.done=true;hEgg.visible=false;hPet.visible=true;$('hatchCv').style.filter='';const p=PETS[H.k],R=RAR[p.r];$('hatchTxt').innerHTML='<div style="color:'+R[1]+';font-size:22px">'+R[0]+'</div><div style="font-size:34px;color:'+R[1]+'" class="out">'+p.n+'</div><div style="font-size:16px;color:#d8ddff">'+EFFN[p.eff]+' +'+Math.round(p.v*100)+'%</div>';$('hatchOk').classList.remove('hide');sfx.power();if(p.r>=3)setTimeout(sfx.buy,250)}
+  hPet.rotation.y+=dt*1.4;hPet.position.y=Math.abs(Math.sin(t*3))*.12}
+ hR.render(hS,hC);if(hState)requestAnimationFrame(hatchLoop)}
+$('hatchOk').onclick=()=>{hState=null;hLast=0;$('hatch').classList.add('hide');modalOpen=false;refreshPets();questCheck();openModal(petHtml())};
 function worldHtml(){const c1=WORLD===1,c2=WORLD===2;return X+'<h2 class="out">🌍 세계</h2>'+
  '<div class="row"><div class="ic">🏙️</div><div class="tx"><b>세계 1 · 블록 월드</b>캔디 파크 · 타운 · 시티 · 자이언트 필드</div>'+(c1?'<button class="btn gray">현재 위치</button>':'<button class="btn blue" data-a="go" data-w="1">이동</button>')+'</div>'+
  '<div class="row" style="background:#2a1f5c"><div class="ic">🌃</div><div class="tx"><b>세계 2 · 네온 시티</b>네온 플라자 · 로봇 스트리트 · 스카이 타워 지구 · 스페이스 포트<br><span style="color:#7dff8a">모든 코인 ×3</span> · 거대 로봇, 스타 게이트, 우주 모선 · 로봇 펫 판매</div>'+(c2?'<button class="btn gray">현재 위치</button>':D.w2?'<button class="btn purple" data-a="go" data-w="2">이동</button>':'<button class="btn '+(D.coins>=WORLD2_COST?'gold':'gray')+'" data-a="buyw2">💰 '+fmt(WORLD2_COST)+'</button>')+'</div>'+
@@ -713,9 +746,10 @@ $('panel').addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(
  if(a==='close')return closeModal();
  if(a==='buy'){const k=t.dataset.k,U=UP[k],l=D.up[k],c=U.cost(l);if(l<U.max&&D.coins>=c){D.coins-=c;D.up[k]++;sfx.buy();if(k==='belly'){count('buyBelly');questCheck()}save()}else sfx.full();openModal(shopHtml())}
  if(a==='reb'){if(P.S<40)return;D.reb++;D.coins=0;D.up={belly:0,speed:0,grow:0,eat:0,reach:0};P.M=10;P.x=0;P.z=0;P.shield=5;if(!D.hats.includes('rainbow'))D.hats.push('rainbow');count('rebirth');questCheck();for(const b of bots)if(!b.off)resetBot(b,false);sfx.buy();toast('환생 완료 · 성장·코인 ×'+rebMult().toFixed(1),3000);save();closeModal()}
- if(a==='petbuy'){const k=t.dataset.k,pp=PETS[k];if(D.pets.includes(k))return;if(pp.w2&&!D.w2)return;if(D.coins<pp.cost){$('petMsg').textContent='코인이 '+fmt(pp.cost-D.coins)+' 부족해요';sfx.full();return}D.coins-=pp.cost;D.pets.push(k);if(D.eq.length<3)D.eq.push(k);refreshPets();count('pet');questCheck();sfx.buy();save();openModal(petHtml())}
- if(a==='equip'){const k=t.dataset.k;if(D.eq.length>=3){$('petMsg').textContent='최대 3마리까지 장착할 수 있어요. 먼저 하나를 해제하세요';return}D.eq.push(k);refreshPets();save();openModal(petHtml())}
- if(a==='unequip'){D.eq=D.eq.filter(x=>x!==t.dataset.k);refreshPets();save();openModal(petHtml())}
+ if(a==='egg'){const E=EGGS[t.dataset.k];if(E.w2&&!D.w2)return;if(D.pets.length>=PET_MAX){$('petMsg').textContent='펫이 가득 찼어요. 펫을 보내고 다시 열어 주세요';return}if(D.coins<E.cost){$('petMsg').textContent='코인이 '+fmt(E.cost-D.coins)+' 부족해요';sfx.full();return}hatch(t.dataset.k);return}
+ if(a==='equip'){const i=+t.dataset.i;if(D.eq.length>=3){$('petMsg').textContent='최대 3마리까지 장착할 수 있어요. 먼저 하나를 해제하세요';return}D.eq.push(i);refreshPets();save();openModal(petHtml())}
+ if(a==='unequip'){const i=+t.dataset.i;D.eq=D.eq.filter(x=>x!==i);refreshPets();save();openModal(petHtml())}
+ if(a==='release'){const i=+t.dataset.i;if(t.dataset.ok!=='1'){t.dataset.ok='1';t.textContent='확인';return}D.pets.splice(i,1);D.eq=D.eq.filter(x=>x!==i).map(x=>x>i?x-1:x);refreshPets();save();openModal(petHtml())}
  if(a==='buyw2'){if(D.w2||D.coins<WORLD2_COST){sfx.full();return}D.coins-=WORLD2_COST;D.w2=true;count('world2');questCheck();goWorld(2);closeModal()}
  if(a==='go'){const w=+t.dataset.w;if(w===2&&!D.w2)return;goWorld(w);closeModal()}
  if(a==='col'){D[t.dataset.f]=t.dataset.c;applyLook();openModal(lookHtml())}
@@ -789,7 +823,7 @@ function loop(){requestAnimationFrame(loop);let dt=Math.min(.05,clock.getDelta()
  // 카메라
  const S=P.vis;camTgt.set(P.x,P.y+S*.85,P.z);
  if(!playing){camYaw+=dt*.12;P.face=camYaw+0.5}
- const dist=(playing?S*3.6*zoom+2.5:S*2.4+2);
+ const dist=(playing?S*(S>30?3.0:3.6)*zoom+2.5:S*2.4+2);
  const want=new THREE.Vector3(camTgt.x+Math.sin(camYaw)*Math.cos(camPitch)*dist,camTgt.y+Math.sin(camPitch)*dist,camTgt.z+Math.cos(camYaw)*Math.cos(camPitch)*dist);
  if(want.y<.5)want.y=.5;camPos.lerp(want,Math.min(1,dt*10));camera.position.copy(camPos);{const off=innerWidth>760?S*.9:0;camera.lookAt(playing?camTgt:new THREE.Vector3(P.x-Math.cos(camYaw)*off,P.y+S*.75,P.z+Math.sin(camYaw)*off))}
  // 그림자·안개는 크기에 맞춰
