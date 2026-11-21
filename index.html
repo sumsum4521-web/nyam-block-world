@@ -724,8 +724,7 @@ function setHtml(){return X+'<h2 class="out">⚙️ 설정</h2>'+
  '<div class="row"><div class="ic">🖼️</div><div class="tx"><b>그래픽</b>느리면 \'낮음\'으로 바꿔요 (그림자 끄기)</div><button class="btn '+(D.low?'gray':'')+'" data-a="gfx">'+(D.low?'낮음':'높음')+'</button></div>'+
  '<div class="row"><div class="ic">💾</div><div class="tx"><b>저장</b>이 브라우저에 자동 저장돼요</div><button class="btn blue" data-a="save">지금 저장</button></div>'+
  '<div class="row"><div class="ic">📍</div><div class="tx"><b>스폰 지점으로 이동</b></div><button class="btn blue" data-a="home">이동</button></div>'+
- '<div class="row"><div class="ic">🔄</div><div class="tx"><b>처음부터 하기</b>크기·코인·업그레이드·퀘스트·모자·펫·세계·코드·환생까지 모두 초기화돼요 (닉네임과 색상은 유지)</div><button class="btn red" data-a="restart">처음부터</button></div>'+
- '<h3 style="font-weight:normal;margin-top:14px;color:#ffe066">🎬 디렉터 테스트 도구</h3><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button class="btn gold" data-a="d_coin">💰 +10만</button><button class="btn gold" data-a="d_coinB">💰 ×100</button><button class="btn gold" data-a="d_coinW">💰 +1억</button><button class="btn" data-a="d_full">용량 가득</button><button class="btn" data-a="d_belly">최대 용량 +3</button><button class="btn blue" data-a="d_boost">부스터 모두</button></div>'}
+ '<div class="row"><div class="ic">🔄</div><div class="tx"><b>처음부터 하기</b>크기·코인·업그레이드·퀘스트·모자·펫·세계·코드·환생까지 모두 초기화돼요 (닉네임과 색상은 유지)</div><button class="btn red" data-a="restart">처음부터</button></div>'}
 $('bShop').onclick=()=>openModal(shopHtml());
 $('bPet').onclick=()=>openModal(petHtml());
 $('bWorld').onclick=()=>openModal(worldHtml());
@@ -765,12 +764,6 @@ $('panel').addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(
  if(a==='save'){save();toast('저장 완료',1200)}
  if(a==='home'){P.x=0;P.z=0;P.y=0;P.shield=3;closeModal()}
  if(a==='restart'){if(restartAsk!==1){restartAsk=1;t.textContent='한 번 더 누르면 초기화';return}restartAsk=0;startOver();closeModal();return}
- if(a==='d_coin'){D.coins+=100000;openModal(setHtml())}
- if(a==='d_coinB'){D.coins=Math.max(1000,D.coins)*100;openModal(setHtml())}
- if(a==='d_coinW'){D.coins+=1e8;openModal(setHtml())}
- if(a==='d_full'){P.M=maxM()}
- if(a==='d_belly'){D.up.belly=Math.min(UP.belly.max,D.up.belly+3);openModal(setHtml())}
- if(a==='d_boost'){for(const k in BOOSTS)boostsOn[k]=30}
  hud()});
 function applyGfx(){sun.castShadow=!D.low;renderer.setPixelRatio(D.low?1:Math.min(window.devicePixelRatio,1.75));renderer.setSize(innerWidth,innerHeight)}
 function applyLook(){recolor(P.A,{skin:D.skin,shirt:D.shirt,pants:D.pants,face:D.face,hat:D.hat});renderTitleSw()}
