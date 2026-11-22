@@ -588,7 +588,7 @@ const SAVES={
  shrink:{keys:['shrinkSim_v1','shrinkSim_prefs'],score:d=>{const P=j(d.shrinkSim_v1)||{};return (P.rb||0)*1e7+(P.world||0)*1e5+(P.wins||0)*10+((P.pets||[]).length);}},
  troll:{keys:['trollJumpMap_v1'],score:d=>{const S=j(d.trollJumpMap_v1)||{};return (S.cleared?1e6:0)+(S.max||0)*1000+(S.coins||0)/100;}},
  detective:{keys:['detectiveSquirrel_v1'],score:d=>{const S=j(d.detectiveSquirrel_v1)||{};return Object.keys(S.solved||{}).length*1e4+(S.tokens||0);}},
- island:{keys:['island_name','island_badges','island_best'],score:d=>((j(d.island_badges)||[]).length)*1e5+(+d.island_best||0)},
+ island:{keys:['island_name','island_badges','island_best','island_pol'],score:d=>((j(d.island_badges)||[]).length)*1e5+(+d.island_best||0)},
  types:{get keys(){return ['types_av_'+(ME?ME.idl:'')];},score:d=>{const v=j(Object.values(d)[0])||{};return (+v.spent||0)*1000+((v.own||[]).length);}}
 };
 function j(s){try{return s?JSON.parse(s):null;}catch(e){return null;}}

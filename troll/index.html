@@ -8,7 +8,9 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;overflow:hidden;background:#9fdcff;font-family:'Jua',sans-serif;touch-action:none}
-#wrap{position:fixed;inset:0;transition:transform .45s cubic-bezier(.5,1.6,.5,1)}
+#app{position:fixed;left:0;top:0;width:100%;height:100%;overflow:hidden}
+html.rot #app{transform-origin:0 0;transform:rotate(90deg)}
+#wrap{position:absolute;inset:0;transition:transform .45s cubic-bezier(.5,1.6,.5,1)}
 #c{width:100%;height:100%;display:block}
 .hud{position:fixed;z-index:5;pointer-events:none}
 #stageInfo{top:10px;left:10px;background:rgba(255,255,255,.88);border-radius:16px;padding:8px 14px;color:#3a2e5c;box-shadow:0 3px 0 rgba(0,0,0,.15)}
@@ -32,7 +34,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#9fdcff;font-family:
 #lag .spin{width:56px;height:56px;border:7px solid #555;border-top-color:#fff;border-radius:50%;animation:sp 1s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 .overlay{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:rgba(40,30,80,.55);padding:16px}
-.card{background:#fffaf0;border-radius:28px;padding:26px 26px 20px;max-width:460px;width:100%;text-align:center;box-shadow:0 8px 0 rgba(0,0,0,.2);border:5px solid #ffd166;max-height:96vh;overflow:auto}
+.card{background:#fffaf0;border-radius:28px;padding:26px 26px 20px;max-width:460px;width:100%;text-align:center;box-shadow:0 8px 0 rgba(0,0,0,.2);border:5px solid #ffd166;max-height:100%;overflow:auto}
 .title{font-size:44px;color:#ff5d8f;-webkit-text-stroke:1px #3a2e5c;margin-bottom:4px}
 .sub{font-size:18px;color:#6b5b95;margin-bottom:16px}
 .big{display:block;width:100%;border:none;font-family:inherit;font-size:24px;padding:13px;border-radius:18px;margin:8px 0;cursor:pointer;background:#7ed957;color:#fff;box-shadow:0 5px 0 #4f9a30;text-shadow:0 2px 0 rgba(0,0,0,.2)}
@@ -60,12 +62,29 @@ input.nick:focus{border-color:#ff5d8f}
 #chatPanel button{border:none;font-family:inherit;font-size:17px;padding:8px 10px;border-radius:12px;background:#f1ecff;color:#3a2e5c;cursor:pointer;text-align:left}
 #chatPanel button:hover{background:#ffe3f0}
 #chatPanel .k{display:inline-block;width:20px;color:#a08fc8}
+body.compact .card{padding:12px 18px;max-width:560px;border-radius:20px}
+body.compact .title{font-size:30px}
+body.compact .sub{font-size:15px;margin-bottom:4px}
+body.compact .big{font-size:19px;padding:8px;margin:5px 0}
+body.compact .help{display:none}
+body.compact input.nick{font-size:18px;padding:6px}
+body.compact .lbl{margin:4px 2px 3px;font-size:14px}
+body.compact .skin{padding:5px 2px;font-size:13px}
+body.compact .row{margin:6px 0}
+body.compact #joy{width:112px;height:112px;left:18px;bottom:16px}
+body.compact #jumpBtn{width:92px;height:92px;right:20px;bottom:20px}
+body.compact #toast{top:96px;font-size:16px}
+body.compact #eventBox{top:56px;font-size:17px}
+body.compact #eventBox.on{font-size:21px}
+body.compact .pop{font-size:30px}
+body.compact #stageInfo .s2{font-size:17px}
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:11;overflow:hidden}
 #confetti span{position:absolute;top:-40px;font-size:30px;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
 </style>
 </head>
 <body>
+<div id="app">
 <div id="wrap"><canvas id="c"></canvas></div>
 
 <div id="stageInfo" class="hud"><div class="s1" id="themeName">🌼 평화로운 초원</div><div class="s2" id="stageName">STAGE 1 / 40</div></div>
@@ -122,6 +141,7 @@ input.nick:focus{border-color:#ff5d8f}
   </div>
 </div>
 <div id="confetti"></div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="../types/room-shim.js" data-game="troll"></script>
@@ -211,8 +231,25 @@ const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(65, 1, 0.1, 400);
-function resize(){ renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); }
-addEventListener('resize', resize); resize();
+let ROT=false;
+function resize(){
+  const touch = document.body.classList.contains('touch');
+  ROT = touch && innerHeight > innerWidth;
+  document.documentElement.classList.toggle('rot', ROT);
+  const W = ROT ? innerHeight : innerWidth, Hh = ROT ? innerWidth : innerHeight;
+  const app = document.getElementById('app');
+  app.style.width = W+'px'; app.style.height = Hh+'px'; app.style.left = ROT ? innerWidth+'px' : '0px';
+  document.body.classList.toggle('compact', Hh < 520);
+  renderer.setSize(W, Hh, false); camera.aspect = W/Hh; camera.updateProjectionMatrix();
+}
+addEventListener('resize', ()=>setTimeout(resize,60)); addEventListener('orientationchange', ()=>setTimeout(resize,200)); resize();
+function tryLandscape(){
+  if (!document.body.classList.contains('touch')) return;
+  try { const el=document.documentElement; const p = el.requestFullscreen ? el.requestFullscreen() : (el.webkitRequestFullscreen ? el.webkitRequestFullscreen() : null);
+    const lock=()=>{ try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(()=>{}); } catch(e){} };
+    if (p && p.then) p.then(lock).catch(()=>{}); else lock();
+  } catch(e){}
+}
 const hemi = new THREE.HemisphereLight(0xffffff, 0x667788, 0.9); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffffff, 0.7); sun.position.set(-5, 10, -3); scene.add(sun);
 scene.fog = new THREE.Fog(0xcdeeff, 45, 150);
@@ -1317,13 +1354,13 @@ addEventListener('keyup',e=>{ keys[e.code]=false; });
 addEventListener('blur',()=>{ for (const k in keys) keys[k]=false; });
 let dragId=null, lx=0, ly=0;
 canvas.addEventListener('pointerdown',e=>{ dragId=e.pointerId; lx=e.clientX; ly=e.clientY; try{canvas.setPointerCapture(e.pointerId);}catch(_){} });
-canvas.addEventListener('pointermove',e=>{ if (e.pointerId!==dragId) return; const f=EV.active&&EV.active.id==='flip'?-1:1; yaw-=(e.clientX-lx)*0.006*f; pitch=Math.max(0.05,Math.min(1.2,pitch+(e.clientY-ly)*0.004*f)); lx=e.clientX; ly=e.clientY; });
+canvas.addEventListener('pointermove',e=>{ if (e.pointerId!==dragId) return; const f=EV.active&&EV.active.id==='flip'?-1:1; let mx=e.clientX-lx, my=e.clientY-ly; if (ROT){ const t=mx; mx=my; my=-t; } yaw-=mx*0.006*f; pitch=Math.max(0.05,Math.min(1.2,pitch+my*0.004*f)); lx=e.clientX; ly=e.clientY; });
 canvas.addEventListener('pointerup',e=>{ if (e.pointerId===dragId) dragId=null; });
 canvas.addEventListener('pointercancel',()=>{ dragId=null; });
 canvas.addEventListener('wheel',e=>{ dist=Math.max(4,Math.min(16,dist+e.deltaY*0.01)); e.preventDefault(); },{passive:false});
-if ('ontouchstart' in window || navigator.maxTouchPoints>0) document.body.classList.add('touch');
+if ('ontouchstart' in window || navigator.maxTouchPoints>0) document.body.classList.add('touch'); resize();
 const joy=$('joy'), knob=$('knob'); let joyId=null;
-function joyMove(e){ const r=joy.getBoundingClientRect(); let dx=(e.clientX-(r.left+r.width/2))/(r.width/2), dy=(e.clientY-(r.top+r.height/2))/(r.height/2); const l=Math.hypot(dx,dy); if (l>1){ dx/=l; dy/=l; } JX=dx; JY=-dy; knob.style.transform='translate('+dx*36+'px,'+dy*36+'px)'; }
+function joyMove(e){ const r=joy.getBoundingClientRect(); let dx=(e.clientX-(r.left+r.width/2))/(r.width/2), dy=(e.clientY-(r.top+r.height/2))/(r.height/2); if (ROT){ const t=dx; dx=dy; dy=-t; } const l=Math.hypot(dx,dy); if (l>1){ dx/=l; dy/=l; } JX=dx; JY=-dy; knob.style.transform='translate('+dx*36+'px,'+dy*36+'px)'; }
 joy.addEventListener('pointerdown',e=>{ joyId=e.pointerId; try{joy.setPointerCapture(e.pointerId);}catch(_){} joyMove(e); e.preventDefault(); });
 joy.addEventListener('pointermove',e=>{ if (e.pointerId===joyId) joyMove(e); });
 const joyEnd=e=>{ if (e.pointerId===joyId){ joyId=null; JX=JY=0; knob.style.transform=''; } };
@@ -1341,9 +1378,9 @@ function refreshMenu(){
   $('btnNew').textContent = '🆕 처음부터 하기';
 }
 function openMenu(){ state='menu'; refreshMenu(); $('menu').style.display='flex'; }
-$('btnContinue').addEventListener('click',()=>{ initAudio(); $('menu').style.display='none';
+$('btnContinue').addEventListener('click',()=>{ initAudio(); tryLandscape(); $('menu').style.display='none';
   if (!started){ started=true; respawn(); toast(THEMES[Math.floor(save.cp/10)].emoji+' STAGE '+(save.cp+1)+' · '+NAMES[save.cp]); } else state='play'; });
-$('btnNew').addEventListener('click',()=>{ initAudio();
+$('btnNew').addEventListener('click',()=>{ initAudio(); tryLandscape();
   if (save.cp>0 && !newConfirm){ newConfirm=1; $('btnNew').textContent='정말 처음부터? 한 번 더 눌러요!'; setTimeout(()=>{ newConfirm=0; refreshMenu(); },3000); return; }
   newConfirm=0; save.cp=0; save.fails=0; save.time=0; stageFails=0; lastTitle=-1; persist();
   $('menu').style.display='none'; started=true; respawn(); toast('🌼 STAGE 1 · '+NAMES[0]); });
