@@ -37,6 +37,13 @@ h1.ttl{font-size:26px;font-weight:900;margin-bottom:4px}
 #cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
 .card{background:#fff;border-radius:18px;overflow:hidden;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.08),0 6px 18px rgba(30,40,70,.08);transition:transform .12s}
 .card:hover{transform:translateY(-3px)}
+.card{position:relative}.card.locked .thumb{filter:grayscale(1) brightness(.7)}
+.lockTag{position:absolute;z-index:2;left:10px;top:10px;background:rgba(20,22,30,.82);color:#fff;font-weight:900;font-size:13px;padding:6px 10px;border-radius:10px}
+.lvl{display:flex;flex-direction:column;gap:8px;margin:12px 0 16px}
+.lvl button{border:3px solid #dfe3ea;background:#fff;border-radius:14px;padding:12px 14px;text-align:left;font-weight:900;font-size:16px;display:flex;align-items:center;gap:10px}
+.lvl button.on{border-color:#2f8cff;background:#eaf3ff}
+.lvl small{display:block;font-weight:500;font-size:12.5px;color:#6b7385}
+#parentLine{font-size:13px;color:#6b7385;font-weight:700;margin:-8px 0 14px}
 .thumb{aspect-ratio:16/10;display:block;width:100%}
 .card .in{padding:10px 14px 14px}
 .card h3{font-size:17px;font-weight:900}
@@ -121,11 +128,12 @@ body.playing .view.on{background:rgba(238,241,247,.97);z-index:20}
  </div>
  <button id="me"><span class="av">ID</span><span class="nm" id="meName">-</span></button>
 </div>
-<div id="meMenu"><button id="logoutBtn">로그아웃</button></div>
+<div id="meMenu"><button id="parentBtn">🔒 보호자 설정</button><button id="logoutBtn">로그아웃</button></div>
 
 <div class="view on" id="v-home"><div class="wrap">
  <h1 class="ttl">무엇을 플레이할까요?</h1>
  <div class="sub">게임 카드를 누르면 설명을 볼 수 있어요. 초록색 ▶ 플레이 버튼으로 바로 들어가요!</div>
+ <div id="parentLine"></div>
  <div id="cards"></div>
 </div></div>
 
@@ -231,8 +239,33 @@ function thumb(id){
  };
  return `<svg class="thumb" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">${S[id]||''}</svg>`;
 }
+// ================= 보호자 설정 (무서움 정도) =================
+const LEVELS=['약함','보통','약간 강함','강함'];
+const PARENT_HASH='4dtkcd';
+let PAR=LS.get('types_parent',{max:'강함',t:0})||{max:'강함',t:0};if(!LEVELS.includes(PAR.max))PAR={max:'강함',t:0};
+const allowed=g=>LEVELS.indexOf(g.scary)<=LEVELS.indexOf(PAR.max);
+function codeHash(s){let h=2166136261;for(const ch of String(s).normalize('NFC').trim().toLowerCase()){h^=ch.codePointAt(0);h=Math.imul(h,16777619)>>>0;}return h.toString(36);}
+function applyParent(p,fromNet){if(!p||!LEVELS.includes(p.max))return;if(fromNet&&(p.t||0)<=(PAR.t||0))return;PAR={max:p.max,t:p.t||Date.now()};LS.set('types_parent',PAR);
+ renderCards();renderFriends();if(cur&&!allowed(G(cur))){exitGame();toast('보호자 설정으로 이 게임이 잠겼어요');}}
+function parentLogin(){$('meMenu').style.display='none';
+ modal(`<div class="mpad"><h2>🔒 보호자 설정</h2><p>부모님만 쓸 수 있는 곳이에요. 보호자 코드를 입력해 주세요.</p>
+  <input class="field" id="parIn" type="password" maxlength="30" placeholder="보호자 코드" autocomplete="off"><div class="err" id="parErr"></div>
+  <button class="btn big" id="parGo" style="width:100%">확인</button></div>`);
+ setTimeout(()=>{try{$('parIn').focus();}catch(e){}},50);
+ const go=()=>{if(codeHash($('parIn').value)!==PARENT_HASH){$('parErr').textContent='코드가 맞지 않아요';$('parIn').value='';return;}parentSettings();};
+ $('parGo').onclick=go;$('parIn').addEventListener('keydown',e=>{if(e.key==='Enter')go();});}
+function parentSettings(){let pick=PAR.max;
+ const desc={'약함':'먹고 커지기, 작아지기 시뮬레이터, 트롤 점프맵','보통':'+ 탐정 다람쥐','약간 강함':'+ 아일랜드 (밤에 꽃 몬스터가 나와요)','강함':'모든 게임'};
+ const draw=()=>{modal(`<div class="mpad"><h2>🔒 무서움 정도 설정</h2><p>고른 단계까지만 플레이할 수 있어요. 더 무서운 게임은 잠겨요.</p>
+  <div class="lvl">${LEVELS.map(l=>`<button data-l="${l}" class="${pick===l?'on':''}"><span class="chip ${SCARY[l]}">${l}</span><span>${l}까지 허용<small>${desc[l]}</small></span></button>`).join('')}</div>
+  <button class="btn green big" id="parSave" style="width:100%">저장하기</button></div>`);
+  document.querySelectorAll('.lvl button').forEach(b=>b.onclick=()=>{pick=b.dataset.l;draw();});
+  $('parSave').onclick=()=>{const p={max:pick,t:Date.now()};applyParent(p,false);if(ME)pub(T('parent/'+ME.idl),p);closeModal();toast(`무서움 정도: ${pick}까지 허용으로 저장했어요`);};};
+ draw();}
+$('parentBtn').onclick=e=>{e.stopPropagation();parentLogin();};
 function renderCards(){
- $('cards').innerHTML=GAMES.map(g=>`<div class="card" data-g="${g.id}">${thumb(g.id)}<div class="in"><h3>${g.name}</h3><div class="meta"><span class="chip ${SCARY[g.scary]}">무서움: ${g.scary}</span><span class="chip">${g.players}</span></div></div></div>`).join('');
+ const pl=$('parentLine');if(pl)pl.textContent=PAR.max==='강함'?'':`🔒 보호자 설정: 무서움 '${PAR.max}'까지 플레이할 수 있어요`;
+ $('cards').innerHTML=GAMES.map(g=>`<div class="card ${allowed(g)?'':'locked'}" data-g="${g.id}">${allowed(g)?'':'<span class="lockTag">🔒 보호자 잠금</span>'}${thumb(g.id)}<div class="in"><h3>${g.name}</h3><div class="meta"><span class="chip ${SCARY[g.scary]}">무서움: ${g.scary}</span><span class="chip">${g.players}</span></div></div></div>`).join('');
  document.querySelectorAll('.card').forEach(c=>c.onclick=()=>showDetail(c.dataset.g));
 }
 function modal(html){$('mc').innerHTML=html;$('modal').style.display='flex';}
@@ -241,12 +274,12 @@ $('mx').onclick=closeModal;$('modal').addEventListener('pointerdown',e=>{if(e.ta
 function showDetail(id){const g=G(id);
  modal(`${thumb(id)}<div class="mpad"><h2>${g.name}</h2><div style="color:#6b7385;font-weight:700">${g.sub}</div>
   <div class="meta" style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap"><span class="chip ${SCARY[g.scary]}">무서움: ${g.scary}</span><span class="chip">${g.players}</span></div>
-  <p>${g.desc}</p><button class="btn green big" id="playGo" style="width:100%">▶ 플레이</button></div>`);
- $('playGo').onclick=()=>askNick(id);}
+  <p>${g.desc}</p>${allowed(g)?'<button class="btn green big" id="playGo" style="width:100%">▶ 플레이</button>':'<button class="btn gray big" disabled style="width:100%">🔒 보호자 설정으로 잠겨 있어요</button>'}</div>`);
+ if($('playGo'))$('playGo').onclick=()=>askNick(id);}
 
 // ================= 게임별 닉네임 =================
 const NICK_RE=/^[A-Za-z0-9_가-힣]{2,10}$/;
-function askNick(id,opts={}){const g=G(id);
+function askNick(id,opts={}){const g=G(id);if(!allowed(g)){toast('보호자 설정으로 잠겨 있는 게임이에요');return;}
  if(!g.nick){closeModal();launch(id,opts);return;}
  const saved=LS.get('types_nick_'+id,'');
  modal(`<div class="mpad"><h2>《${g.name}》 닉네임</h2><p>이 게임에서 쓸 닉네임을 정해요. 다른 게임 닉네임과는 따로예요.<br>비워 두면 내 타입스 아이디 <b>${esc(ME.id)}</b>(으)로 나와요.</p>
@@ -368,7 +401,7 @@ function renderFriends(){
  const fl=[...friends.entries()].sort((a,b)=>(online(b[1])-online(a[1]))||a[1].id.localeCompare(b[1].id));
  $('s-list').innerHTML=fl.length?'<div class="list">'+fl.map(([k,f])=>{const on=online(f),g=on&&f.st.g&&G(f.st.g);
   return `<div class="row"><div class="av">${esc(f.id[0].toUpperCase())}<i class="${on?'on':''}"></i></div><div class="info"><b>${esc(f.id)}</b><small style="${on?'color:#2b8a3e':''}">${on?'● ':'○ '}${statusText(f)}</small></div>
-   ${g?`<button class="btn green" data-join="${k}">${g.room||g.id==='shrink'?'같은 방 합류':'같은 게임 하기'}</button>`:''}<button class="btn gray" data-rm="${k}" title="친구 삭제">✕</button></div>`;}).join('')+'</div>'
+   ${g?(allowed(g)?`<button class="btn green" data-join="${k}">${g.room||g.id==='shrink'?'같은 방 합류':'같은 게임 하기'}</button>`:'<button class="btn gray" disabled>🔒 잠김</button>'):''}<button class="btn gray" data-rm="${k}" title="친구 삭제">✕</button></div>`;}).join('')+'</div>'
   :'<div class="empty">아직 친구가 없어요.<br>"친구 추가"에서 친구의 타입스 아이디를 검색해 보세요!</div>';
  $('reqList').innerHTML=rc?[...recv.entries()].map(([k,r])=>`<div class="row"><div class="av">${esc((r.id||k)[0].toUpperCase())}</div><div class="info"><b>${esc(r.id||k)}</b><small>친구 요청을 보냈어요</small></div><button class="btn green" data-acc="${k}">수락</button><button class="btn red" data-dec="${k}">거절</button></div>`).join('')
   :'<div class="empty">받은 친구 요청이 없어요.</div>';
@@ -419,7 +452,7 @@ function refreshBadges(){if(view!=='badges')return;const data=computeBadges();le
 // ================= 시작 =================
 function enter(){$('auth').style.display='none';$('meName').textContent=ME.id;$('me').querySelector('.av').textContent=ME.id[0].toUpperCase();
  connect({topic:T('on/'+ME.idl),payload:JSON.stringify({on:0,t:Date.now()}),retain:true,qos:0});
- startSocial();renderCards();showView('home');
+ startSocial();sub(T('parent/'+ME.idl),(t,s)=>{if(s){try{applyParent(JSON.parse(s),true);}catch(e){}}});renderCards();showView('home');
  // 내 계정 정보가 서버에서 사라졌으면 다시 올려 둠
  getRetained(T('acct/'+ME.idl),3000).then(r=>{if(r&&!r.offline&&!r.v)pub(T('acct/'+ME.idl),{id:ME.id,h:ME.h,t:Date.now()});});
  addEventListener('pagehide',()=>pub(T('on/'+ME.idl),{on:0,t:Date.now()}));}
