@@ -22,6 +22,14 @@ input{font-family:inherit}
 .tab.on{background:#2c3344;color:#fff}
 .tab .dot{position:absolute;top:2px;right:4px;min-width:18px;height:18px;border-radius:9px;background:#ff4757;color:#fff;font-size:11px;display:none;align-items:center;justify-content:center;padding:0 5px}
 #exitBtn{white-space:nowrap;flex:0 0 auto;display:none;border:none;background:#ff5c5c;color:#fff;font-weight:900;font-size:13px;padding:7px 12px;border-radius:10px;box-shadow:0 3px 0 #b33}
+#typer{flex:0 0 auto;display:flex;align-items:center;gap:5px;color:#fff;font-weight:900;font-size:15px;background:#2c3344;padding:5px 11px 5px 7px;border-radius:12px;border:none;cursor:pointer;font-family:inherit}
+#typer svg{width:24px;height:24px}
+.tico{display:inline-block;width:1.15em;height:1.15em;vertical-align:-0.2em}
+.badge .tico svg,.tico svg{width:100%;height:100%;display:block;margin:0}
+.brew{display:inline-flex;align-items:center;gap:2px;margin-top:3px;font-size:11px;font-weight:900;padding:1px 7px;border-radius:9px;background:#f1f3f7;color:#6b7385}
+.brew.l1{background:#e6f8ec;color:#2b8a3e}.brew.l2{background:#fff4d6;color:#b07800}.brew.l3{background:#ffe3e3;color:#c92a2a}
+.badge.lock .brew{opacity:.7}
+.tlist{text-align:left;font-size:14px;line-height:1.9;margin:8px 0 12px}
 #me{flex:0 0 auto;display:flex;align-items:center;gap:8px;color:#fff;font-weight:900;font-size:14px;background:#2c3344;padding:6px 12px;border-radius:12px;border:none;max-width:200px}
 #me .av{width:26px;height:26px;border-radius:8px;background:#f5cd30;display:flex;align-items:center;justify-content:center;color:#1b1f2a;font-size:13px}
 #me .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -110,7 +118,7 @@ body.playing .view.on{background:rgba(238,241,247,.97);z-index:20}
  :root{--bar:52px}
  .tab span.t{display:none}.tab{font-size:20px;padding:6px 10px}
  .logo span{width:20px;height:26px;font-size:17px}
- #me{padding:5px}#me .nm{display:none}#exitBtn .t{display:none}#tabs{gap:2px}
+ #me{padding:5px}#me .nm{display:none}#typer{padding:4px 8px 4px 5px;font-size:13px}#typer svg{width:20px;height:20px}#exitBtn .t{display:none}#tabs{gap:2px}
  #exitBtn{padding:6px 8px;font-size:12px}
 }
 @media (max-height:500px){:root{--bar:44px}.logo span{width:18px;height:22px;font-size:15px}.tab{padding:4px 10px}}
@@ -126,6 +134,7 @@ body.playing .view.on{background:rgba(238,241,247,.97);z-index:20}
   <button class="tab" data-v="friends">👥<span class="t">친구</span><span class="dot" id="reqDot"></span></button>
   <button class="tab" data-v="badges">🏅<span class="t">내 배지</span></button>
  </div>
+ <button id="typer" title="타입터"><span id="tIco"></span><span id="tNum">0</span></button>
  <button id="me"><span class="av">ID</span><span class="nm" id="meName">-</span></button>
 </div>
 <div id="meMenu"><button id="parentBtn">🔒 보호자 설정</button><button id="logoutBtn">로그아웃</button></div>
@@ -160,7 +169,7 @@ body.playing .view.on{background:rgba(238,241,247,.97);z-index:20}
 
 <div class="view" id="v-badges"><div class="wrap">
  <h1 class="ttl">내 배지 보관함</h1>
- <div class="sub">각 게임에서 얻은 업적이 모두 여기 모여요. (이 기기에서 플레이한 기록이에요)</div>
+ <div class="sub">각 게임에서 얻은 업적이 모두 여기 모여요. 배지를 얻으면 타입터를 받아요!</div>
  <div id="badgeBox"></div>
 </div></div>
 
@@ -305,7 +314,7 @@ function launch(id,opts={}){if(SYNC.busy){toast('☁️ 기록 불러오는 중�
  const url=g.url+(g.room?('?room='+encodeURIComponent(curRoom)):'');
  $('frame').src=url;$('game').style.display='block';document.body.classList.add('playing');$('exitBtn').style.display='block';
  showView(null);pubStatus();setTimeout(()=>{try{$('frame').focus();}catch(e){}},300);}
-function exitGame(){if(cur&&SAVES[cur]){const g=cur;setTimeout(()=>upload(g),400);}$('frame').src='about:blank';$('game').style.display='none';document.body.classList.remove('playing');$('exitBtn').style.display='none';cur=null;curRoom='';showView('home');pubStatus();refreshBadges();}
+function exitGame(){if(cur&&SAVES[cur]){const g=cur;setTimeout(()=>upload(g),400);}$('frame').src='about:blank';$('game').style.display='none';document.body.classList.remove('playing');$('exitBtn').style.display='none';cur=null;curRoom='';showView('home');pubStatus();refreshBadges();checkTyper();}
 $('exitBtn').onclick=()=>{modal(`<div class="mpad"><h2>게임을 나갈까요?</h2><p>홈 화면으로 돌아가요. 게임 기록은 저장돼요.</p><div style="display:flex;gap:10px"><button class="btn red big" id="exYes" style="flex:1">나가기</button><button class="btn gray big" id="exNo" style="flex:1">계속 하기</button></div></div>`);
  $('exYes').onclick=()=>{closeModal();exitGame();};$('exNo').onclick=closeModal;};
 
@@ -443,12 +452,51 @@ function computeBadges(){const out=[];
  const de=LS.get('detectiveSquirrel_v1',{})||{},sv=Object.keys(de.solved||{}).length;
  out.push({g:'detective',color:'#a0693c',extra:sv?`해결한 사건 ${sv}개`:'',items:[
   {n:'첫 사건 해결',d:'사건 1개 해결',l:'1',got:sv>=1},{n:'믿음직한 탐정',d:'사건 4개 해결',l:'4',got:sv>=4},{n:'명탐정',d:'사건 8개 모두 해결',l:'8',shape:'trophy',got:sv>=8}]});
+ out.forEach(b=>b.items.forEach((it,i)=>{it.lv=(LVS[b.g]||[])[i]||1;it.id=b.g+':'+i;}));
  return out;}
 function refreshBadges(){if(view!=='badges')return;const data=computeBadges();let total=0,got=0;
  $('badgeBox').innerHTML=data.map(b=>{const g=G(b.g);total+=b.items.length;got+=b.items.filter(i=>i.got).length;
-  return `<div class="bgame"><h3>《${g.name}》 <small>${b.items.filter(i=>i.got).length} / ${b.items.length}${b.extra?' · '+b.extra:''}</small></h3><div class="bgrid">${b.items.map(i=>`<div class="badge ${i.got?'':'lock'}">${badgeSvg(i.got?b.color:'#adb5bd',i.l,i.shape)}<b>${i.n}</b><small>${i.got?i.d:'🔒 '+i.d}</small></div>`).join('')}</div></div>`;}).join('')
+  return `<div class="bgame"><h3>《${g.name}》 <small>${b.items.filter(i=>i.got).length} / ${b.items.length}${b.extra?' · '+b.extra:''}</small></h3><div class="bgrid">${b.items.map(i=>`<div class="badge ${i.got?'':'lock'}">${badgeSvg(i.got?b.color:'#adb5bd',i.l,i.shape)}<b>${i.n}</b><small>${i.got?i.d:'🔒 '+i.d}</small><span class="brew l${i.lv}">${TY_LV[i.lv]} · ${tico()}${TY_VAL[i.lv]}</span></div>`).join('')}</div></div>`;}).join('')
   +`<div style="text-align:center;color:#6b7385;font-weight:700;margin-top:6px">모은 배지 ${got} / ${total}</div>`;}
 
+
+
+// ================= 🪙 타입터 (타입스 게임머니) =================
+// 배지를 얻을 때마다 받아요: 쉬움 10 · 보통 15 · 어려움 20
+const TY_VAL=[0,10,15,20],TY_LV=['','쉬움','보통','어려움'];
+const LVS={island:[1,1,2,2,3,3],troll:[1,2,2,3],shrink:[1,2,1,2,3,3],nyam:[1,2,2,3],detective:[1,2,3]};
+function typerSvg(sz){return `<svg viewBox="0 0 32 32" width="${sz}" height="${sz}" class="tsvg" aria-label="타입터">
+<g filter="url(#tyRough)"><use href="#tyShape" fill="#b4b4ff" clip-path="url(#tyL)"/><use href="#tyShape" fill="#fff1a1" clip-path="url(#tyR)"/>
+<rect x="15.6" y="5" width="1.1" height="26" fill="#cdb99a" opacity=".85" clip-path="url(#tyIn)"/></g>
+<use href="#tyShape" fill="none" stroke="rgba(0,0,0,.2)" stroke-width=".7"/></svg>`;}
+function tico(){return `<span class="tico">${typerSvg('100%')}</span>`;}
+(function(){const d=document.createElement('div');d.style.cssText='position:absolute;width:0;height:0;overflow:hidden';
+ d.innerHTML='<svg width="0" height="0"><defs><filter id="tyRough" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="1.1"/></filter><clipPath id="tyL"><rect x="0" y="0" width="16.2" height="32"/></clipPath><clipPath id="tyR"><rect x="16.2" y="0" width="16" height="32"/></clipPath><path id="tyShape" d="M2.6 11.2C2.4 7.6 8.6 6.3 16 6.1C23.6 5.6 29.2 6.1 29.6 9.2C30 12.1 26 12.7 19.9 13.6L20.2 26.8C20.3 29.9 17.6 30.6 16.2 30.6C14.2 30.6 13 29.3 12.9 27L12.6 14.7C7.6 15 2.8 14.6 2.6 11.2Z"/><clipPath id="tyIn"><path d="M2.6 11.2C2.4 7.6 8.6 6.3 16 6.1C23.6 5.6 29.2 6.1 29.6 9.2C30 12.1 26 12.7 19.9 13.6L20.2 26.8C20.3 29.9 17.6 30.6 16.2 30.6C14.2 30.6 13 29.3 12.9 27L12.6 14.7C7.6 15 2.8 14.6 2.6 11.2Z"/></clipPath></defs></svg>';
+ document.body.appendChild(d);})();
+$('tIco').innerHTML=typerSvg(24);
+function allBadges(){const list=[];for(const b of computeBadges())b.items.forEach(it=>list.push({...it,g:b.g}));return list;}
+function typerEarned(){return allBadges().filter(i=>i.got).reduce((a,i)=>a+TY_VAL[i.lv],0);}
+function typerSpent(){return +(LS.get('types_typer_spent_'+(ME?ME.idl:''),0))||0;}
+function typerBal(){return Math.max(0,typerEarned()-typerSpent());}
+function renderTyper(){$('tNum').textContent=typerBal().toLocaleString();}
+const seenKey=()=>'types_tseen_'+(ME?ME.idl:'');
+function checkTyper(){if(!ME)return;const got=allBadges().filter(i=>i.got);const seen=LS.get(seenKey(),null);
+ if(!seen){LS.set(seenKey(),got.map(i=>i.id));const tot=got.reduce((a,i)=>a+TY_VAL[i.lv],0);
+  if(tot)setTimeout(()=>toastLong(`🎉 타입터 시작! 지금까지 모은 배지 ${got.length}개로 ${tot} 타입터를 받았어요`),600);renderTyper();return;}
+ const fresh=got.filter(i=>!seen.includes(i.id));
+ if(fresh.length){LS.set(seenKey(),seen.concat(fresh.map(i=>i.id)));
+  fresh.forEach((i,k)=>setTimeout(()=>toastLong(`🏅 새 배지 '${i.n}'!  +${TY_VAL[i.lv]} 타입터`),k*2600));
+  const el=$('typer');el.animate([{transform:'scale(1)'},{transform:'scale(1.25)'},{transform:'scale(1)'}],{duration:600,iterations:2});}
+ renderTyper();}
+function toastLong(t){const e=$('toast');e.innerHTML=t.replace(/타입터/,tico()+' 타입터');e.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>e.style.opacity=0,2500);}
+$('typer').onclick=e=>{e.stopPropagation();const got=allBadges().filter(i=>i.got).length,all=allBadges().length;
+ modal(`<div class="mpad" style="text-align:center"><div style="width:84px;height:84px;margin:0 auto">${typerSvg(84)}</div>
+ <h2>타입터 ${typerBal().toLocaleString()}</h2><p>타입스 안에서 쓰는 돈이에요.<br>배지를 얻을 때마다 받아요!</p>
+ <div class="tlist"><div><span class="brew l1">쉬운 배지</span> → ${tico()} 10</div><div><span class="brew l2">보통 배지</span> → ${tico()} 15</div><div><span class="brew l3">어려운 배지</span> → ${tico()} 20</div>
+ <div style="color:#6b7385;font-weight:700">모은 배지 ${got} / ${all}</div></div>
+ <div style="display:flex;gap:10px"><button class="btn green big" id="tyB" style="flex:1">🏅 배지 보러 가기</button><button class="btn gray big" id="tyX" style="flex:1">닫기</button></div></div>`);
+ $('tyX').onclick=closeModal;$('tyB').onclick=()=>{closeModal();showView('badges');};};
+let tyT=0;addEventListener('storage',()=>{clearTimeout(tyT);tyT=setTimeout(checkTyper,1200);});
 
 // ================= ☁️ 기록 이어하기 (다른 기기에서도 같은 기록) =================
 // 계정 비밀값(ME.h)으로 만든 자리에 게임 기록을 올려 두고, 다른 기기에서 로그인하면 내려받아요.
@@ -481,7 +529,7 @@ async function syncGame(g){const r=await getRetained(T('sv/'+ME.h+'/'+g),2500);i
  SYNC.rec[g]={t:0,sig:''};upload(g);return 'up';}
 function syncAll(){if(!ME||cur||SYNC.busy)return SYNC.p;SYNC.busy=true;SYNC.rec=LS.get(recKey(),{})||{};
  SYNC.p=Promise.all(Object.keys(SAVES).map(g=>syncGame(g).catch(()=>'-'))).then(res=>{SYNC.busy=false;
-  if(res.includes('down')){toast('☁️ 다른 기기에서 한 기록을 불러왔어요');refreshBadges();}return res;});return SYNC.p;}
+  if(res.includes('down')){toast('☁️ 다른 기기에서 한 기록을 불러왔어요');refreshBadges();}checkTyper();return res;});return SYNC.p;}
 // 게임이 기록을 저장하면 잠시 뒤 올리기
 addEventListener('storage',e=>{if(!ME||!e.key)return;for(const g in SAVES)if(SAVES[g].keys.includes(e.key)){clearTimeout(SYNC.timers[g]);SYNC.timers[g]=setTimeout(()=>upload(g),3000);}});
 setInterval(()=>{if(ME&&cur&&SAVES[cur])upload(cur);},20000);
@@ -499,7 +547,7 @@ function boot(){if(!window.mqtt){$('auth').style.display='flex';$('aErr').textCo
  if(ME&&ME.idl&&ME.id){enter();}
  else{ME=null;connect(null);$('auth').style.display='flex';renderCards();setTimeout(()=>{try{$('aId').focus();}catch(e){}},100);}}
 boot();
-window.__types={syncAll,upload,SYNC,friends,recv,sent,get ME(){return ME;},launch,exitGame,computeBadges};
+window.__types={typerBal,checkTyper,syncAll,upload,SYNC,friends,recv,sent,get ME(){return ME;},launch,exitGame,computeBadges};
 })();
 </script>
 </body>
