@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#1b1f2a">
+<title>타입스 TYPES</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#eef1f7;font-family:"Noto Sans KR",sans-serif;color:#1d2230}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+:root{--bar:56px}
+/* 상단 메뉴 바 */
+#bar{position:fixed;left:0;right:0;top:0;height:var(--bar);background:#1b1f2a;display:flex;align-items:center;gap:10px;padding:0 14px;z-index:50;box-shadow:0 3px 0 rgba(0,0,0,.25)}
+.logo{display:flex;gap:2px;cursor:pointer;flex:0 0 auto}
+.logo span{font-family:"Black Han Sans",sans-serif;font-size:22px;color:#fff;width:26px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:6px;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+.logo span:nth-child(1){background:#ff5c5c;transform:rotate(-6deg)}.logo span:nth-child(2){background:#ffb020;transform:rotate(4deg)}.logo span:nth-child(3){background:#2fbf71;transform:rotate(-3deg)}.logo span:nth-child(4){background:#2f8cff;transform:rotate(5deg)}.logo span:nth-child(5){background:#9b5cff;transform:rotate(-4deg)}
+#tabs{flex:1;display:flex;justify-content:center;gap:6px}
+.tab{border:none;background:transparent;color:#aab3c5;font-weight:900;font-size:15px;padding:8px 14px;border-radius:12px;display:flex;align-items:center;gap:6px;position:relative}
+.tab.on{background:#2c3344;color:#fff}
+.tab .dot{position:absolute;top:2px;right:4px;min-width:18px;height:18px;border-radius:9px;background:#ff4757;color:#fff;font-size:11px;display:none;align-items:center;justify-content:center;padding:0 5px}
+#exitBtn{white-space:nowrap;flex:0 0 auto;display:none;border:none;background:#ff5c5c;color:#fff;font-weight:900;font-size:13px;padding:7px 12px;border-radius:10px;box-shadow:0 3px 0 #b33}
+#me{flex:0 0 auto;display:flex;align-items:center;gap:8px;color:#fff;font-weight:900;font-size:14px;background:#2c3344;padding:6px 12px;border-radius:12px;border:none;max-width:200px}
+#me .av{width:26px;height:26px;border-radius:8px;background:#f5cd30;display:flex;align-items:center;justify-content:center;color:#1b1f2a;font-size:13px}
+#me .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#meMenu{position:fixed;right:12px;top:calc(var(--bar) + 6px);background:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.2);padding:6px;display:none;z-index:60}
+#meMenu button{display:block;width:100%;border:none;background:none;padding:10px 16px;font-weight:700;text-align:left;border-radius:8px}
+#meMenu button:hover{background:#f1f3f5}
+/* 화면들 */
+.view{position:fixed;left:0;right:0;top:var(--bar);bottom:0;overflow:auto;display:none;padding:22px 18px 40px}
+.view.on{display:block}
+.wrap{max-width:1100px;margin:0 auto}
+h1.ttl{font-size:26px;font-weight:900;margin-bottom:4px}
+.sub{color:#6b7385;font-size:14px;margin-bottom:18px}
+#cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.card{background:#fff;border-radius:18px;overflow:hidden;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.08),0 6px 18px rgba(30,40,70,.08);transition:transform .12s}
+.card:hover{transform:translateY(-3px)}
+.thumb{aspect-ratio:16/10;display:block;width:100%}
+.card .in{padding:10px 14px 14px}
+.card h3{font-size:17px;font-weight:900}
+.card .meta{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.chip{font-size:11.5px;font-weight:900;padding:3px 8px;border-radius:8px;background:#eef1f7;color:#4a5263}
+.sc1{background:#d3f9d8;color:#2b8a3e}.sc2{background:#fff3bf;color:#a07800}.sc3{background:#ffe3c2;color:#c2410c}.sc4{background:#ffe0e0;color:#c92a2a}
+/* 게임 화면 */
+#game{position:fixed;left:0;right:0;top:var(--bar);bottom:0;display:none;background:#000;z-index:5}
+#game iframe{width:100%;height:100%;border:none;display:block}
+body.playing .view.on{background:rgba(238,241,247,.97);z-index:20}
+/* 친구 */
+.subtabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.stab{border:none;background:#fff;font-weight:900;font-size:15px;padding:10px 16px;border-radius:12px;box-shadow:0 3px 0 rgba(0,0,0,.08);color:#4a5263}
+.stab.on{background:#2f8cff;color:#fff}
+.stab b{display:inline-block;min-width:20px;padding:0 6px;border-radius:10px;background:#ff4757;color:#fff;font-size:12px;margin-left:4px}
+.list{display:flex;flex-direction:column;gap:10px}
+.row{background:#fff;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 3px 0 rgba(0,0,0,.06)}
+.row .av{width:42px;height:42px;border-radius:12px;background:#f5cd30;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-weight:900;color:#1b1f2a;position:relative}
+.row .av i{position:absolute;right:-3px;bottom:-3px;width:14px;height:14px;border-radius:50%;border:3px solid #fff;background:#adb5bd}
+.row .av i.on{background:#2fbf71}
+.row .info{flex:1;min-width:0}
+.row .info b{display:block;font-size:16px}
+.row .info small{color:#6b7385;font-size:13px}
+.btn{border:none;border-radius:12px;padding:9px 14px;font-weight:900;font-size:14px;color:#fff;background:#2f8cff;box-shadow:0 3px 0 #1c5fb0}
+.btn.green{background:#2fbf71;box-shadow:0 3px 0 #1e8a50}.btn.red{background:#ff5c5c;box-shadow:0 3px 0 #b33}.btn.gray{background:#adb5bd;box-shadow:0 3px 0 #7c858d}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.big{font-size:20px;padding:14px 26px;border-radius:16px}
+.empty{background:#fff;border-radius:14px;padding:26px;text-align:center;color:#6b7385;font-weight:700}
+.field{width:100%;padding:13px 14px;border-radius:12px;border:3px solid #dfe3ea;font-size:17px;font-weight:700;outline:none;background:#fff}
+.field:focus{border-color:#2f8cff}
+.err{color:#e03131;font-weight:700;font-size:13px;min-height:20px;margin-top:6px}
+.ok{color:#2b8a3e}
+/* 배지 */
+.bgame{background:#fff;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 3px 0 rgba(0,0,0,.06)}
+.bgame h3{font-size:18px;font-weight:900;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.bgame h3 small{font-size:13px;color:#6b7385;font-weight:700}
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px}
+.badge{text-align:center}
+.badge svg{width:76px;height:76px;display:block;margin:0 auto 4px}
+.badge b{display:block;font-size:13px}
+.badge small{display:block;font-size:11px;color:#8a92a3;line-height:1.3}
+.badge.lock{opacity:.45;filter:grayscale(1)}
+/* 창 */
+#modal{position:fixed;inset:0;background:rgba(15,18,28,.55);display:none;align-items:center;justify-content:center;z-index:80;padding:14px}
+#mbox{background:#fff;border-radius:20px;width:min(520px,100%);max-height:92vh;overflow:auto;position:relative}
+#mbox .x{position:absolute;right:10px;top:10px;width:38px;height:38px;border-radius:12px;border:none;background:rgba(0,0,0,.45);color:#fff;font-size:18px;font-weight:900;z-index:2}
+.mpad{padding:18px 20px 22px}
+.mpad h2{font-size:24px;font-weight:900}
+.mpad p{color:#4a5263;line-height:1.6;margin:10px 0 14px;font-size:15px}
+/* 로그인 */
+#auth{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;padding:16px;background:radial-gradient(circle at 20% 20%,#3a2f7a,#1b1f2a 60%)}
+#auth .box{background:#fff;border-radius:22px;width:min(420px,100%);padding:26px 24px}
+#auth .logo{justify-content:center;margin-bottom:6px}
+#auth .logo span{font-size:34px;width:42px;height:46px}
+#auth .tag{text-align:center;color:#6b7385;font-weight:700;margin-bottom:18px;font-size:14px}
+.atabs{display:flex;background:#eef1f7;border-radius:12px;padding:4px;margin-bottom:14px}
+.atabs button{flex:1;border:none;background:none;padding:10px;font-weight:900;border-radius:10px;color:#6b7385;font-size:15px}
+.atabs button.on{background:#fff;color:#1d2230;box-shadow:0 2px 0 rgba(0,0,0,.08)}
+#auth label{display:block;font-weight:900;font-size:13px;margin:10px 0 5px;color:#4a5263}
+#auth .hint{font-size:12px;color:#8a92a3;margin-top:4px}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#1b1f2a;color:#fff;font-weight:900;padding:12px 18px;border-radius:14px;opacity:0;transition:opacity .25s;z-index:100;pointer-events:none;max-width:90vw;text-align:center}
+#netState{font-size:12px;color:#8a92a3;font-weight:700;margin-left:auto}
+@media (max-width:720px){
+ :root{--bar:52px}
+ .tab span.t{display:none}.tab{font-size:20px;padding:6px 10px}
+ .logo span{width:20px;height:26px;font-size:17px}
+ #me{padding:5px}#me .nm{display:none}#exitBtn .t{display:none}#tabs{gap:2px}
+ #exitBtn{padding:6px 8px;font-size:12px}
+}
+@media (max-height:500px){:root{--bar:44px}.logo span{width:18px;height:22px;font-size:15px}.tab{padding:4px 10px}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.16.1/dist/mqtt.min.js"></script>
+</head>
+<body>
+<div id="bar">
+ <div class="logo" id="logo"><span>T</span><span>Y</span><span>P</span><span>E</span><span>S</span></div>
+ <button id="exitBtn">◀<span class="t"> 나가기</span></button>
+ <div id="tabs">
+  <button class="tab on" data-v="home">🏠<span class="t">홈</span></button>
+  <button class="tab" data-v="friends">👥<span class="t">친구</span><span class="dot" id="reqDot"></span></button>
+  <button class="tab" data-v="badges">🏅<span class="t">내 배지</span></button>
+ </div>
+ <button id="me"><span class="av">ID</span><span class="nm" id="meName">-</span></button>
+</div>
+<div id="meMenu"><button id="logoutBtn">로그아웃</button></div>
+
+<div class="view on" id="v-home"><div class="wrap">
+ <h1 class="ttl">무엇을 플레이할까요?</h1>
+ <div class="sub">게임 카드를 누르면 설명을 볼 수 있어요. 초록색 ▶ 플레이 버튼으로 바로 들어가요!</div>
+ <div id="cards"></div>
+</div></div>
+
+<div class="view" id="v-friends"><div class="wrap">
+ <h1 class="ttl">친구</h1>
+ <div class="sub" style="display:flex;gap:8px"><span>친구가 접속했는지, 어떤 게임을 하는지 볼 수 있어요.</span><span id="netState"></span></div>
+ <div class="subtabs">
+  <button class="stab on" data-s="list">내 친구 목록</button>
+  <button class="stab" data-s="add">친구 추가</button>
+  <button class="stab" data-s="req">받은 요청 <b id="reqCnt" style="display:none">0</b></button>
+ </div>
+ <div id="s-list"></div>
+ <div id="s-add" style="display:none">
+  <div class="row" style="flex-wrap:wrap">
+   <div style="flex:1;min-width:200px"><input class="field" id="addIn" maxlength="15" placeholder="친구의 타입스 아이디 (영어+숫자)" autocomplete="off"></div>
+   <button class="btn green" id="addBtn">친구 요청 보내기</button>
+  </div>
+  <div class="err" id="addMsg"></div>
+  <h3 style="margin:16px 0 10px;font-size:16px">보낸 요청</h3>
+  <div class="list" id="sentList"></div>
+ </div>
+ <div id="s-req" style="display:none"><div class="list" id="reqList"></div></div>
+</div></div>
+
+<div class="view" id="v-badges"><div class="wrap">
+ <h1 class="ttl">내 배지 보관함</h1>
+ <div class="sub">각 게임에서 얻은 업적이 모두 여기 모여요. (이 기기에서 플레이한 기록이에요)</div>
+ <div id="badgeBox"></div>
+</div></div>
+
+<div id="game"><iframe id="frame" allow="fullscreen; autoplay" title="게임"></iframe></div>
+
+<div id="modal"><div id="mbox"><button class="x" id="mx">✕</button><div id="mc"></div></div></div>
+
+<div id="auth"><div class="box">
+ <div class="logo"><span>T</span><span>Y</span><span>P</span><span>E</span><span>S</span></div>
+ <div class="tag">여러 게임을 한곳에서! 미니 게임 플랫폼</div>
+ <div class="atabs"><button class="on" data-a="login">로그인</button><button data-a="signup">회원가입</button></div>
+ <label>타입스 아이디</label>
+ <input class="field" id="aId" maxlength="15" placeholder="영어 + 숫자 3~15글자" autocomplete="off" autocapitalize="off">
+ <label>비밀번호 (숫자 4자리)</label>
+ <input class="field" id="aPin" maxlength="4" inputmode="numeric" type="password" placeholder="••••" autocomplete="off">
+ <div id="pin2Wrap" style="display:none"><label>비밀번호 한 번 더</label><input class="field" id="aPin2" maxlength="4" inputmode="numeric" type="password" placeholder="••••" autocomplete="off">
+  <div class="hint">비밀번호는 잊어버리지 않게 꼭 기억해 두세요! 다른 기기에서 로그인할 때 필요해요.</div></div>
+ <div class="err" id="aErr"></div>
+ <button class="btn green big" id="aGo" style="width:100%;margin-top:6px">로그인</button>
+</div></div>
+<div id="toast"></div>
+
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let toastT=0;function toast(t){const e=$('toast');e.textContent=t;e.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>e.style.opacity=0,2200);}
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}},raw(k){try{return localStorage.getItem(k);}catch(e){return null;}},setRaw(k,v){try{localStorage.setItem(k,v);}catch(e){}}};
+
+// ================= 게임 목록 =================
+const SCARY={'약함':'sc1','보통':'sc2','약간 강함':'sc3','강함':'sc4'};
+const GAMES=[
+ {id:'nyam',name:'먹고 커지기',sub:'냠냠 블록 월드',url:'../',scary:'약함',players:'혼자',nick:true,
+  desc:'나보다 작은 건 뭐든지 냠냠! 사탕에서 시작해 자동차, 빌딩, 산까지 먹으면서 점점 커져요. 사탕 공원부터 거인의 들판까지 4개 지역, 상점 업그레이드, 퀘스트, 새로 태어나기가 있어요.'},
+ {id:'detective',name:'탐정 다람쥐',sub:'추리 게임',url:'../detective-squirrel/',scary:'보통',players:'혼자',nick:false,
+  desc:'돋보기를 든 다람쥐 탐정이 되어 사건 현장의 단서를 조사하고, 용의자에게 질문해서 진짜 범인을 찾아요. 이지·미디움·하드 사건 8개가 기다리고 있어요.'},
+ {id:'island',name:'아일랜드',sub:'꽃이 깨어나는 밤',url:'../island/',scary:'약간 강함',players:'친구랑 같이 (최대 6명)',nick:true,room:true,
+  desc:'밤이 되면 꽃 몬스터가 깨어나는 섬에서 살아남아요. 낮에는 나무와 돌을 모아 도구와 모닥불을 만들고, 밤에는 빛 안에서 버텨요. 오래 살아남을수록 생존 배지를 받아요.'},
+ {id:'shrink',name:'작아지기 시뮬레이터',sub:'달리고 작아지기',url:'/shrink-simulator/',scary:'약함',players:'친구랑 같이',nick:true,
+  desc:'러닝머신에서 달려서 점점 작아지고, 더 작은 동그라미 구멍을 통과해서 승리를 모아요. 환생, 펫 알, 초원·사막·숲 세계 3개가 있어요.'},
+ {id:'troll',name:'트롤 점프맵',sub:'40스테이지 오비',url:'../troll/',scary:'약함',players:'혼자',nick:true,
+  desc:'도망가는 발판, 가짜 체크포인트, 거짓말하는 화살표! 스테이지마다 다른 트롤 함정을 뚫고 40스테이지 결승선까지 가요. 마지막엔 트로피 추격전이 있어요.'}
+];
+const G=id=>GAMES.find(g=>g.id===id);
+function thumb(id){
+ const S={
+  nyam:`<rect width="320" height="200" fill="#ffd6e8"/><rect y="140" width="320" height="60" fill="#7bd36b"/><circle cx="60" cy="50" r="22" fill="#fff6a8"/>
+   <rect x="40" y="90" width="10" height="55" fill="#fff"/><circle cx="45" cy="85" r="22" fill="#ff5c9a"/><circle cx="45" cy="85" r="12" fill="#ffc2dc"/>
+   <circle cx="265" cy="118" r="26" fill="#d9822b"/><circle cx="265" cy="118" r="9" fill="#ffd6e8"/><path d="M243 108 q22 -18 44 0" stroke="#ff8fc2" stroke-width="9" fill="none"/>
+   <rect x="138" y="60" width="44" height="40" rx="6" fill="#f5cd30"/><rect x="128" y="100" width="64" height="44" rx="6" fill="#ff7aa8"/><rect x="134" y="144" width="22" height="30" fill="#4c6ef5"/><rect x="164" y="144" width="22" height="30" fill="#4c6ef5"/>
+   <circle cx="151" cy="78" r="4" fill="#222"/><circle cx="169" cy="78" r="4" fill="#222"/><ellipse cx="160" cy="90" rx="9" ry="6" fill="#222"/>`,
+  detective:`<rect width="320" height="200" fill="#26324d"/><rect y="150" width="320" height="50" fill="#5a4632"/><circle cx="270" cy="40" r="20" fill="#ffe8a3"/>
+   <rect x="20" y="40" width="70" height="110" fill="#3b4a6b"/><rect x="32" y="56" width="18" height="22" fill="#ffd56b"/><rect x="60" y="56" width="18" height="22" fill="#ffd56b"/>
+   <ellipse cx="170" cy="150" rx="40" ry="10" fill="rgba(0,0,0,.3)"/><rect x="146" y="92" width="48" height="56" rx="10" fill="#8a5a33"/><rect x="146" y="92" width="48" height="56" rx="10" fill="#7a4a24"/>
+   <path d="M160 95 l10 22 l10 -22" fill="#c9a074"/><rect x="144" y="58" width="52" height="40" rx="10" fill="#a0693c"/><ellipse cx="170" cy="86" rx="14" ry="9" fill="#e8c9a0"/>
+   <circle cx="161" cy="74" r="4" fill="#111"/><circle cx="179" cy="74" r="4" fill="#111"/><rect x="138" y="52" width="64" height="8" rx="3" fill="#6b7280"/><rect x="150" y="34" width="40" height="22" rx="6" fill="#6b7280"/><rect x="150" y="48" width="40" height="5" fill="#1e2a4a"/>
+   <circle cx="214" cy="104" r="15" fill="none" stroke="#ffd43b" stroke-width="6"/><rect x="198" y="114" width="6" height="22" transform="rotate(35 201 125)" fill="#ffd43b"/>
+   <path d="M196 120 q30 10 26 -40" stroke="#8a5a33" stroke-width="16" fill="none" stroke-linecap="round" opacity=".0"/>`,
+  island:`<rect width="320" height="200" fill="#2a1e5c"/><circle cx="250" cy="45" r="24" fill="#d0bfff"/><circle cx="40" cy="30" r="2" fill="#fff"/><circle cx="110" cy="20" r="2" fill="#fff"/><circle cx="180" cy="40" r="2" fill="#fff"/><circle cx="300" cy="90" r="2" fill="#fff"/>
+   <rect y="150" width="320" height="50" fill="#1c3f7a"/><ellipse cx="160" cy="150" rx="140" ry="26" fill="#3f8f3a"/>
+   <rect x="70" y="100" width="10" height="45" fill="#7a4a24"/><rect x="52" y="78" width="46" height="30" fill="#2f9e44"/>
+   <circle cx="200" cy="128" r="10" fill="#ff922b"/><path d="M190 140 l10 -28 l10 28z" fill="#ffd43b"/>
+   <rect x="232" y="104" width="6" height="36" fill="#2f9e44"/><circle cx="235" cy="96" r="16" fill="#9b5cff"/><circle cx="235" cy="96" r="7" fill="#f3d9fa"/><circle cx="229" cy="92" r="2" fill="#222"/><circle cx="241" cy="92" r="2" fill="#222"/>
+   <rect x="140" y="106" width="20" height="18" fill="#f5cd30"/><rect x="136" y="124" width="28" height="18" fill="#ff7aa8"/>`,
+  shrink:`<rect width="320" height="200" fill="#8fd3ff"/><rect y="150" width="320" height="50" fill="#5cb847"/><rect x="0" y="40" width="320" height="112" fill="#5f7fb8"/>
+   <path d="M150 152 a42 42 0 1 1 84 0z" fill="#8fd3ff"/><rect x="150" y="150" width="84" height="2" fill="#5cb847"/><path d="M150 152 a42 42 0 1 1 84 0" fill="none" stroke="#ff922b" stroke-width="8"/>
+   <rect x="64" y="96" width="22" height="20" rx="5" fill="#f5cd30"/><rect x="58" y="116" width="34" height="22" rx="5" fill="#0d69ac"/><rect x="60" y="138" width="13" height="16" fill="#a4bd47"/><rect x="77" y="138" width="13" height="16" fill="#a4bd47"/>
+   <rect x="182" y="132" width="8" height="8" rx="2" fill="#f5cd30"/><rect x="180" y="140" width="12" height="8" rx="2" fill="#0d69ac"/>
+   <text x="22" y="30" font-size="20" font-weight="900" fill="#fff" font-family="sans-serif">크기 0.372</text>`,
+  troll:`<rect width="320" height="200" fill="#a5d8ff"/><circle cx="270" cy="40" r="22" fill="#fff3a0"/>
+   <rect x="20" y="150" width="60" height="16" rx="4" fill="#51cf66"/><rect x="110" y="120" width="50" height="14" rx="4" fill="#ff922b"/><rect x="190" y="95" width="46" height="14" rx="4" fill="#cc5de8" opacity=".5" stroke="#cc5de8" stroke-dasharray="5 4"/><rect x="250" y="70" width="50" height="14" rx="4" fill="#4dabf7"/>
+   <rect x="262" y="40" width="4" height="30" fill="#868e96"/><path d="M266 40 l22 8 l-22 8z" fill="#ff4757"/>
+   <rect x="120" y="86" width="16" height="16" rx="4" fill="#f5cd30"/><rect x="116" y="102" width="24" height="16" rx="3" fill="#0d69ac"/>
+   <circle cx="60" cy="100" r="26" fill="#ffd43b"/><path d="M46 92 l6 4 M74 92 l-6 4" stroke="#222" stroke-width="4"/><path d="M44 106 q16 16 32 0" stroke="#222" stroke-width="4" fill="#fff"/>`
+ };
+ return `<svg class="thumb" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">${S[id]||''}</svg>`;
+}
+function renderCards(){
+ $('cards').innerHTML=GAMES.map(g=>`<div class="card" data-g="${g.id}">${thumb(g.id)}<div class="in"><h3>${g.name}</h3><div class="meta"><span class="chip ${SCARY[g.scary]}">무서움: ${g.scary}</span><span class="chip">${g.players}</span></div></div></div>`).join('');
+ document.querySelectorAll('.card').forEach(c=>c.onclick=()=>showDetail(c.dataset.g));
+}
+function modal(html){$('mc').innerHTML=html;$('modal').style.display='flex';}
+function closeModal(){$('modal').style.display='none';}
+$('mx').onclick=closeModal;$('modal').addEventListener('pointerdown',e=>{if(e.target===$('modal'))closeModal();});
+function showDetail(id){const g=G(id);
+ modal(`${thumb(id)}<div class="mpad"><h2>${g.name}</h2><div style="color:#6b7385;font-weight:700">${g.sub}</div>
+  <div class="meta" style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap"><span class="chip ${SCARY[g.scary]}">무서움: ${g.scary}</span><span class="chip">${g.players}</span></div>
+  <p>${g.desc}</p><button class="btn green big" id="playGo" style="width:100%">▶ 플레이</button></div>`);
+ $('playGo').onclick=()=>askNick(id);}
+
+// ================= 게임별 닉네임 =================
+const NICK_RE=/^[A-Za-z0-9_가-힣]{2,10}$/;
+function askNick(id,opts={}){const g=G(id);
+ if(!g.nick){closeModal();launch(id,opts);return;}
+ const saved=LS.get('types_nick_'+id,'');
+ modal(`<div class="mpad"><h2>《${g.name}》 닉네임</h2><p>이 게임에서 쓸 닉네임을 정해요. 다른 게임 닉네임과는 따로예요.<br>비워 두면 내 타입스 아이디 <b>${esc(ME.id)}</b>(으)로 나와요.</p>
+  <input class="field" id="nickIn" maxlength="10" value="${esc(saved)}" placeholder="${esc(ME.id)}" autocomplete="off"><div class="err" id="nickErr"></div>
+  <div style="font-size:12px;color:#8a92a3;margin-bottom:12px">한글·영어·숫자·밑줄(_) 2~10글자</div>
+  <button class="btn green big" id="nickGo" style="width:100%">▶ 플레이</button></div>`);
+ setTimeout(()=>{try{$('nickIn').focus();}catch(e){}},50);
+ const go=()=>{const v=$('nickIn').value.trim();if(v&&!NICK_RE.test(v)){$('nickErr').textContent='한글·영어·숫자·밑줄(_)로 2~10글자만 쓸 수 있어요';return;}
+  LS.set('types_nick_'+id,v);applyNick(id,v||ME.id);closeModal();launch(id,opts);};
+ $('nickGo').onclick=go;$('nickIn').addEventListener('keydown',e=>{if(e.key==='Enter')go();});}
+function applyNick(id,name){
+ try{
+  if(id==='nyam'){const d=LS.get('nyamBlockWorld_v1',null)||{};d.name=name.slice(0,12);LS.set('nyamBlockWorld_v1',d);}
+  if(id==='shrink'){const d=LS.get('shrinkSim_v1',null)||{};let n=name.replace(/[^A-Za-z0-9_가-힣]/g,'').slice(0,16);if(n.length<2)n=(n+'__').slice(0,2);d.name=n;d.named=true;LS.set('shrinkSim_v1',d);}
+  if(id==='troll'){const d=LS.get('trollJumpMap_v1',null)||{};d.nick=name.slice(0,10);LS.set('trollJumpMap_v1',d);}
+  if(id==='island'){LS.setRaw('island_name',name.slice(0,10));}
+ }catch(e){}
+}
+
+// ================= 게임 실행 =================
+let cur=null,curRoom='';
+function launch(id,opts={}){const g=G(id);cur=id;curRoom=g.room?(opts.room||'main'):'';
+ const url=g.url+(g.room?('?room='+encodeURIComponent(curRoom)):'');
+ $('frame').src=url;$('game').style.display='block';document.body.classList.add('playing');$('exitBtn').style.display='block';
+ showView(null);pubStatus();setTimeout(()=>{try{$('frame').focus();}catch(e){}},300);}
+function exitGame(){$('frame').src='about:blank';$('game').style.display='none';document.body.classList.remove('playing');$('exitBtn').style.display='none';cur=null;curRoom='';showView('home');pubStatus();refreshBadges();}
+$('exitBtn').onclick=()=>{modal(`<div class="mpad"><h2>게임을 나갈까요?</h2><p>홈 화면으로 돌아가요. 게임 기록은 저장돼요.</p><div style="display:flex;gap:10px"><button class="btn red big" id="exYes" style="flex:1">나가기</button><button class="btn gray big" id="exNo" style="flex:1">계속 하기</button></div></div>`);
+ $('exYes').onclick=()=>{closeModal();exitGame();};$('exNo').onclick=closeModal;};
+
+// ================= 화면 이동 =================
+let view='home';
+function showView(v){view=v;document.querySelectorAll('.view').forEach(e=>e.classList.toggle('on',e.id==='v-'+v));
+ document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===(v||'')));
+ if(v==='badges')refreshBadges();if(v==='friends')renderFriends();}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{const v=t.dataset.v;
+ if(cur){if(v==='home'){$('exitBtn').click();return;}showView(view===v?null:v);return;} // 게임 중에는 친구·배지를 위에 띄움
+ showView(v);});
+$('logo').onclick=()=>{if(cur)$('exitBtn').click();else showView('home');};
+$('me').onclick=e=>{e.stopPropagation();const m=$('meMenu');m.style.display=m.style.display==='block'?'none':'block';};
+addEventListener('click',()=>{$('meMenu').style.display='none';});
+
+// ================= 중계 서버 (계정·친구·접속) =================
+const URLS=window.__MQTT_URLS||['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'];
+const T=p=>'types/v1/'+p;
+let clients=[];const subs=new Map();
+const anyUp=()=>clients.some(c=>c.connected);
+function match(f,t){const a=f.split('/'),b=t.split('/');if(a.length!==b.length)return false;for(let i=0;i<a.length;i++)if(a[i]!=='+'&&a[i]!==b[i])return false;return true;}
+function connect(will){clients.forEach(c=>{try{c.end(true);}catch(e){}});
+ clients=URLS.map(u=>{const o={clientId:'tp_'+Math.random().toString(36).slice(2,12),clean:true,keepalive:30,reconnectPeriod:2500,connectTimeout:8000};if(will)o.will=will;
+  const c=window.mqtt.connect(u,o);c.on('connect',()=>{const fs=[...subs.keys()];if(fs.length)c.subscribe(fs);netState();if(ME)pubStatus();});c.on('close',netState);c.on('error',()=>{});
+  c.on('message',(topic,buf,pk)=>{const s=buf.toString();for(const [f,fns] of subs)if(match(f,topic))fns.forEach(fn=>{try{fn(topic,s,pk);}catch(e){console.warn(e);}});});return c;});}
+function sub(f,fn){if(!subs.has(f)){subs.set(f,[]);clients.forEach(c=>{if(c.connected)c.subscribe(f);});}subs.get(f).push(fn);}
+function unsub(f){subs.delete(f);clients.forEach(c=>{try{if(c.connected)c.unsubscribe(f);}catch(e){}});}
+function pub(topic,obj,retain=true){const s=obj===''?'':JSON.stringify(obj);clients.forEach(c=>{try{if(c.connected)c.publish(topic,s,{retain,qos:0});}catch(e){}});}
+function waitUp(ms){return new Promise(res=>{if(anyUp())return res(true);const t0=Date.now();const iv=setInterval(()=>{if(anyUp()||Date.now()-t0>ms){clearInterval(iv);res(anyUp());}},100);});}
+async function getRetained(topic,ms=2500){if(!await waitUp(8000))return {offline:true};
+ return new Promise(res=>{let done=false;const fin=v=>{if(done)return;done=true;unsub(topic);res(v);};sub(topic,(t,s)=>{if(s){try{fin({v:JSON.parse(s)});}catch(e){}}});setTimeout(()=>fin({v:null}),ms);});}
+function netState(){const e=$('netState');if(e)e.textContent=anyUp()?'● 서버 연결됨':'○ 서버 연결 중…';}
+async function sha(s){try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+ catch(e){let h=2166136261;for(const ch of s){h^=ch.codePointAt(0);h=Math.imul(h,16777619)>>>0;}return 'f'+h.toString(16);}}
+
+// ================= 로그인 / 회원가입 =================
+let ME=null,amode='login';
+const ID_RE=/^[A-Za-z0-9]{3,15}$/,PIN_RE=/^\d{4}$/;
+document.querySelectorAll('.atabs button').forEach(b=>b.onclick=()=>{amode=b.dataset.a;document.querySelectorAll('.atabs button').forEach(x=>x.classList.toggle('on',x===b));
+ $('pin2Wrap').style.display=amode==='signup'?'block':'none';$('aGo').textContent=amode==='signup'?'아이디 만들기':'로그인';$('aErr').textContent='';});
+async function doAuth(){const id=$('aId').value.trim(),pin=$('aPin').value.trim(),err=$('aErr');err.className='err';
+ if(!ID_RE.test(id)){err.textContent='아이디는 영어와 숫자만, 3~15글자로 써 주세요 (띄어쓰기·특수문자 안 돼요)';return;}
+ if(!PIN_RE.test(pin)){err.textContent='비밀번호는 숫자 4자리예요';return;}
+ if(amode==='signup'&&$('aPin2').value.trim()!==pin){err.textContent='비밀번호 두 개가 서로 달라요';return;}
+ const idl=id.toLowerCase();$('aGo').disabled=true;err.className='err ok';err.textContent='서버에 확인하는 중…';
+ const r=await getRetained(T('acct/'+idl),3000);$('aGo').disabled=false;err.className='err';
+ if(r.offline){err.textContent='서버에 연결할 수 없어요. 인터넷을 확인하고 다시 해 주세요';return;}
+ const h=await sha('types|'+idl+'|'+pin);
+ if(amode==='signup'){if(r.v){err.textContent='이미 누군가 쓰고 있는 아이디예요. 다른 아이디를 골라 주세요';return;}
+  pub(T('acct/'+idl),{id,h,t:Date.now()});}
+ else{if(!r.v){err.textContent='없는 아이디예요. 처음이라면 회원가입을 눌러 주세요';return;}if(r.v.h!==h){err.textContent='비밀번호가 맞지 않아요';return;}}
+ ME={id:r.v&&r.v.id||id,idl,h};LS.set('types_account',ME);enter();}
+$('aGo').onclick=doAuth;['aId','aPin','aPin2'].forEach(k=>$(k).addEventListener('keydown',e=>{if(e.key==='Enter')doAuth();}));
+$('logoutBtn').onclick=()=>{if(cur)exitGame();pub(T('on/'+ME.idl),{on:0,t:Date.now()});setTimeout(()=>{try{localStorage.removeItem('types_account');}catch(e){}location.reload();},300);};
+
+// ================= 친구 =================
+const friends=new Map(),recv=new Map(),sent=new Map();
+let stab='list';
+document.querySelectorAll('.stab').forEach(b=>b.onclick=()=>{stab=b.dataset.s;document.querySelectorAll('.stab').forEach(x=>x.classList.toggle('on',x===b));['list','add','req'].forEach(k=>$('s-'+k).style.display=k===stab?'block':'none');renderFriends();});
+function pubStatus(){if(!ME)return;pub(T('on/'+ME.idl),{on:1,g:cur||'',r:curRoom||'',t:Date.now()});}
+function online(f){return f.st&&f.st.on&&Date.now()-(f.st.t||0)<80000;}
+function startSocial(){const me=ME.idl;
+ sub(T('fr/'+me+'/+'),(topic,s)=>{const f=topic.split('/').pop();
+  if(!s){if(friends.delete(f))unsub(T('on/'+f));renderFriends();return;}
+  let o={};try{o=JSON.parse(s);}catch(e){}if(!friends.has(f)){friends.set(f,{id:o.id||f,st:null});sub(T('on/'+f),(t2,s2)=>{const fr=friends.get(f);if(!fr)return;try{fr.st=s2?JSON.parse(s2):null;}catch(e){}renderFriends();});}else friends.get(f).id=o.id||f;
+  if(sent.has(f)){sent.delete(f);}renderFriends();});
+ sub(T('req/'+me+'/+'),(topic,s)=>{const f=topic.split('/').pop();if(!s)recv.delete(f);else{try{recv.set(f,JSON.parse(s));}catch(e){}}renderFriends();});
+ sub(T('req/+/'+me),(topic,s)=>{const to=topic.split('/')[3];if(!s)sent.delete(to);else{try{sent.set(to,JSON.parse(s));}catch(e){}}renderFriends();});
+ setInterval(pubStatus,25000);setInterval(renderFriends,15000);}
+function accept(f){const r=recv.get(f);const fid=(r&&r.id)||f;const t=Date.now();
+ pub(T('fr/'+ME.idl+'/'+f),{id:fid,t});pub(T('fr/'+f+'/'+ME.idl),{id:ME.id,t});pub(T('req/'+ME.idl+'/'+f),'');recv.delete(f);toast(`${fid}님과 친구가 되었어요!`);renderFriends();}
+function decline(f){pub(T('req/'+ME.idl+'/'+f),'');recv.delete(f);renderFriends();}
+function cancelSent(f){pub(T('req/'+f+'/'+ME.idl),'');sent.delete(f);renderFriends();}
+function removeFriend(f){const fr=friends.get(f);modal(`<div class="mpad"><h2>친구를 삭제할까요?</h2><p><b>${esc(fr?fr.id:f)}</b>님이 친구 목록에서 사라져요.</p><div style="display:flex;gap:10px"><button class="btn red big" id="rmYes" style="flex:1">삭제</button><button class="btn gray big" id="rmNo" style="flex:1">취소</button></div></div>`);
+ $('rmYes').onclick=()=>{pub(T('fr/'+ME.idl+'/'+f),'');pub(T('fr/'+f+'/'+ME.idl),'');friends.delete(f);unsub(T('on/'+f));closeModal();renderFriends();};$('rmNo').onclick=closeModal;}
+async function addFriend(){const v=$('addIn').value.trim(),msg=$('addMsg');msg.className='err';
+ if(!ID_RE.test(v)){msg.textContent='타입스 아이디는 영어와 숫자 3~15글자예요';return;}
+ const f=v.toLowerCase();
+ if(f===ME.idl){msg.textContent='나 자신에게는 친구 요청을 보낼 수 없어요';return;}
+ if(friends.has(f)){msg.textContent='이미 친구예요!';return;}
+ if(recv.has(f)){accept(f);msg.className='err ok';msg.textContent='그 친구가 먼저 요청을 보내서 바로 친구가 되었어요!';return;}
+ if(sent.has(f)){msg.textContent='이미 친구 요청을 보냈어요. 수락을 기다려 주세요';return;}
+ $('addBtn').disabled=true;msg.className='err ok';msg.textContent='아이디를 찾는 중…';
+ const r=await getRetained(T('acct/'+f),3000);$('addBtn').disabled=false;msg.className='err';
+ if(r.offline){msg.textContent='서버에 연결할 수 없어요';return;}
+ if(!r.v){msg.textContent='그런 아이디를 가진 사람이 없어요. 철자를 확인해 주세요';return;}
+ pub(T('req/'+f+'/'+ME.idl),{id:ME.id,t:Date.now()});sent.set(f,{to:r.v.id||v});$('addIn').value='';msg.className='err ok';msg.textContent=`${r.v.id||v}님에게 친구 요청을 보냈어요!`;renderFriends();}
+$('addBtn').onclick=addFriend;$('addIn').addEventListener('keydown',e=>{if(e.key==='Enter')addFriend();});
+function statusText(f){if(!online(f))return '오프라인';const g=f.st.g&&G(f.st.g);return g?`《${g.name}》 플레이 중`:'타입스 홈에 있어요';}
+function renderFriends(){
+ const rc=recv.size;$('reqCnt').style.display=rc?'inline-block':'none';$('reqCnt').textContent=rc;const d=$('reqDot');d.style.display=rc?'flex':'none';d.textContent=rc;
+ if(view!=='friends')return;netState();
+ const fl=[...friends.entries()].sort((a,b)=>(online(b[1])-online(a[1]))||a[1].id.localeCompare(b[1].id));
+ $('s-list').innerHTML=fl.length?'<div class="list">'+fl.map(([k,f])=>{const on=online(f),g=on&&f.st.g&&G(f.st.g);
+  return `<div class="row"><div class="av">${esc(f.id[0].toUpperCase())}<i class="${on?'on':''}"></i></div><div class="info"><b>${esc(f.id)}</b><small style="${on?'color:#2b8a3e':''}">${on?'● ':'○ '}${statusText(f)}</small></div>
+   ${g?`<button class="btn green" data-join="${k}">${g.room||g.id==='shrink'?'같은 방 합류':'같은 게임 하기'}</button>`:''}<button class="btn gray" data-rm="${k}" title="친구 삭제">✕</button></div>`;}).join('')+'</div>'
+  :'<div class="empty">아직 친구가 없어요.<br>"친구 추가"에서 친구의 타입스 아이디를 검색해 보세요!</div>';
+ $('reqList').innerHTML=rc?[...recv.entries()].map(([k,r])=>`<div class="row"><div class="av">${esc((r.id||k)[0].toUpperCase())}</div><div class="info"><b>${esc(r.id||k)}</b><small>친구 요청을 보냈어요</small></div><button class="btn green" data-acc="${k}">수락</button><button class="btn red" data-dec="${k}">거절</button></div>`).join('')
+  :'<div class="empty">받은 친구 요청이 없어요.</div>';
+ $('sentList').innerHTML=sent.size?[...sent.entries()].map(([k,r])=>`<div class="row"><div class="av">${esc(k[0].toUpperCase())}</div><div class="info"><b>${esc(r.to||k)}</b><small>수락을 기다리는 중</small></div><button class="btn gray" data-cs="${k}">요청 취소</button></div>`).join('')
+  :'<div class="empty" style="padding:16px">보낸 요청이 없어요.</div>';
+ document.querySelectorAll('[data-acc]').forEach(b=>b.onclick=()=>accept(b.dataset.acc));
+ document.querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>decline(b.dataset.dec));
+ document.querySelectorAll('[data-cs]').forEach(b=>b.onclick=()=>cancelSent(b.dataset.cs));
+ document.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>removeFriend(b.dataset.rm));
+ document.querySelectorAll('[data-join]').forEach(b=>b.onclick=()=>{const f=friends.get(b.dataset.join);if(!f||!online(f))return;const gid=f.st.g;if(cur)exitGame();askNick(gid,{room:f.st.r||'main'});});
+}
+
+// ================= 내 배지 =================
+function badgeSvg(color,label,shape){const s=shape==='trophy'
+ ?`<path d="M26 14h28v12a14 14 0 0 1-28 0z" fill="${color}" stroke="#fff" stroke-width="2"/><path d="M26 18h-8a8 8 0 0 0 8 10M54 18h8a8 8 0 0 1-8 10" fill="none" stroke="${color}" stroke-width="4"/><rect x="36" y="40" width="8" height="10" fill="${color}"/><rect x="26" y="50" width="28" height="8" rx="2" fill="${color}"/><text x="40" y="70" text-anchor="middle" font-size="9" font-weight="900" fill="#555">${label}</text>`
+ :`<path d="M28 4l12 14 12-14 6 4-10 16H32L22 8z" fill="#ff6b6b"/><circle cx="40" cy="46" r="26" fill="${color}" stroke="#fff" stroke-width="4"/><circle cx="40" cy="46" r="19" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2" stroke-dasharray="3 3"/><text x="40" y="${label.length>3?50:53}" text-anchor="middle" font-size="${label.length>3?12:18}" font-weight="900" fill="#fff" font-family="sans-serif">${label}</text>`;
+ return `<svg viewBox="0 0 80 80">${s}</svg>`;}
+function computeBadges(){const out=[];
+ // 아일랜드
+ const ib=LS.get('island_badges',[])||[],ibest=+(LS.raw('island_best')||0);
+ out.push({g:'island',color:'#9b5cff',extra:ibest?`최고 기록 ${ibest}일차`:'',items:[7,10,30,50,70,100].map(d=>({n:`${d}일 생존`,d:`섬에서 ${d}일 동안 살아남기`,l:d+'일',got:ib.includes(d)}))});
+ // 트롤 점프맵
+ const tr=LS.get('trollJumpMap_v1',{})||{},tm=+tr.max||0;
+ out.push({g:'troll',color:'#ff922b',extra:tm?`최고 ${Math.min(40,tm)}스테이지`:'',items:[
+  {n:'초원 돌파',d:'10스테이지 통과',l:'10',got:tm>=10},{n:'네온 시티 돌파',d:'20스테이지 통과',l:'20',got:tm>=20},{n:'하늘섬 돌파',d:'30스테이지 통과',l:'30',got:tm>=30},
+  {n:'40스테이지 클리어',d:'트롤 타워 꼭대기의 트로피',l:'40',shape:'trophy',got:!!tr.cleared}]});
+ // 작아지기
+ const sh=LS.get('shrinkSim_v1',{})||{},rec=LS.get('shrinkSim_record',null);
+ out.push({g:'shrink',color:'#2f8cff',extra:sh.rb?`환생 ${sh.rb}번`:'',items:[
+  {n:'사막 개척자',d:'세계 2 열기',l:'세계2',got:!!sh.w2},{n:'숲 탐험가',d:'세계 3 열기',l:'세계3',got:!!sh.w3},
+  {n:'환생 10번',d:'환생 10번 하기',l:'10',got:(sh.rb||0)>=10},{n:'환생 50번',d:'환생 50번 하기',l:'50',got:(sh.rb||0)>=50},{n:'환생 100번',d:'환생 끝까지!',l:'100',got:(sh.rb||0)>=100},
+  {n:'환생 최고 기록',d:'최고 기록에 내 이름 올리기',l:'1위',shape:'trophy',got:!!(rec&&sh.name&&rec.n===sh.name)}]});
+ // 먹고 커지기
+ const ny=LS.get('nyamBlockWorld_v1',{})||{};
+ out.push({g:'nyam',color:'#ff5c9a',extra:ny.best?`최고 크기 ${Math.floor(ny.best)}`:'',items:[
+  {n:'크기 20',d:'크기 20까지 커지기',l:'20',got:(ny.best||0)>=20},{n:'크기 40',d:'크기 40까지 커지기',l:'40',got:(ny.best||0)>=40},
+  {n:'새로 태어나기',d:'처음으로 새로 태어나기',l:'★',got:(ny.reb||0)>=1},{n:'전설의 거인',d:'크기 150까지 커지기',l:'150',shape:'trophy',got:(ny.best||0)>=150}]});
+ // 탐정 다람쥐
+ const de=LS.get('detectiveSquirrel_v1',{})||{},sv=Object.keys(de.solved||{}).length;
+ out.push({g:'detective',color:'#a0693c',extra:sv?`해결한 사건 ${sv}개`:'',items:[
+  {n:'첫 사건 해결',d:'사건 1개 해결',l:'1',got:sv>=1},{n:'믿음직한 탐정',d:'사건 4개 해결',l:'4',got:sv>=4},{n:'명탐정',d:'사건 8개 모두 해결',l:'8',shape:'trophy',got:sv>=8}]});
+ return out;}
+function refreshBadges(){if(view!=='badges')return;const data=computeBadges();let total=0,got=0;
+ $('badgeBox').innerHTML=data.map(b=>{const g=G(b.g);total+=b.items.length;got+=b.items.filter(i=>i.got).length;
+  return `<div class="bgame"><h3>《${g.name}》 <small>${b.items.filter(i=>i.got).length} / ${b.items.length}${b.extra?' · '+b.extra:''}</small></h3><div class="bgrid">${b.items.map(i=>`<div class="badge ${i.got?'':'lock'}">${badgeSvg(i.got?b.color:'#adb5bd',i.l,i.shape)}<b>${i.n}</b><small>${i.got?i.d:'🔒 '+i.d}</small></div>`).join('')}</div></div>`;}).join('')
+  +`<div style="text-align:center;color:#6b7385;font-weight:700;margin-top:6px">모은 배지 ${got} / ${total}</div>`;}
+
+// ================= 시작 =================
+function enter(){$('auth').style.display='none';$('meName').textContent=ME.id;$('me').querySelector('.av').textContent=ME.id[0].toUpperCase();
+ connect({topic:T('on/'+ME.idl),payload:JSON.stringify({on:0,t:Date.now()}),retain:true,qos:0});
+ startSocial();renderCards();showView('home');
+ // 내 계정 정보가 서버에서 사라졌으면 다시 올려 둠
+ getRetained(T('acct/'+ME.idl),3000).then(r=>{if(r&&!r.offline&&!r.v)pub(T('acct/'+ME.idl),{id:ME.id,h:ME.h,t:Date.now()});});
+ addEventListener('pagehide',()=>pub(T('on/'+ME.idl),{on:0,t:Date.now()}));}
+function boot(){if(!window.mqtt){$('auth').style.display='flex';$('aErr').textContent='서버 연결 도구를 불러오지 못했어요. 새로고침해 주세요';return;}
+ ME=LS.get('types_account',null);
+ if(ME&&ME.idl&&ME.id){enter();}
+ else{ME=null;connect(null);$('auth').style.display='flex';renderCards();setTimeout(()=>{try{$('aId').focus();}catch(e){}},100);}}
+boot();
+window.__types={friends,recv,sent,get ME(){return ME;},launch,exitGame,computeBadges};
+})();
+</script>
+</body>
+</html>
