@@ -2,7 +2,7 @@
    window.TAV = { BODIES, ITEMS, CATS, SLOTS, render(state,opts), defaultState(), rarity(price) } */
 (function(){
 'use strict';
-const OL='#3b3355', SKIN='#ffe6c4', SKIN_D='#f4cfa4';
+const OL='rgba(92,72,104,.5)', SKIN='#ffe6c4', SKIN_D='#f4cfa4';
 let UID=0;
 
 // ---------- 체형 2개 (무료) ----------
@@ -26,6 +26,7 @@ function defsSvg(){
  ${lg('tav-glass',['#e7f5ff','#a5d8ff','#d0ebff'],1)}
  ${lg('tav-sky',['#d0ebff','#74c0fc','#4dabf7'],1)}
  ${lg('tav-sunset',['#ffd8a8','#ff8787','#b197fc'],1)}
+ <linearGradient id="tav-iris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b5fe0"/><stop offset="1" stop-color="#a5a8ff"/></linearGradient><radialGradient id="tav-blush"><stop offset="0" stop-color="#ff8fab" stop-opacity=".55"/><stop offset="1" stop-color="#ff8fab" stop-opacity="0"/></radialGradient><linearGradient id="tav-shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
  <radialGradient id="tav-glow"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
  </defs></svg>`;}
 
@@ -134,12 +135,12 @@ const FREE=ITEMS.filter(i=>i.p===0).map(i=>i.id);
 
 // ---------- 그리기 도우미 ----------
 const f2=n=>(+n).toFixed(1);
-function cap(x1,y1,x2,y2,w,c){return `<line x1="${f2(x1)}" y1="${f2(y1)}" x2="${f2(x2)}" y2="${f2(y2)}" stroke="${OL}" stroke-width="${f2(w+2.4)}" stroke-linecap="round"/><line x1="${f2(x1)}" y1="${f2(y1)}" x2="${f2(x2)}" y2="${f2(y2)}" stroke="${c}" stroke-width="${f2(w)}" stroke-linecap="round"/>`;}
-const P=(d,c,extra='')=>`<path d="${d}" fill="${c}" stroke="${OL}" stroke-width="1.3" stroke-linejoin="round" ${extra}/>`;
+function cap(x1,y1,x2,y2,w,c){return `<line x1="${f2(x1)}" y1="${f2(y1)}" x2="${f2(x2)}" y2="${f2(y2)}" stroke="${OL}" stroke-width="${f2(w+1.6)}" stroke-linecap="round"/><line x1="${f2(x1)}" y1="${f2(y1)}" x2="${f2(x2)}" y2="${f2(y2)}" stroke="${c}" stroke-width="${f2(w)}" stroke-linecap="round"/>`;}
+const P=(d,c,extra='')=>`<path d="${d}" fill="${c}" stroke="${OL}" stroke-width="1" stroke-linejoin="round" ${extra}/>`;
 const PN=(d,c,extra='')=>`<path d="${d}" fill="${c}" ${extra}/>`;
-const C=(x,y,r,c,extra='')=>`<circle cx="${f2(x)}" cy="${f2(y)}" r="${f2(r)}" fill="${c}" stroke="${OL}" stroke-width="1.3" ${extra}/>`;
+const C=(x,y,r,c,extra='')=>`<circle cx="${f2(x)}" cy="${f2(y)}" r="${f2(r)}" fill="${c}" stroke="${OL}" stroke-width="1" ${extra}/>`;
 const CN=(x,y,r,c,extra='')=>`<circle cx="${f2(x)}" cy="${f2(y)}" r="${f2(r)}" fill="${c}" ${extra}/>`;
-const E=(x,y,rx,ry,c,extra='')=>`<ellipse cx="${f2(x)}" cy="${f2(y)}" rx="${f2(rx)}" ry="${f2(ry)}" fill="${c}" stroke="${OL}" stroke-width="1.3" ${extra}/>`;
+const E=(x,y,rx,ry,c,extra='')=>`<ellipse cx="${f2(x)}" cy="${f2(y)}" rx="${f2(rx)}" ry="${f2(ry)}" fill="${c}" stroke="${OL}" stroke-width="1" ${extra}/>`;
 function star(x,y,r,c,ol){let d='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;d+=(i?'L':'M')+f2(x+Math.cos(a)*rr)+' '+f2(y+Math.sin(a)*rr);}return ol?P(d+'Z',c):PN(d+'Z',c);}
 function heart(x,y,s,c,ol){const d=`M${f2(x)} ${f2(y+s*.9)}C${f2(x-s*1.3)} ${f2(y+s*.1)} ${f2(x-s*.9)} ${f2(y-s*.9)} ${f2(x)} ${f2(y-s*.3)}C${f2(x+s*.9)} ${f2(y-s*.9)} ${f2(x+s*1.3)} ${f2(y+s*.1)} ${f2(x)} ${f2(y+s*.9)}Z`;return ol?P(d,c):PN(d,c);}
 function twinkle(x,y,r,c='#fff'){return `<path d="M${f2(x)} ${f2(y-r)}Q${f2(x)} ${f2(y)} ${f2(x+r)} ${f2(y)}Q${f2(x)} ${f2(y)} ${f2(x)} ${f2(y+r)}Q${f2(x)} ${f2(y)} ${f2(x-r)} ${f2(y)}Q${f2(x)} ${f2(y)} ${f2(x)} ${f2(y-r)}Z" fill="${c}"/>`;}
@@ -148,14 +149,21 @@ function torsoPath(M,ext=0,fl=0){const a=M.tx1,b=M.tx2,t=M.ty1,u=M.ty2+ext,A=M.b
 
 // ---------- 머리카락 ----------
 function bangs(M,c,kind){const {hx:x,hy:y,hr:r}=M;
- if(kind==='side')return P(`M${x-r-1} ${y+4}A${r+1} ${r+2} 0 0 1 ${x+r+1} ${y+4}L${x+r-1} ${y-r*.05}Q${x+r*.2} ${y-r*.2} ${x-r*.55} ${y+r*.15}Q${x-r*.75} ${y-r*.1} ${x-r+1} ${y+r*.1}L${x-r-1} ${y+4}Z`,c);
  if(kind==='spiky'){let d=`M${x-r-1} ${y+3}`;const pts=[[-1.1,-.2],[-1.2,-.9],[-.7,-.75],[-.6,-1.45],[-.15,-1.05],[.2,-1.6],[.45,-1.05],[.95,-1.35],[.85,-.7],[1.25,-.7],[1.05,-.1]];pts.forEach(([a,b])=>d+=`L${f2(x+a*r)} ${f2(y+b*r)}`);d+=`L${x+r+1} ${y+3}L${x+r-2} ${y-r*.2}Q${x} ${y-r*.5} ${x-r+2} ${y-r*.2}Z`;return P(d,c);}
  if(kind==='curly'){let s='';for(let i=0;i<7;i++){const a=Math.PI+i*Math.PI/6;s+=C(x+Math.cos(a)*r*.92,y-r*.12+Math.sin(a)*r*.92,r*.36,c);}return s;}
- return P(`M${x-r-1.5} ${y+r*.55}C${x-r-2} ${y-r-11} ${x+r+2} ${y-r-11} ${x+r+1.5} ${y+r*.55}Q${x+r*.75} ${y+r*.5} ${x+r*.72} ${y-r*.05}Q${x+r*.4} ${y+r*.14} ${x+r*.08} ${y-r*.22}Q${x-r*.3} ${y+r*.16} ${x-r*.72} ${y-r*.05}Q${x-r*.75} ${y+r*.5} ${x-r-1.5} ${y+r*.55}Z`,c);}
+ const pts=kind==='side'?[[.8,-.18],[.55,-.08],[.3,-.3],[0,-.04],[-.3,.02],[-.6,.06],[-.8,-.12]]:[[.8,-.18],[.6,-.02],[.42,-.32],[.21,.02],[0,-.36],[-.21,.01],[-.42,-.32],[-.6,-.03],[-.8,-.18]];
+ let d=`M${f2(x-r-1.5)} ${f2(y+r*.5)}C${f2(x-r-3)} ${f2(y-r*.6)} ${f2(x-r*.6)} ${f2(y-r-6)} ${x} ${f2(y-r-5.5)}C${f2(x+r*.6)} ${f2(y-r-6)} ${f2(x+r+3)} ${f2(y-r*.6)} ${f2(x+r+1.5)} ${f2(y+r*.5)}Q${f2(x+r*.92)} ${f2(y+r*.18)} ${f2(x+pts[0][0]*r)} ${f2(y+pts[0][1]*r)}`;
+ for(let i=1;i<pts.length;i++){const [px,py]=pts[i-1],[qx,qy]=pts[i];const down=qy>py;const cx=down?px-(px-qx)*.25:qx+(px-qx)*.25,cy=down?qy-.12:py-.04;d+=`Q${f2(x+cx*r)} ${f2(y+cy*r)} ${f2(x+qx*r)} ${f2(y+qy*r)}`;}
+ d+=`Q${f2(x-r*.92)} ${f2(y+r*.18)} ${f2(x-r-1.5)} ${f2(y+r*.5)}Z`;
+ let s=P(d,c);
+ // 머릿결 + 윤기
+ s+=`<path d="M${f2(x-r*.62)} ${f2(y-r*.62)}Q${x} ${f2(y-r*.98)} ${f2(x+r*.62)} ${f2(y-r*.62)}" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="${f2(r*.09)}" stroke-linecap="round"/>`;
+ for(const k of [-.5,-.2,.15,.45])s+=`<path d="M${f2(x+k*r*.3)} ${f2(y-r-4)}Q${f2(x+k*r*1.1)} ${f2(y-r*.5)} ${f2(x+k*r*1.2)} ${f2(y-r*.05)}" fill="none" stroke="#000" stroke-opacity=".08" stroke-width=".7"/>`;
+ return s;}
 function puff(M,c,len=0){const {hx:x,hy:y,hr:r}=M;const L=len;
- return P(`M${x-r-1} ${y-2}C${x-r-2} ${y-r-12} ${x+r+2} ${y-r-12} ${x+r+1} ${y-2}C${x+r+3} ${y+r*.2} ${x+r+9} ${y+r*.3+L*.6} ${x+r+7} ${y+r*.7+L}C${x+r+5} ${y+r+L} ${x+r-2} ${y+r*.95+L} ${x+r-4} ${y+r*.75+L}L${x-r+4} ${y+r*.75+L}C${x-r+2} ${y+r*.95+L} ${x-r-5} ${y+r+L} ${x-r-7} ${y+r*.7+L}C${x-r-9} ${y+r*.3+L*.6} ${x-r-3} ${y+r*.2} ${x-r-1} ${y-2}Z`,c);}
+ return P(`M${x-r-2} ${y}C${x-r-3} ${y-r-12} ${x+r+3} ${y-r-12} ${x+r+2} ${y}C${x+r+3} ${f2(y+r*.4+L*.5)} ${x+r+2} ${f2(y+r*.7+L)} ${x+r+5} ${f2(y+r*.88+L)}Q${x+r} ${f2(y+r*1.02+L)} ${f2(x+r*.6)} ${f2(y+r*.8+L)}L${f2(x-r*.6)} ${f2(y+r*.8+L)}Q${x-r} ${f2(y+r*1.02+L)} ${x-r-5} ${f2(y+r*.88+L)}C${x-r-2} ${f2(y+r*.7+L)} ${x-r-3} ${f2(y+r*.4+L*.5)} ${x-r-2} ${y}Z`,c);}
 function hairBack(M,it){const {hx:x,hy:y,hr:r}=M,c=it.c;switch(it.s){
- case 'long':return puff(M,c,r*.9);
+ case 'long':return P(`M${x-r-2} ${y}C${x-r-3} ${y-r-12} ${x+r+3} ${y-r-12} ${x+r+2} ${y}C${x+r+3} ${f2(y+r*.8)} ${x+r+1} ${f2(y+r*1.4)} ${x+r+7} ${f2(y+r*1.95)}Q${x+r+2} ${f2(y+r*2.05)} ${x+r-2} ${f2(y+r*1.8)}L${x-r+2} ${f2(y+r*1.8)}Q${x-r-2} ${f2(y+r*2.05)} ${x-r-7} ${f2(y+r*1.95)}C${x-r-1} ${f2(y+r*1.4)} ${x-r-3} ${f2(y+r*.8)} ${x-r-2} ${y}Z`,c);
  case 'wavy':{let d=`M${x-r-3} ${y}`;for(let i=0;i<4;i++)d+=`Q${x-r-7+(i%2)*6} ${y+6+i*6} ${x-r-3} ${y+9+i*6}`;d+=`L${x+r+3} ${y+33}`;for(let i=3;i>=0;i--)d+=`Q${x+r+7-(i%2)*6} ${y+6+i*6} ${x+r+3} ${y+3+i*6}`;d+=`A${r+3} ${r+3} 0 0 0 ${x-r-3} ${y}Z`;return P(d,c);}
  case 'princess':{let s=P(`M${x-r-4} ${y}Q${x-r-7} ${y+r+30} ${x-r+2} ${y+r+34}L${x+r-2} ${y+r+34}Q${x+r+7} ${y+r+30} ${x+r+4} ${y}A${r+4} ${r+4} 0 0 0 ${x-r-4} ${y}Z`,c);
   for(const k of [-1,1])for(let i=0;i<3;i++)s+=C(x+k*(r+1-i*.5),y+r+12+i*8,4.2,c);return s;}
@@ -166,19 +174,24 @@ function hairBack(M,it){const {hx:x,hy:y,hr:r}=M,c=it.c;switch(it.s){
  case 'bun':return C(x,y-r-4,r*.5,c)+puff(M,c);
  case 'odango':return C(x-r*.8,y-r*.9,r*.45,c)+C(x+r*.8,y-r*.9,r*.45,c)+puff(M,c);
  default:return puff(M,c);}}
-function hairFront(M,it){const k=it.s==='spiky'?'spiky':it.s==='curly'?'curly':it.s==='side'?'side':'bang';let s=bangs(M,it.c,k);
+function hairFront(M,it){const k=it.s==='spiky'?'spiky':it.s==='curly'?'curly':it.s==='side'?'side':'bang';let s='';
  const {hx:x,hy:y,hr:r}=M;
- if(it.s==='wavy'||it.s==='princess')for(const q of [-1,1])s+=P(`M${x+q*(r+1)} ${y}Q${x+q*(r+3)} ${y+r*.8} ${x+q*(r-1)} ${y+r+4}Q${x+q*(r-4)} ${y+r*.5} ${x+q*(r-2)} ${y-r*.1}Z`,it.c);
- return s;}
-
+ if(['long','wavy','princess'].includes(it.s))for(const q of [-1,1])s+=P(`M${f2(x+q*(r+1.5))} ${f2(y+r*.2)}C${f2(x+q*(r+3))} ${f2(y+r*1.1)} ${f2(x+q*(r-.5))} ${f2(y+r*1.5)} ${f2(x+q*(r+6))} ${f2(y+r*2.05)}Q${f2(x+q*(r-1))} ${f2(y+r*1.85)} ${f2(x+q*(r-3.5))} ${f2(y+r*1.35)}Q${f2(x+q*(r-4))} ${f2(y+r*.9)} ${f2(x+q*(r-2.5))} ${f2(y+r*.35)}Z`,it.c);
+ return s+bangs(M,it.c,k);}
 // ---------- 몸 ----------
+function armD(sx,sy,hx,hy,w0,w1){const dx=hx-sx,dy=hy-sy,L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L;
+ const p=(x,y)=>f2(x)+' '+f2(y);
+ return `M${p(sx+nx*w0/2,sy+ny*w0/2)}L${p(hx+nx*w1/2,hy+ny*w1/2)}A${f2(w1/2)} ${f2(w1/2)} 0 0 1 ${p(hx-nx*w1/2,hy-ny*w1/2)}L${p(sx-nx*w0/2,sy-ny*w0/2)}A${f2(w0/2)} ${f2(w0/2)} 0 0 1 ${p(sx+nx*w0/2,sy+ny*w0/2)}Z`;}
 function arms(M,top){const sl=top?(['tank','dress','princess'].includes(top.s)?(top.s==='princess'?1:0):['tee','stripe','dots','stars','hearts','sailor','space'].includes(top.s)?1:2):1;
- let s='';const [x1,x2]=[M.tx1+2,M.tx2-2],y=M.ty1+M.arm*.55+1.5;
- M.hand.forEach(([hx,hy],i)=>{const sx=i?x2:x1;s+=cap(sx,y,hx,hy,M.arm,SKIN);
-  if(top&&sl){const t=sl===1?.32:.86;const ex=sx+(hx-sx)*t,ey=y+(hy-y)*t;s+=cap(sx,y,ex,ey,M.arm+1.6,top.s==='jacket'||top.s==='tux'?top.c:top.c);
-   if(top.s==='princess')s+=C(sx+(hx-sx)*.18,y+(hy-y)*.18,M.arm*.85,top.c2||'#fff');}
-  s+=C(hx,hy,M.arm*.7,SKIN);});return s;}
-function legs(M){let s='';M.legs.forEach(([a,b])=>{const r=(b-a)/2;s+=P(`M${a} ${M.ty2-6}L${a} ${M.ly2-r}A${r} ${r} 0 0 0 ${b} ${M.ly2-r}L${b} ${M.ty2-6}Z`,SKIN);});return s;}
+ let s='';const y=M.ty1+M.arm*.5+1;
+ M.hand.forEach(([hx,hy],i)=>{const sx=i?M.tx2-2:M.tx1+2;const w0=M.arm,w1=M.arm*.72;s+=cap(sx,y,hx,hy,w0*.88,SKIN);
+  if(top&&sl){const t=sl===1?.34:.84;const ex=sx+(hx-sx)*t,ey=y+(hy-y)*t;s+=cap(sx,y,ex,ey,w0*.88+2,top.c);
+   if(top.s==='princess')s+=C(sx+(hx-sx)*.16,y+(hy-y)*.16,M.arm*.8,top.c2||'#fff');}
+  s+=E(hx,hy+1,M.arm*.62,M.arm*.68,SKIN);});return s;}
+function legD(M,i){const [a,b]=M.legs[i],yT=M.ty2-8,yB=M.ly2,h=yB-yT,mid=(a+b)/2;
+ if(i===0)return `M${a} ${yT}C${a-1.4} ${f2(yT+h*.45)} ${a+1} ${yB-10} ${a+2} ${yB-4}Q${a+3.2} ${yB+1} ${f2(mid)} ${yB+1}Q${b-1.6} ${yB+.8} ${b-2.2} ${yB-4}C${b-1.6} ${yB-14} ${b+.2} ${f2(yT+h*.35)} ${b} ${yT}Z`;
+ return `M${b} ${yT}C${b+1.4} ${f2(yT+h*.45)} ${b-1} ${yB-10} ${b-2} ${yB-4}Q${b-3.2} ${yB+1} ${f2(mid)} ${yB+1}Q${a+1.6} ${yB+.8} ${a+2.2} ${yB-4}C${a+1.6} ${yB-14} ${a-.2} ${f2(yT+h*.35)} ${a} ${yT}Z`;}
+function legs(M){return P(legD(M,0),SKIN)+P(legD(M,1),SKIN);}
 function torsoTop(M,it,uid){const c=it.c,c2=it.c2,t=M.ty1,u=M.ty2,cx=M.hx,a=M.bx1,b=M.bx2,w=b-a,ta=M.tx1,tb=M.tx2;
  let ext=0,fl=0;if(it.s==='dress'){ext=10;fl=6;}if(it.s==='princess'){ext=16;fl=11;}if(it.s==='rain'){ext=3;fl=2;}
  const tp=torsoPath(M,ext,fl);let d='';
@@ -207,8 +220,8 @@ function torsoTop(M,it,uid){const c=it.c,c2=it.c2,t=M.ty1,u=M.ty2,cx=M.hx,a=M.bx
  return pre+PN(tp,c)+`<clipPath id="tc${uid}"><path d="${tp}"/></clipPath><g clip-path="url(#tc${uid})">${d}</g>`+P(tp,'none')+col;}
 function sleevesHanbok(M,top){if(!top||top.s!=='hanbok')return '';const cols=['#ff6b6b','#ffd43b','#69db7c','#4dabf7','#9775fa'];let s='';
  M.hand.forEach(([hx,hy],i)=>{const sx=i?M.tx2-2:M.tx1+2;const y=M.ty1+M.arm*.55+1.5;for(let k=0;k<5;k++){const t0=.12+k*.15,t1=t0+.15;s+=`<line x1="${f2(sx+(hx-sx)*t0)}" y1="${f2(y+(hy-y)*t0)}" x2="${f2(sx+(hx-sx)*t1)}" y2="${f2(y+(hy-y)*t1)}" stroke="${cols[k]}" stroke-width="${M.arm+1.2}"/>`;}});return s;}
-function bottom(M,it,uid){const c=it.c,c2=it.c2,[[la,lb],[ra,rb]]=M.legs,top=M.ty2-6,y1=M.ly1,y2=M.ly2-3,cx=(la+rb)/2;let s='';
- const pants=(end)=>P(`M${la-1} ${top}L${rb+1} ${top}L${rb+1} ${end}L${ra-.5} ${end}L${ra-.5} ${y1+2}Q${cx} ${y1-2} ${lb+.5} ${y1+2}L${lb+.5} ${end}L${la-1} ${end}Z`,c);
+function bottom(M,it,uid){const c=it.c,c2=it.c2,[[la,lb],[ra,rb]]=M.legs,top=M.ty2-6,y1=M.ly1,y2=M.ly2+3,cx=(la+rb)/2;let s='';
+ const pants=(end)=>{end=Math.min(end,M.ly2+2);return `<clipPath id="pc${uid}"><rect x="-20" y="${top-30}" width="140" height="${end-top+30}"/></clipPath><g clip-path="url(#pc${uid})">${P(legD(M,0),c)+P(legD(M,1),c)}<rect x="${la+.5}" y="${top}" width="${rb-la-1}" height="7" fill="${c}"/></g>`+(end<M.ly2-1?`<path d="M${la-1.5} ${end}L${lb-1} ${end}M${ra+1} ${end}L${rb+1.5} ${end}" stroke="${OL}" stroke-width="1"/>`:'');};
  const skirt=(len,fl)=>P(`M${la} ${top}L${rb} ${top}L${rb+fl} ${y1+len}Q${cx} ${y1+len+3} ${la-fl} ${y1+len}Z`,c);
  switch(it.s){
  case 'shorts':s+=pants(y1+9);break;
@@ -227,7 +240,7 @@ function bottom(M,it,uid){const c=it.c,c2=it.c2,[[la,lb],[ra,rb]]=M.legs,top=M.t
  default:s+=pants(y2-4);}
  return s;}
 function shoes(M,it,bot){if(bot&&bot.s==='mermaid')return '';const c=it.c,c2=it.c2;let s='';
- M.legs.forEach(([a,b],i)=>{const y=M.ly2,cx=(a+b)/2,w=b-a+3;const s0=s.length;
+ M.legs.forEach(([a0,b0],i)=>{const a=i?a0+2:a0+1,b=i?b0-1:b0-2,y=M.ly2,cx=(a+b)/2,w=b-a+3;const s0=s.length;
  switch(it.s){
  case 'sandal':s+=`<rect x="${a-1.5}" y="${y-1}" width="${w}" height="3" rx="1.5" fill="${c}" stroke="${OL}" stroke-width="1.1"/>`+cap(a+1,y-3,b-1,y-1,1.2,c);break;
  case 'mary':s+=P(`M${a-1.5} ${y-3}Q${a-1.5} ${y+3} ${cx} ${y+3}Q${b+1.5} ${y+3} ${b+1.5} ${y-3}Z`,c)+cap(a,y-4.5,b,y-4.5,1,c)+CN(cx-2,y,1,'#fff','opacity=".8"');break;
@@ -240,13 +253,20 @@ function shoes(M,it,bot){if(bot&&bot.s==='mermaid')return '';const c=it.c,c2=it.
  case 'rocket':s+=P(`M${a-1} ${y-8}L${b+1} ${y-8}L${b+1.5} ${y+2}L${a-1.5} ${y+2}Z`,c)+`<rect x="${a-1}" y="${y-5}" width="${b-a+2}" height="2" fill="${c2}"/>`+P(`M${a+.5} ${y+2.5}Q${cx} ${y+12} ${b-.5} ${y+2.5}Z`,'url(#tav-fire)','stroke="none"');break;
  case 'light':s+=P(`M${a-1.5} ${y-3}Q${a-1.5} ${y+3} ${cx} ${y+3}Q${b+1.5} ${y+3} ${b+1.5} ${y-3}Z`,c)+`<rect x="${a-1}" y="${y+1}" width="${w-1}" height="2.2" rx="1" fill="url(#tav-rainbow)"/>`;break;
  default:s+=P(`M${a-1.5} ${y-3}Q${a-1.5} ${y+3.2} ${cx} ${y+3.2}Q${b+2} ${y+3.2} ${b+2} ${y-3}Z`,c)+`<rect x="${a-1.3}" y="${y+1.2}" width="${w-.4}" height="1.8" rx=".9" fill="${c2||'#fff'}"/>`+CN(cx,y-1,.7,OL)+CN(cx+2,y-1,.7,OL);}
- s=s.slice(0,s0)+`<g transform="translate(${f2(cx)} ${f2(y-2)}) scale(1.3) translate(${f2(-cx)} ${f2(-y+2)})">`+s.slice(s0)+'</g>';});
+ s=s.slice(0,s0)+`<g transform="translate(${f2(cx)} ${f2(y-2)}) scale(1.12) translate(${f2(-cx)} ${f2(-y+2)})">`+s.slice(s0)+'</g>';});
  return s;}
-function face(M){const {hx:x,hy:y,hr:r}=M;let s='';
- for(const k of [-1,1]){s+=`<ellipse cx="${f2(x+k*r*.38)}" cy="${f2(y+r*.14)}" rx="${f2(r*.11)}" ry="${f2(r*.15)}" fill="#2b2540"/>`+CN(x+k*r*.38+r*.04,y+r*.08,r*.045,'#fff');
-  s+=`<ellipse cx="${f2(x+k*r*.62)}" cy="${f2(y+r*.42)}" rx="${f2(r*.15)}" ry="${f2(r*.08)}" fill="#ff8fab" opacity=".55"/>`;}
- s+=`<path d="M${f2(x-r*.16)} ${f2(y+r*.42)}Q${f2(x)} ${f2(y+r*.6)} ${f2(x+r*.16)} ${f2(y+r*.42)}" fill="none" stroke="#2b2540" stroke-width="1.3" stroke-linecap="round"/>`;return s;}
-
+function face(M){const {hx:x,hy:y,hr:r}=M;let s='';const ey=y+r*.22;
+ for(const k of [-1,1]){const ex=x+k*r*.4,w=r*.25,o=k;// o: 바깥쪽 방향
+  s+=`<ellipse cx="${f2(x+k*r*.62)}" cy="${f2(y+r*.52)}" rx="${f2(r*.2)}" ry="${f2(r*.12)}" fill="url(#tav-blush)"/>`;
+  s+=`<path d="M${f2(ex-o*w)} ${f2(ey+r*.02)}Q${f2(ex)} ${f2(ey-r*.27)} ${f2(ex+o*w)} ${f2(ey-r*.06)}Q${f2(ex+o*w*.6)} ${f2(ey+r*.24)} ${f2(ex-o*w)} ${f2(ey+r*.02)}Z" fill="#fff"/>`;
+  s+=`<ellipse cx="${f2(ex+o*r*.02)}" cy="${f2(ey+r*.02)}" rx="${f2(r*.14)}" ry="${f2(r*.175)}" fill="url(#tav-iris)"/>`+`<ellipse cx="${f2(ex+o*r*.02)}" cy="${f2(ey+r*.03)}" rx="${f2(r*.06)}" ry="${f2(r*.085)}" fill="#2e2a6b"/>`;
+  s+=CN(ex-o*r*.03,ey-r*.04,r*.045,'#fff')+CN(ex+o*r*.06,ey+r*.09,r*.02,'#fff');
+  s+=`<path d="M${f2(ex-o*w*1.05)} ${f2(ey+r*.03)}Q${f2(ex)} ${f2(ey-r*.29)} ${f2(ex+o*w*1.05)} ${f2(ey-r*.07)}" fill="none" stroke="#2b2540" stroke-width="${f2(r*.07)}" stroke-linecap="round"/>`;
+  s+=`<path d="M${f2(ex+o*w*.95)} ${f2(ey-r*.07)}l${f2(o*r*.1)} ${f2(-r*.07)}M${f2(ex+o*w*.7)} ${f2(ey-r*.14)}l${f2(o*r*.07)} ${f2(-r*.08)}" stroke="#2b2540" stroke-width="${f2(r*.035)}" stroke-linecap="round"/>`;
+  s+=`<path d="M${f2(ex-o*w*.4)} ${f2(ey+r*.16)}Q${f2(ex+o*w*.2)} ${f2(ey+r*.19)} ${f2(ex+o*w*.7)} ${f2(ey+r*.1)}" fill="none" stroke="#e8a0a0" stroke-width="${f2(r*.025)}" stroke-linecap="round"/>`;}
+ s+=`<path d="M${f2(x-r*.01)} ${f2(y+r*.42)}l${f2(r*.02)} ${f2(r*.03)}" stroke="#e0a890" stroke-width="${f2(r*.03)}" stroke-linecap="round"/>`;
+ s+=`<path d="M${f2(x-r*.1)} ${f2(y+r*.56)}Q${f2(x)} ${f2(y+r*.64)} ${f2(x+r*.1)} ${f2(y+r*.56)}" fill="none" stroke="#d9707f" stroke-width="${f2(r*.045)}" stroke-linecap="round"/>`;
+ return s;}
 // ---------- 장신구 ----------
 function acc(M,it,uid,layer){const raw=acc0(M,it,uid);const x=M.hx;
  if(['batwing','fairy','butterfly','angel','dragon'].includes(it.s))return `<g transform="translate(${x} ${M.ty1+6}) scale(1.35) translate(${-x} ${-M.ty1-6})">${raw}</g>`;
@@ -326,8 +346,8 @@ function render(st,opts={}){const uid=++UID;st=st||defaultState();const eq=st.eq
  if(A_.tail)s+=acc(M,A_.tail,uid);
  if(hair)s+=hairBack(M,hair);
  s+=legs(M);
- if(sh)s+=shoes(M,sh,bot);
  if(bot&&bot.s!=='overall')s+=bottom(M,bot,uid);
+ if(sh)s+=shoes(M,sh,bot);
  s+=arms(M,top)+sleevesHanbok(M,top);
  if(!top)s+=P(torsoPath(M),SKIN);
  if(top)s+=torsoTop(M,top,uid);
@@ -335,7 +355,7 @@ function render(st,opts={}){const uid=++UID;st=st||defaultState();const eq=st.eq
  if(top&&(top.s==='dress'||top.s==='princess')&&sh)s+=''; // 신발은 이미 그려짐
  if(A_.neck)s+=acc(M,A_.neck,uid);
  // 머리
- s+=E(M.hx,M.hy,M.hr,M.hr*.9,SKIN);
+ s+=P(`M${M.hx-M.hr} ${M.hy}C${M.hx-M.hr} ${f2(M.hy-M.hr*1.2)} ${M.hx+M.hr} ${f2(M.hy-M.hr*1.2)} ${M.hx+M.hr} ${M.hy}C${M.hx+M.hr} ${f2(M.hy+M.hr*.75)} ${f2(M.hx+M.hr*.45)} ${f2(M.hy+M.hr*.92)} ${M.hx} ${f2(M.hy+M.hr*.92)}C${f2(M.hx-M.hr*.45)} ${f2(M.hy+M.hr*.92)} ${M.hx-M.hr} ${f2(M.hy+M.hr*.75)} ${M.hx-M.hr} ${M.hy}Z`,SKIN);
  s+=face(M);
  if(A_.face&&A_.face.s!=='glasses'&&A_.face.s!=='mono')s+=acc(M,A_.face,uid);
  if(hair)s+=hairFront(M,hair);
