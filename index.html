@@ -56,6 +56,7 @@ button{font-family:inherit;cursor:pointer;border:none}
 #jumpBtn{position:absolute;right:140px;bottom:24px;width:80px;height:80px;border-radius:50%;font-size:20px;background:#2f8cff;border:4px solid #1b1f3a;box-shadow:0 6px 0 #1b1f3a;color:#fff}
 #joy{position:absolute;left:30px;bottom:30px;width:130px;height:130px;border-radius:50%;background:rgba(27,31,58,.35);border:3px solid rgba(255,255,255,.5)}
 #zoomBtns{position:absolute;right:20px;bottom:150px;display:flex;flex-direction:column;gap:8px}#zoomBtns .btn{width:56px;height:56px;padding:0;font-size:22px}
+#chatPop{position:absolute;right:146px;bottom:90px;width:300px;background:rgba(27,31,58,.9);border:3px solid #1b1f3a;border-radius:16px;padding:8px;display:flex;flex-wrap:wrap;gap:6px}#chatPop button{font-family:inherit;font-size:16px;padding:6px 10px;border-radius:10px;border:2px solid #1b1f3a;background:#fff;color:#1b1f3a;cursor:pointer}
 #joy i{position:absolute;left:40px;top:40px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.75)}
 .float{position:fixed;pointer-events:none;font-size:22px;white-space:nowrap;transform:translate(-50%,-50%)}
 #hatch{position:fixed;inset:0;z-index:30;background:radial-gradient(circle,rgba(60,50,120,.92),rgba(10,12,30,.96));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center}#hatchCv{width:320px;height:320px}#hatchOk{font-size:22px;min-width:160px;margin-top:8px}
@@ -117,7 +118,7 @@ input.t{font-family:inherit;font-size:20px;padding:8px 12px;border-radius:12px;b
     <button class="btn gold" id="bShop">🛒 상점</button>
     <button class="btn" id="bPet" style="background:#ff8a3d">🥚 펫</button>
     <button class="btn" id="bWorld" style="background:#00a8c8">🌍 세계</button>
-    <button class="btn" id="bNet" style="background:#3bb5a0">🌐 함께</button>
+    <button class="btn" id="bNet" style="background:#3bb5a0">🌐 서버</button>
     <button class="btn pink" id="bLook">👕 꾸미기</button>
     <button class="btn purple" id="bCode">🎁 코드</button>
     <button class="btn blue" id="bQuest">📜 퀘스트</button>
@@ -125,7 +126,9 @@ input.t{font-family:inherit;font-size:20px;padding:8px 12px;border-radius:12px;b
   </div>
   <div id="questMini"></div>
   <div id="lb"></div>
-  <button id="netBadge" class="btn hide" style="position:absolute;right:12px;top:auto;bottom:150px;font-size:16px;padding:6px 12px;background:#3bb5a0"></button>
+  <button id="netBadge" class="btn hide" style="position:absolute;left:50%;transform:translateX(-50%);top:8px;font-size:15px;padding:4px 12px;background:#3bb5a0;box-shadow:0 3px 0 #1b1f3a"></button>
+  <button id="chatBtn" class="btn" style="position:absolute;right:146px;bottom:30px;font-size:22px;padding:8px 14px;background:#ffffff;color:#1b1f3a">💬</button>
+  <div id="chatPop" class="hide"></div>
   <div id="toast" class="out"></div>
   <div id="hint">WASD 이동 · Space 점프 · E 흡입 · 마우스 드래그 카메라 · 휠 확대/축소</div>
   <div id="feed"></div>
@@ -515,7 +518,8 @@ function botLook(){return {skin:pick(SKINS),shirt:pick(SHIRTS),pants:pick(PANTS)
 function resetBot(b,big){b.M=big?massOf(rnd(2,Math.max(3,P.S*1.3))):rnd(10,40);b.maxM=Math.max(b.M*2,massOf(4));const a=Math.random()*7,d=rnd(10,200);b.x=Math.cos(a)*d;b.z=Math.sin(a)*d;b.y=0;b.vy=0;b.S=sizeOf(b.M);b.vis=b.S;b.shield=4;b.target=null;b.grow=rnd(25,45);for(const o of b.eating)o.eater=null;b.eating.length=0}
 function setBotOn(b,on,silent){b.off=!on;b.A.g.visible=on;b.tag.visible=on;if(on){b.name=freeNick();b.tagTxt='';recolor(b.A,botLook());resetBot(b,true);b.stay=rnd(60,240);if(!silent)feed(b.name+' 님이 입장했습니다')}else{for(const o of b.eating)o.eater=null;b.eating.length=0;b.away=rnd(15,60);if(!silent)feed(b.name+' 님이 나갔습니다')}}
 function spawnBots(){for(let i=0;i<8;i++){const b=makeAgent(botLook(),'',false);b.growT=rnd(0,30);bots.push(b);setBotOn(b,true,true);if(i>=6)setBotOn(b,false,true)}}
-function botServer(dt){if(NET.remotes.size>0){for(const b of bots)if(!b.off){setBotOn(b,false,true);b.away=rnd(5,20)}return}for(const b of bots){if(b.off){b.away-=dt;if(b.away<=0)setBotOn(b,true)}else{b.stay-=dt;if(b.stay<=0&&bots.filter(x=>!x.off).length>3)setBotOn(b,false);else if(b.stay<=0)b.stay=rnd(30,90)}}}
+function botChat(dt){if(NET.remotes.size)return;for(const b of bots){if(b.off)continue;if(Math.random()<dt/90)sayChat(b,pick([0,1,5,8,10,11,12,13,3]))}}
+function botServer(dt){botChat(dt);if(NET.remotes.size>0){for(const b of bots)if(!b.off){setBotOn(b,false,true);b.away=rnd(5,20)}return}for(const b of bots){if(b.off){b.away-=dt;if(b.away<=0)setBotOn(b,true)}else{b.stay-=dt;if(b.stay<=0&&bots.filter(x=>!x.off).length>3)setBotOn(b,false);else if(b.stay<=0)b.stay=rnd(30,90)}}}
 const live=()=>agents.filter(a=>!a.off);
 let feedEls=[];function feed(t){const el=document.createElement('div');el.textContent=t;$('feed').appendChild(el);feedEls.push({el,t:6});if(feedEls.length>4){feedEls[0].el.remove();feedEls.shift()}}
 
@@ -525,57 +529,69 @@ const NETID=Math.random().toString(36).slice(2,10);
 function netEat(o){if(!NET.mode)return;NET.myEats.push([WORLD,o.id,Date.now()]);if(NET.myEats.length>60)NET.myEats.shift()}
 function netGift(to,amt){if(!NET.mode||!to)return;NET.myGifts.push([to,Math.round(amt),Date.now()])}
 function netMyState(){const now=Date.now();NET.myEats=NET.myEats.filter(e=>now-e[2]<3000);NET.myGifts=NET.myGifts.filter(g=>now-g[2]<4000);
- return {i:NETID,n:String(D.name).slice(0,16),l:[D.skin,D.shirt,D.pants,D.face,D.hat],x:+P.x.toFixed(1),z:+P.z.toFixed(1),y:+P.y.toFixed(1),f:+P.face.toFixed(2),m:Math.round(P.M),w:WORLD,c:P.chew>0?1:0,e:NET.myEats.slice(-40),g:NET.myGifts.slice(-5),pl:playing?1:0}}
+ return {i:NETID,n:String(D.name).slice(0,16),l:[D.skin,D.shirt,D.pants,D.face,D.hat],x:+P.x.toFixed(1),z:+P.z.toFixed(1),y:+P.y.toFixed(1),f:+P.face.toFixed(2),m:Math.round(P.M),w:WORLD,c:P.chew>0?1:0,e:NET.myEats.slice(-40),g:NET.myGifts.slice(-5),q:NET.myChat&&Date.now()-NET.myChat[1]<4000?NET.myChat:null,pl:playing?1:0}}
 const okCol=c=>typeof c==='string'&&/^#[0-9a-f]{6}$/i.test(c)?c:'#cccccc';
 function netApply(list){const now=Date.now();const alive=new Set();
  for(const st of list){if(!st||typeof st!=='object'||st.i===NETID||typeof st.i!=='string')continue;if(!st.pl)continue;const id=st.i.slice(0,16);alive.add(id);let a=NET.remotes.get(id);
   const look=Array.isArray(st.l)?{skin:okCol(st.l[0]),shirt:okCol(st.l[1]),pants:okCol(st.l[2]),face:clamp(st.l[3]|0,0,2),hat:HATS[st.l[4]]?st.l[4]:'none'}:{skin:'#ffe0bd',shirt:'#2f8cff',pants:'#2f4a8c',face:0,hat:'none'};
   const nm=String(st.n||'Player').slice(0,16);
-  if(!a){a=makeAgent(look,nm,false);a.remote=true;a.netId=id;a.x=+st.x||0;a.z=+st.z||0;a.tx=a.x;a.tz=a.z;NET.remotes.set(id,a);feed(nm+' 님이 입장했습니다');a.lookKey=''}
+  if(!a){a=makeAgent(look,nm,false);a.remote=true;a.netId=id;a.x=+st.x||0;a.z=+st.z||0;a.tx=a.x;a.tz=a.z;NET.remotes.set(id,a);feed(nm+' 님이 입장했습니다');setTimeout(netBadgeUpd,50);a.lookKey=''}
   const lk=look.skin+look.shirt+look.pants+look.face+look.hat;if(lk!==a.lookKey){a.lookKey=lk;recolor(a.A,look)}
   if(a.name!==nm){a.name=nm;a.tagTxt=''}
   a.tx=clamp(+st.x||0,-WORLD_R,WORLD_R);a.tz=clamp(+st.z||0,-WORLD_R,WORLD_R);a.ty=clamp(+st.y||0,0,5000);a.tf=+st.f||0;a.M=clamp(+st.m||10,10,massOf(170));a.rw=st.w===2?2:1;a.chewR=!!st.c;a.lastSeen=now;
   if(Array.isArray(st.e))for(const e of st.e){if(!Array.isArray(e))continue;const key=id+':'+e[0]+':'+e[1]+':'+e[2];if(NET.seen.has(key))continue;NET.seen.add(key);if(e[0]!==WORLD)continue;const o=objs[e[1]|0];if(o&&o.alive){if(o.eater)removeEat(o);o.alive=false;o.pull=0;o.prog=0;setMat(o);o.respawn=Math.min(60,4+o.size*.7);deadList.push(o)}}
+  if(Array.isArray(st.q)){const key='q:'+id+':'+st.q[1];if(!NET.seen.has(key)){NET.seen.add(key);if(a.rw===WORLD||true)sayChat(a,clamp(st.q[0]|0,0,QCHAT.length-1))}}
   if(Array.isArray(st.g))for(const g of st.g){if(!Array.isArray(g)||g[0]!==NETID)continue;const key='g:'+id+':'+g[2];if(NET.seen.has(key))continue;NET.seen.add(key);const amt=clamp(+g[1]||0,0,massOf(170));P.M=Math.min(maxM(),P.M+amt);feed(a.name+' 님 링 아웃 · '+D.name+' 님 승리');toast('링 아웃 승리! '+a.name+' 님의 크기 10% 획득',2600);sfx.buy();count('ringout');questCheck()}}
  for(const [id,a] of NET.remotes){if(!alive.has(id)||now-(a.lastSeen||0)>8000)netDrop(id)}
  if(NET.seen.size>4000)NET.seen.clear()}
-function netDrop(id){const a=NET.remotes.get(id);if(!a)return;feed(a.name+' 님이 나갔습니다');scene.remove(a.A.g);scene.remove(a.tag);const i=agents.indexOf(a);if(i>=0)agents.splice(i,1);NET.remotes.delete(id)}
+function netBadgeUpd(){if(NET.mode)netStatus('🌐 서버 '+NET.srv)}
+function netDrop(id){const a=NET.remotes.get(id);if(!a)return;feed(a.name+' 님이 나갔습니다');scene.remove(a.A.g);scene.remove(a.tag);if(a.bub)scene.remove(a.bub);const i=agents.indexOf(a);if(i>=0)agents.splice(i,1);NET.remotes.delete(id);setTimeout(netBadgeUpd,50)}
 function netRemoteUpdate(dt){for(const a of NET.remotes.values()){const same=a.rw===WORLD;a.off=!same;a.A.g.visible=same;a.tag.visible=same;if(!same)continue;const ox=a.x,oz=a.z;const k=Math.min(1,dt*10);a.x+=(a.tx-a.x)*k;a.z+=(a.tz-a.z)*k;a.y+=((a.ty||0)-a.y)*k;let df=(a.tf||0)-a.face;df=Math.atan2(Math.sin(df),Math.cos(df));a.face+=df*k;a.vx=(a.x-ox)/Math.max(dt,1e-3);a.vz=(a.z-oz)/Math.max(dt,1e-3);const sp=Math.hypot(a.vx,a.vz);if(sp>.5)a.phase+=sp*dt/(a.S*.55);else a.phase*=.85;a.grounded=a.y<.05;a.chew=a.chewR?a.chew+dt:0}}
 let netT=0;
 function netTick(dt){if(!NET.mode)return;netT+=dt;if(netT<.1)return;netT=0;const st=netMyState();
  if(NET.mode==='claude'&&NET.room){NET.room.presence({s:st}).catch(()=>{})}
  else if(NET.mode==='p2p'){if(NET.isHost){NET.states.set(NETID,st);const all=[...NET.states.values()];for(const c of NET.conns)if(c.open)try{c.send({all})}catch(e){}netApply(all)}else if(NET.hostConn&&NET.hostConn.open){try{NET.hostConn.send({me:st})}catch(e){}}}}
-function netStatus(t){NET.status=t;const el=$('netBadge');if(el){el.textContent=t;el.classList.toggle('hide',!t)}if(modalOpen&&$('netPanel'))openModal(netHtml())}
-async function netJoin(code,create){netLeave(true);code=String(code).replace(/[^0-9]/g,'').slice(0,6);if(code.length<4){netStatus('');return '방 코드는 숫자 4~6자리예요'}
- NET.code=code;netStatus('🌐 연결 중…');
+function netStatus(t){NET.status=t;const el=$('netBadge');if(el){el.textContent=t+(NET.mode?' · '+(NET.remotes.size+1)+'명':'');el.classList.toggle('hide',!t)}if(modalOpen&&$('netPanel'))openModal(netHtml())}
+const QCHAT=['안녕하세요!','같이 놀아요!','따라오세요!','대결해요! ⚔','고마워요!','잘했어요! 👍','미안해요!','조심하세요!','배불러요 😋','잘 가요! 👋','😄','😮','❤️','🎉'];
+let chatCd=0;
+function sayChat(a,idx){const t=QCHAT[idx];if(t==null)return;if(!a.bub){a.bub=nameSprite('','#1b1f3a');a.bub.material.depthTest=false;scene.add(a.bub)}const c=a.bub.material.map.image,g=c.getContext('2d');c.width=512;c.height=128;g.clearRect(0,0,512,128);g.font='44px Jua, sans-serif';const w=Math.min(500,g.measureText(t).width+60);g.fillStyle='#ffffff';g.strokeStyle='#1b1f3a';g.lineWidth=6;const x0=256-w/2;g.beginPath();if(g.roundRect)g.roundRect(x0,8,w,92,28);else g.rect(x0,8,w,92);g.fill();g.stroke();g.beginPath();g.moveTo(240,98);g.lineTo(256,124);g.lineTo(272,98);g.fill();g.fillStyle='#1b1f3a';g.textAlign='center';g.textBaseline='middle';g.fillText(t,256,56);a.bub.material.map.needsUpdate=true;a.bubT=4.5;a.bub.visible=true;feed(a.name+': '+t)}
+function bubbleUpdate(dt){for(const a of agents){if(!a.bub)continue;if(a.bubT>0&&!a.off){a.bubT-=dt;const sc=Math.max(1.6,a.vis*.9);a.bub.scale.set(sc*2.2,sc*.55,1);a.bub.position.set(a.x,a.y+a.vis*1.18+a.vis*.12+sc*.55,a.z);a.bub.visible=true}else a.bub.visible=false}}
+function myChat(idx){if(chatCd>0)return;chatCd=1.2;sayChat(P,idx);if(NET.mode){NET.myChat=[idx,Date.now()]}$('chatPop').classList.add('hide');
+ // 컴퓨터 플레이어가 가끔 대답해요
+ if(!NET.remotes.size&&(idx===0||idx===1||idx===3)){const b=pick(bots.filter(b=>!b.off));if(b)setTimeout(()=>{if(!b.off)sayChat(b,idx===3?3:pick([0,1,10,5]))},rnd(700,1800))}}
+const MAXP=8;
+async function netAuto(n){if(D.online===false){netStatus('');return}n=n||1;if(n>5){netStatus('🌐 서버가 모두 가득 찼어요');return}netLeave(true);NET.srv=n;netStatus('🌐 서버 접속 중…');
  let room=null;try{if(window.claude&&typeof window.claude.use==='function')room=await window.claude.use('room')}catch(e){room=null}
- if(room){try{const r=await room.join('nyam-'+code);NET.room=r;NET.mode='claude';r.onPeers(ch=>{const list=[];for(const p of ch.peers){if(p.sameTab||p.kind!=='viewer')continue;const s=p.presence&&p.presence.s;if(s)list.push(s)}netApply(list)});netStatus('🌐 방 '+code);return null}catch(e){}}
- return await p2pJoin(code,create)}
+ if(room){try{const r=await room.join('nyam-srv'+n);NET.room=r;NET.mode='claude';await new Promise(res=>setTimeout(res,1500));if(r.peers().filter(p=>p.kind==='viewer').length>MAXP){netLeave(true);return netAuto(n+1)}
+   r.onPeers(ch=>{const list=[];for(const p of ch.peers){if(p.sameTab||p.kind!=='viewer')continue;const s=p.presence&&p.presence.s;if(s)list.push(s)}netApply(list)});netStatus('🌐 서버 '+n);return}catch(e){netLeave(true)}}
+ const err=await p2pJoin(n);if(err==='full')return netAuto(n+1);if(err){netStatus('🌐 오프라인 (서버 연결 실패)');setTimeout(()=>{if(!NET.mode&&D.online!==false)netAuto(1)},30000)}}
 function loadPeer(){return new Promise((res,rej)=>{if(window.Peer)return res();const sc=document.createElement('script');sc.src='https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';sc.onload=()=>res();sc.onerror=()=>rej();document.head.appendChild(sc)})}
-async function p2pJoin(code,create){try{await loadPeer()}catch(e){netStatus('');NET.code=null;return '연결 도구를 불러오지 못했어요. 인터넷 연결을 확인해 주세요'}
- const hostId='nyamblockworld-'+code;
- const asClient=()=>new Promise(res=>{const pe=new window.Peer();NET.peer=pe;let done=false;pe.on('open',()=>{const c=pe.connect(hostId,{reliable:false});NET.hostConn=c;const to=setTimeout(()=>{if(!done){done=true;netLeave(true);res('방을 찾을 수 없어요. 코드를 확인해 주세요')}},9000);
-   c.on('open',()=>{if(done)return;done=true;clearTimeout(to);NET.mode='p2p';NET.isHost=false;netStatus('🌐 방 '+code);res(null)});
-   c.on('data',d=>{if(d&&Array.isArray(d.all))netApply(d.all);if(d&&d.full){done=true;netLeave(true);res('방이 가득 찼어요 (최대 8명)')}});
-   c.on('close',()=>{if(NET.mode){netLeave(true);toast('방이 닫혔어요',2000)}})});
-  pe.on('error',err=>{if(!done){done=true;netLeave(true);res(err&&err.type==='peer-unavailable'?'방을 찾을 수 없어요. 코드를 확인해 주세요':'연결에 실패했어요. 잠시 후 다시 해 주세요')}})});
- if(!create)return await asClient();
- return await new Promise(res=>{const pe=new window.Peer(hostId);NET.peer=pe;let done=false;
-  pe.on('open',()=>{done=true;NET.mode='p2p';NET.isHost=true;netStatus('🌐 방 '+code);res(null)});
-  pe.on('connection',c=>{c.on('open',()=>{if(NET.conns.filter(x=>x.open).length>=7){try{c.send({full:1})}catch(e){}setTimeout(()=>c.close(),300);return}NET.conns.push(c)});c.on('data',d=>{if(d&&d.me&&typeof d.me==='object'){d.me.pl=d.me.pl?1:0;c.stId=String(d.me.i||'').slice(0,16);NET.states.set(c.stId,d.me)}});c.on('close',()=>{NET.conns=NET.conns.filter(x=>x!==c);if(c.stId)NET.states.delete(c.stId)})});
-  pe.on('error',err=>{if(!done){done=true;if(err&&err.type==='unavailable-id'){try{pe.destroy()}catch(e){}asClient().then(res)}else{netLeave(true);res('연결에 실패했어요. 잠시 후 다시 해 주세요')}}})})}
-function netLeave(silent){if(NET.room){try{NET.room.leave()}catch(e){}}if(NET.peer){try{NET.peer.destroy()}catch(e){}}NET.room=null;NET.peer=null;NET.conns=[];NET.hostConn=null;NET.isHost=false;NET.states.clear();NET.mode=null;for(const id of [...NET.remotes.keys()])netDrop(id);NET.code=null;if(!silent)toast('방에서 나왔어요',1500);netStatus('')}
-function netHtml(){let h=X+'<h2 class="out" id="netPanel">🌐 함께하기</h2>';
- if(!NET.mode){h+='<p style="font-size:16px;color:#d8ddff;margin-bottom:8px">같은 방 코드를 넣은 사람끼리 같은 세상에서 함께 놀 수 있어요. (최대 8명 · 채팅 없음) 방 코드는 함께 놀 사람에게만 알려 주세요.</p>'+
-  '<div class="row"><div class="ic">🏠</div><div class="tx"><b>방 만들기</b>새 방 코드가 만들어져요</div><button class="btn" data-a="netNew">만들기</button></div>'+
-  '<div class="row"><div class="ic">🔑</div><div class="tx"><b>방 들어가기</b><input class="t" id="netCode" inputmode="numeric" maxlength="6" placeholder="방 코드 숫자" style="width:170px"></div><button class="btn blue" data-a="netGo">들어가기</button></div>'+
-  '<div id="netMsg" style="font-size:16px;color:#ffd0d0;min-height:22px">'+(NET.status&&NET.status.indexOf('연결')>=0?'연결 중…':'')+'</div>'}
- else{const L=[...NET.remotes.values()];h+='<div style="text-align:center;margin:6px 0 10px"><div style="font-size:16px;color:#d8ddff">방 코드</div><div class="out" style="font-size:52px;letter-spacing:6px;color:#ffe066">'+NET.code+'</div><div style="font-size:14px;color:#b9c4ff">함께 놀 사람에게 이 코드를 알려 주세요</div></div>';
+function rejoinSoon(){if(D.online===false)return;netStatus('🌐 서버 다시 연결 중…');setTimeout(()=>{if(!NET.mode)netAuto(NET.srv||1)},rnd(400,2500))}
+async function p2pJoin(n){try{await loadPeer()}catch(e){return 'load'}
+ const hostId='nyamblockworld-srv'+n;
+ const asClient=()=>new Promise(res=>{const pe=new window.Peer();NET.peer=pe;let done=false;pe.on('open',()=>{const c=pe.connect(hostId,{reliable:false});NET.hostConn=c;const to=setTimeout(()=>{if(!done){done=true;netLeave(true);res('timeout')}},9000);
+   c.on('open',()=>{if(done)return;done=true;clearTimeout(to);NET.mode='p2p';NET.isHost=false;netStatus('🌐 서버 '+n);res(null)});
+   c.on('data',d=>{if(d&&Array.isArray(d.all))netApply(d.all);if(d&&d.full){if(!done){done=true;clearTimeout(to)}netLeave(true);res('full')}});
+   c.on('close',()=>{if(NET.mode){netLeave(true);rejoinSoon()}})});
+  pe.on('error',err=>{if(!done){done=true;netLeave(true);res(err&&err.type==='peer-unavailable'?'nohost':'error')}})});
+ const asHost=()=>new Promise(res=>{const pe=new window.Peer(hostId);NET.peer=pe;let done=false;
+  pe.on('open',()=>{done=true;NET.mode='p2p';NET.isHost=true;netStatus('🌐 서버 '+n);res(null)});
+  pe.on('connection',c=>{c.on('open',()=>{if(NET.conns.filter(x=>x.open).length>=MAXP-1){try{c.send({full:1})}catch(e){}setTimeout(()=>c.close(),300);return}NET.conns.push(c)});c.on('data',d=>{if(d&&d.me&&typeof d.me==='object'){d.me.pl=d.me.pl?1:0;c.stId=String(d.me.i||'').slice(0,16);NET.states.set(c.stId,d.me)}});c.on('close',()=>{NET.conns=NET.conns.filter(x=>x!==c);if(c.stId)NET.states.delete(c.stId)})});
+  pe.on('disconnected',()=>{try{pe.reconnect()}catch(e){}});
+  pe.on('error',err=>{if(!done){done=true;try{pe.destroy()}catch(e){}NET.peer=null;res(err&&err.type==='unavailable-id'?'taken':'error')}})});
+ const h=await asHost();if(h===null)return null;if(h!=='taken')return 'error';
+ const c=await asClient();if(c==='nohost'){await new Promise(r=>setTimeout(r,rnd(300,1500)));const h2=await asHost();return h2===null?null:(h2==='taken'?await asClient():'error')}return c}
+function netLeave(silent){if(NET.room){try{NET.room.leave()}catch(e){}}if(NET.peer){try{NET.peer.destroy()}catch(e){}}NET.room=null;NET.peer=null;NET.conns=[];NET.hostConn=null;NET.isHost=false;NET.states.clear();NET.mode=null;for(const id of [...NET.remotes.keys()])netDrop(id);if(!silent)netStatus('')}
+function netHtml(){let h=X+'<h2 class="out" id="netPanel">🌐 서버</h2>';const L=[...NET.remotes.values()];
+ if(D.online===false)h+='<p style="font-size:16px;color:#d8ddff">지금은 혼자 하기 모드예요. 켜면 게임을 하는 다른 사람들과 같은 서버에서 함께 놀 수 있어요.</p>';
+ else if(!NET.mode)h+='<p style="font-size:16px;color:#d8ddff">'+(NET.status||'서버에 연결하고 있어요…')+'</p>';
+ else{h+='<div style="font-size:20px;color:#ffe066;margin-bottom:6px">서버 '+NET.srv+' · '+(L.length+1)+'명 접속 중 (최대 '+MAXP+'명)</div>';
   h+='<div class="row"><div class="ic">⭐</div><div class="tx"><b>'+escapeH(D.name)+' (나)</b>크기 '+P.S.toFixed(1)+' · 세계 '+WORLD+'</div></div>';
   for(const a of L)h+='<div class="row"><div class="ic">🙂</div><div class="tx"><b>'+escapeH(a.name)+'</b>크기 '+sizeOf(a.M).toFixed(1)+' · 세계 '+(a.rw||1)+(a.rw!==WORLD?' (다른 세계에 있어요)':'')+'</div></div>';
-  if(!L.length)h+='<div style="font-size:15px;color:#b9c4ff">아직 아무도 없어요. 코드를 알려 주고 기다려 보세요.</div>';
-  h+='<button class="btn red" data-a="netLeave" style="margin-top:8px">방에서 나가기</button>'}
- return h}
+  if(!L.length)h+='<div style="font-size:15px;color:#b9c4ff">지금은 이 서버에 나 혼자예요. 다른 사람이 게임을 켜면 자동으로 들어와요.</div>';
+  h+='<button class="btn blue" data-a="netNext" style="margin-top:8px">다른 서버로 이동</button> '}
+ h+='<div class="row" style="margin-top:10px"><div class="ic">🌐</div><div class="tx"><b>온라인 서버</b>끄면 혼자서 놀아요</div><button class="btn '+(D.online===false?'gray':'')+'" data-a="netToggle">'+(D.online===false?'꺼짐':'켜짐')+'</button></div>';
+ h+='<p style="font-size:13px;color:#b9c4ff;margin-top:6px">채팅은 정해진 말만 보낼 수 있는 빠른 채팅이에요.</p>';return h}
 
 // ================= 펫 =================
 const PETMAT=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.5});
@@ -633,7 +649,7 @@ cv.addEventListener('wheel',e=>{zoom=clamp(zoom*(e.deltaY>0?1.1:.9),.45,3)},{pas
 // 터치
 const isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
 let joyId=null,joyX=0,joyY=0;
-if(isTouch){$('joy').classList.remove('hide');$('zoomBtns').classList.remove('hide');$('zIn').addEventListener('pointerdown',e=>{e.stopPropagation();zoom=clamp(zoom*.8,.45,3)});$('zOut').addEventListener('pointerdown',e=>{e.stopPropagation();zoom=clamp(zoom*1.25,.45,3)});$('jumpBtn').classList.remove('hide');$('hint').textContent='조이스틱 이동 · 화면 드래그 카메라 · 흡입 버튼';
+if(isTouch){$('chatBtn').style.right='236px';$('chatPop').style.right='20px';$('joy').classList.remove('hide');$('zoomBtns').classList.remove('hide');$('zIn').addEventListener('pointerdown',e=>{e.stopPropagation();zoom=clamp(zoom*.8,.45,3)});$('zOut').addEventListener('pointerdown',e=>{e.stopPropagation();zoom=clamp(zoom*1.25,.45,3)});$('jumpBtn').classList.remove('hide');$('hint').textContent='조이스틱 이동 · 화면 드래그 카메라 · 흡입 버튼';
  const J=$('joy');J.addEventListener('pointerdown',e=>{joyId=e.pointerId;J.setPointerCapture(e.pointerId);moveJoy(e);e.stopPropagation()});J.addEventListener('pointermove',e=>{if(e.pointerId===joyId)moveJoy(e)});J.addEventListener('pointerup',e=>{joyId=null;joyX=joyY=0;J.firstChild.style.transform=''});
  function moveJoy(e){const r=J.getBoundingClientRect();let dx=e.clientX-(r.left+65),dy=e.clientY-(r.top+65);const l=Math.hypot(dx,dy);if(l>50){dx*=50/l;dy*=50/l}joyX=dx/50;joyY=dy/50;J.firstChild.style.transform='translate('+dx+'px,'+dy+'px)'}
  $('jumpBtn').addEventListener('pointerdown',e=>{e.stopPropagation();jump(P)})}
@@ -821,7 +837,10 @@ function setHtml(){return X+'<h2 class="out">⚙️ 설정</h2>'+
  '<div class="row"><div class="ic">📍</div><div class="tx"><b>스폰 지점으로 이동</b></div><button class="btn blue" data-a="home">이동</button></div>'+
  '<div class="row"><div class="ic">🔄</div><div class="tx"><b>처음부터 하기</b>크기·코인·업그레이드·퀘스트·모자·펫·세계·코드·환생까지 모두 초기화돼요 (닉네임과 색상은 유지)</div><button class="btn red" data-a="restart">처음부터</button></div>'}
 $('bShop').onclick=()=>openModal(shopHtml());
-$('bNet').onclick=()=>openModal(netHtml());$('netBadge').onclick=()=>openModal(netHtml());
+$('bNet').onclick=()=>openModal(netHtml());
+$('chatPop').innerHTML=QCHAT.map((t,i)=>'<button data-q="'+i+'">'+t+'</button>').join('');
+$('chatBtn').addEventListener('pointerdown',e=>{e.stopPropagation();$('chatPop').classList.toggle('hide')});
+$('chatPop').addEventListener('pointerdown',e=>{e.stopPropagation();const b=e.target.closest('button');if(b)myChat(+b.dataset.q)});$('netBadge').onclick=()=>openModal(netHtml());
 $('bPet').onclick=()=>openModal(petHtml());
 $('bWorld').onclick=()=>openModal(worldHtml());
 $('bLook').onclick=()=>openModal(lookHtml());
@@ -839,9 +858,8 @@ function startOver(){const keep={reb:0,name:D.name,skin:D.skin,shirt:D.shirt,pan
  toast('처음부터 다시 시작합니다',2600)}
 $('panel').addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t)return;initAudio();const a=t.dataset.a;
  if(a==='close')return closeModal();
- if(a==='netNew'){const code=String(ri(10000,99999));$('netMsg').textContent='방을 만드는 중…';netJoin(code,true).then(err=>{if(err){if($('netMsg'))$('netMsg').textContent=err}else{sfx.buy();if(modalOpen)openModal(netHtml())}});return}
- if(a==='netGo'){const v=$('netCode').value;$('netMsg').textContent='들어가는 중…';netJoin(v,false).then(err=>{if(err){if($('netMsg'))$('netMsg').textContent=err}else{sfx.buy();if(modalOpen)openModal(netHtml())}});return}
- if(a==='netLeave'){netLeave();openModal(netHtml());return}
+ if(a==='netNext'){const n=(NET.srv||1)%5+1;netAuto(n);openModal(netHtml());return}
+ if(a==='netToggle'){D.online=D.online===false;save();if(D.online===false)netLeave();else netAuto(1);openModal(netHtml());return}
  if(a==='buy'){const k=t.dataset.k,U=UP[k],l=D.up[k],c=U.cost(l);if(l<U.max&&D.coins>=c){D.coins-=c;D.up[k]++;sfx.buy();if(k==='belly'){count('buyBelly');questCheck()}save()}else sfx.full();openModal(shopHtml())}
  if(a==='reb'){if(P.S<40)return;D.reb++;D.coins=0;D.up={belly:0,speed:0,grow:0,eat:0,reach:0};P.M=10;P.x=0;P.z=0;P.shield=5;if(!D.hats.includes('rainbow'))D.hats.push('rainbow');count('rebirth');questCheck();for(const b of bots)if(!b.off)resetBot(b,false);sfx.buy();toast('환생 완료 · 성장·코인 ×'+rebMult().toFixed(1),3000);save();closeModal()}
  if(a==='egg'){const E=EGGS[t.dataset.k];if(E.w2&&!D.w2)return;if(D.pets.length>=PET_MAX){$('petMsg').textContent='펫이 가득 찼어요. 펫을 보내고 다시 열어 주세요';return}if(D.coins<E.cost){$('petMsg').textContent='코인이 '+fmt(E.cost-D.coins)+' 부족해요';sfx.full();return}hatch(t.dataset.k);return}
@@ -877,7 +895,7 @@ $('nameIn').value=D.name;
 if(hadSave)$('saveInfo').textContent='💾 저장된 기록: 크기 '+sizeOf(D.M).toFixed(1)+' · 💰 '+fmt(D.coins)+(D.reb?' · ★'+D.reb:'');
 $('restartBtn').onclick=()=>{initAudio();const b=$('restartBtn');if(restartAsk!==2){restartAsk=2;b.textContent='한 번 더 누르면 모든 기록이 초기화돼요';return}restartAsk=0;startOver();b.textContent='초기화 완료';$('saveInfo').textContent='새로 시작합니다';setTimeout(()=>b.classList.add('hide'),1200)};
 if(hadSave)$('restartBtn').classList.remove('hide');
-$('playBtn').onclick=()=>{initAudio();const v=$('nameIn').value.trim().slice(0,16);if(v){D.name=v;P.name=v;P.tagTxt=''}save();$('title').classList.add('hide');$('hud').classList.remove('hide');playing=true;P.shield=4;toast((WORLD===2?'세계 2 · ':'')+ZONES[0].n,2200);sfx.buy()};
+$('playBtn').onclick=()=>{initAudio();const v=$('nameIn').value.trim().slice(0,16);if(v){D.name=v;P.name=v;P.tagTxt=''}save();$('title').classList.add('hide');$('hud').classList.remove('hide');playing=true;P.shield=4;setTimeout(()=>netAuto(1),300);toast((WORLD===2?'세계 2 · ':'')+ZONES[0].n,2200);sfx.buy()};
 
 // ================= 시작! =================
 buildWorld(D.w2&&D.world===2?2:1);
@@ -902,7 +920,7 @@ function loop(){requestAnimationFrame(loop);let dt=Math.min(.05,clock.getDelta()
  for(const b of bots)if(!b.off)botThink(b,dt);
  pullUpdate(dt);duelUpdate(dt,time);bumpCheck();orbUpdate(dt);boostUpdate(dt,time);popUpdate(dt);
  respT+=dt;if(respT>.25){respawnUpdate(respT);respT=0}
- netRemoteUpdate(dt);for(const a of live())animAgent(a,dt,time);petUpdate(dt,time);botServer(dt);netTick(dt);
+ netRemoteUpdate(dt);if(chatCd>0)chatCd-=dt;bubbleUpdate(dt);for(const a of live())animAgent(a,dt,time);petUpdate(dt,time);botServer(dt);netTick(dt);
  if(P.S>D.best)D.best=P.S;
  if(playing&&fpsCheck<5){fpsCheck+=dt;fpsN++;if(fpsCheck>=5){if(fpsN/fpsCheck<24&&!D.low){D.low=true;applyGfx();save();toast('화면이 느려서 그래픽을 낮음으로 바꿨어요',2600)}}}
  D.M=P.M;
