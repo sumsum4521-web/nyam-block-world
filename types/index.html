@@ -544,14 +544,14 @@ document.body.insertAdjacentHTML('afterbegin',TAV.defsSvg());
 const avKey=()=>'types_av_'+(ME?ME.idl:'');
 function avLoad(){const d=TAV.defaultState();const v=LS.get(avKey(),null);if(!v||typeof v!=='object')return d;
  const st={...d,...v,eq:{...d.eq,...(v.eq||{}),acc:{...((v.eq&&v.eq.acc)||{})}}};if(!Array.isArray(st.own))st.own=[];if(!TAV.BODIES[st.body])st.body='round';
- for(const k of ['hair','top','bottom','shoes','eyes','eyec','mouth'])if(!TAV.BY[st.eq[k]]||!avOwns(st,st.eq[k]))st.eq[k]=d.eq[k];
+ for(const k of ['hair','top','bottom','shoes','eyes','eyec','mouth','skin'])if(!TAV.BY[st.eq[k]]||!avOwns(st,st.eq[k]))st.eq[k]=d.eq[k];
  for(const sl in st.eq.acc)if(!TAV.BY[st.eq.acc[sl]]||!avOwns(st,st.eq.acc[sl]))delete st.eq.acc[sl];return st;}
 function avOwns(st,id){return TAV.FREE.includes(id)||st.own.includes(id);}
 let avUpT=0;function avSave(st){LS.set(avKey(),st);clearTimeout(avUpT);avUpT=setTimeout(()=>{upload('types');pubStatus();},1500);renderMeAv();renderTyper();}
 function avApply(st,it){st=JSON.parse(JSON.stringify(st));
  if(it.cat==='body')st.body=it.body;else if(it.cat==='acc'){if(st.eq.acc[it.slot]===it.id)delete st.eq.acc[it.slot];else st.eq.acc[it.slot]=it.id;}else st.eq[it.cat]=it.id;return st;}
 function avWorn(st,it){return it.cat==='body'?st.body===it.body:it.cat==='acc'?st.eq.acc[it.slot]===it.id:st.eq[it.cat]===it.id;}
-function avCompact(st){st=st||avLoad();return {b:st.body,e:[st.eq.hair,st.eq.top,st.eq.bottom,st.eq.shoes,st.eq.eyes,st.eq.eyec,st.eq.mouth,...Object.values(st.eq.acc)]};}
+function avCompact(st){st=st||avLoad();return {b:st.body,e:[st.eq.hair,st.eq.top,st.eq.bottom,st.eq.shoes,st.eq.eyes,st.eq.eyec,st.eq.mouth,st.eq.skin,...Object.values(st.eq.acc)]};}
 function avFromCompact(a){if(!a||!Array.isArray(a.e))return null;const st=TAV.defaultState();st.body=TAV.BODIES[a.b]?a.b:'round';const ks=['hair','top','bottom','shoes'];
  a.e.slice(0,16).forEach(id=>{const it=TAV.BY[id];if(!it||it.cat==='body')return;if(it.cat==='acc')st.eq.acc[it.slot]=id;else st.eq[it.cat]=id;});return st;}
 function renderMeAv(){if(!ME)return;$('me').querySelector('.av').innerHTML=TAV.render(avLoad(),{head:true});}
@@ -560,12 +560,12 @@ function renderAvatar(){if(view!=='avatar'||!ME)return;const st=avLoad();const p
  if(pv&&pv.cat==='acc'&&!show.eq.acc[pv.slot])show.eq.acc[pv.slot]=pv.id;
  $('avStage').innerHTML=TAV.render(show);$('avName').textContent=ME.id;
  $('avCats').innerHTML=TAV.CATS.map(c=>`<button data-c="${c.k}" class="${c.k===avCat?'on':''}">${c.e} ${c.n}</button>`).join('');
- $('avSlots').style.display=avCat==='acc'||avCat==='face'?'flex':'none';
- const subs=avCat==='face'?[['','전체'],['eyes','눈매'],['eyec','눈 색'],['mouth','입']]:[['','전체'],...Object.entries(TAV.SLOTS)];
+ $('avSlots').style.display=['acc','face','body'].includes(avCat)?'flex':'none';
+ const subs=avCat==='face'?[['','전체'],['eyes','눈매'],['eyec','눈 색'],['mouth','입']]:avCat==='body'?[['','전체'],['body','체형'],['skin','피부색']]:[['','전체'],...Object.entries(TAV.SLOTS)];
  $('avSlots').innerHTML=subs.map(([k,n])=>`<button data-s="${k}" class="${k===avSlot?'on':''}">${n}</button>`).join('');
  const list=TAV.ITEMS.filter(i=>(i.grp||i.cat)===avCat&&(!avSlot||(avCat==='acc'?i.slot:i.cat)===avSlot)).sort((a,b)=>(avOwns(st,b.id)-avOwns(st,a.id))||a.p-b.p);
  $('avGrid').innerHTML=list.map(it=>{const own=avOwns(st,it.id),worn=avWorn(st,it),r=TAV.rarity(it.p);let tr=avApply(st,it);if(it.cat==='acc')tr.eq.acc[it.slot]=it.id;
-  return `<div class="ait r${r.k} ${own?'own':''} ${worn?'on':''} ${avPrev===it.id?'pv':''}" data-it="${it.id}"><span class="rar" style="background:${r.c}">${r.n}</span>${TAV.render(tr,{head:it.grp==='face'})}<b>${esc(it.n)}</b><span class="pr">${worn?'✅ 입는 중':own?'보유':tico()+' '+it.p}</span></div>`;}).join('');
+  return `<div class="ait r${r.k} ${own?'own':''} ${worn?'on':''} ${avPrev===it.id?'pv':''}" data-it="${it.id}"><span class="rar" style="background:${r.c}">${r.n}</span>${TAV.render(tr,{head:it.grp==='face'||it.cat==='skin'})}<b>${esc(it.n)}</b><span class="pr">${worn?'✅ 입는 중':own?'보유':tico()+' '+it.p}</span></div>`;}).join('');
  // 사기 바
  const bb=$('buyBar');if(pv&&!avOwns(st,pv.id)){const bal=typerBal(),r=TAV.rarity(pv.p);bb.style.display='block';
   bb.innerHTML=`<b>${esc(pv.n)} <small style="color:${r.c}">· ${r.n}</small></b><div style="font-weight:900;margin-top:4px">${tico()} ${pv.p} <small style="color:#868e96">(내 타입터 ${bal})</small></div>

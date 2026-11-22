@@ -2,7 +2,7 @@
    window.TAV = { BODIES, ITEMS, CATS, SLOTS, render(state,opts), defaultState(), rarity(price) } */
 (function(){
 'use strict';
-let OL='none';const SEAM='rgba(70,50,90,.2)', SKIN='#f8d33a', SKIN_D='#e9bf22';
+let OL='none';const SEAM='rgba(70,50,90,.2)', SKIN_D='#e9bf22';let SKIN='#f8d33a';
 let UID=0;
 
 // ---------- 체형 2개 (무료) ----------
@@ -126,6 +126,8 @@ const ACCS=[
  // 펫
  A('a_chick','어깨 위 병아리','pet','chick','#ffe066','#ff922b',60),A('a_kitty','어깨 위 아기 고양이','pet','kitty','#ffd8a8','#ff922b',80),A('a_baby','어깨 위 아기 용','pet','babydragon','#69db7c','#ffe066',300,1)
 ];
+const SK=(id,n,c)=>({id,cat:'skin',grp:'body',n,c,p:0});
+const SKINS=[SK('sk_noob','뉴비 노랑','#f8d33a'),SK('sk_light','밝은 살구','#ffe3c8'),SK('sk_peach','살구','#f6c9a0'),SK('sk_tan','밀색','#e0a877'),SK('sk_brown','갈색','#b97a4f'),SK('sk_dark','진한 갈색','#7d4e2d'),SK('sk_pink','분홍','#ffc9de'),SK('sk_sky','하늘','#a5d8ff'),SK('sk_mint','연두','#c0eb75'),SK('sk_lav','연보라','#d0bfff'),SK('sk_gray','회색','#ced4da'),SK('sk_white','하양','#f8f9fa')];
 const F=(id,cat,n,s,c,p)=>({id,cat,grp:'face',n,s,c,p});
 const FACE=[
  F('e_round','eyes','동그란 눈','round','',0),F('e_manga','eyes','순정만화 눈','manga','',0),
@@ -140,12 +142,12 @@ const FACE=[
  F('m_shy','mouth','수줍은 입','shy','',8),F('m_cat','mouth','고양이 입','cat','',10),F('m_tongue','mouth','메롱','tongue','',10),
  F('m_teeth','mouth','이 보이는 웃음','teeth','',12),F('m_kiss','mouth','뽀뽀 입','kiss','',15)
 ];
-const ITEMS=[...BODY,...FACE,...HAIR,...TOPS,...BOTS,...SHOES,...ACCS];
+const ITEMS=[...BODY,...SKINS,...FACE,...HAIR,...TOPS,...BOTS,...SHOES,...ACCS];
 const BY={};ITEMS.forEach(i=>BY[i.id]=i);
 const CATS=[{k:'body',n:'체형',e:'🧍'},{k:'face',n:'얼굴',e:'😊'},{k:'hair',n:'머리',e:'💇'},{k:'top',n:'상의',e:'👕'},{k:'bottom',n:'하의',e:'👖'},{k:'shoes',n:'신발',e:'👟'},{k:'acc',n:'장신구',e:'💍'}];
 const SLOTS={hat:'모자·머리',face:'얼굴',neck:'목',back:'등',tail:'꼬리',hand:'손',aura:'오라',pet:'펫'};
 function rarity(p){return p<=0?{k:0,n:'기본',c:'#868e96'}:p<=20?{k:1,n:'일반',c:'#2b8a3e'}:p<=60?{k:2,n:'희귀',c:'#1971c2'}:p<=120?{k:3,n:'영웅',c:'#7048e8'}:{k:4,n:'전설',c:'#e8590c'};}
-function defaultState(){return {v:1,body:'round',eq:{hair:'h_ys',top:'t_gray',bottom:'b_blue',shoes:'s_white',eyes:'e_round',eyec:'ec_purple',mouth:'m_smile',acc:{}},own:[],spent:0};}
+function defaultState(){return {v:1,body:'round',eq:{hair:'h_ys',top:'t_gray',bottom:'b_blue',shoes:'s_white',eyes:'e_round',eyec:'ec_purple',mouth:'m_smile',skin:'sk_noob',acc:{}},own:[],spent:0};}
 const FREE=ITEMS.filter(i=>i.p===0).map(i=>i.id);
 
 // ---------- 그리기 도우미 ----------
@@ -159,7 +161,7 @@ const E=(x,y,rx,ry,c,extra='')=>`<ellipse cx="${f2(x)}" cy="${f2(y)}" rx="${f2(r
 function star(x,y,r,c,ol){let d='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;d+=(i?'L':'M')+f2(x+Math.cos(a)*rr)+' '+f2(y+Math.sin(a)*rr);}return ol?P(d+'Z',c):PN(d+'Z',c);}
 function heart(x,y,s,c,ol){const d=`M${f2(x)} ${f2(y+s*.9)}C${f2(x-s*1.3)} ${f2(y+s*.1)} ${f2(x-s*.9)} ${f2(y-s*.9)} ${f2(x)} ${f2(y-s*.3)}C${f2(x+s*.9)} ${f2(y-s*.9)} ${f2(x+s*1.3)} ${f2(y+s*.1)} ${f2(x)} ${f2(y+s*.9)}Z`;return ol?P(d,c):PN(d,c);}
 function twinkle(x,y,r,c='#fff'){return `<path d="M${f2(x)} ${f2(y-r)}Q${f2(x)} ${f2(y)} ${f2(x+r)} ${f2(y)}Q${f2(x)} ${f2(y)} ${f2(x)} ${f2(y+r)}Q${f2(x)} ${f2(y)} ${f2(x-r)} ${f2(y)}Q${f2(x)} ${f2(y)} ${f2(x)} ${f2(y-r)}Z" fill="${c}"/>`;}
-function torsoPath(M,ext=0,fl=0){const a=M.tx1,b=M.tx2,t=M.ty1,u=M.ty2+ext,A=a-fl,B=b+fl,r=2;
+function torsoPath(M,ext=0,fl=0){const a=M.tx1,b=M.tx2,t=M.ty1,u=M.ty2+ext,A=a-fl,B=b+fl,r=5.5;
  return `M${a+r} ${t}L${b-r} ${t}Q${b} ${t} ${b} ${t+r}L${B} ${u-r}Q${B} ${u} ${B-r} ${u}L${A+r} ${u}Q${A} ${u} ${A} ${u-r}L${a} ${t+r}Q${a} ${t} ${a+r} ${t}Z`;}
 // ---------- 머리카락 ----------
 function bangs(M,c,kind){const {hx:x,hy:y,hr:r}=M;
@@ -178,32 +180,32 @@ function puff(M,c,len=0){const {hx:x,hy:y,hr:r}=M;const L=len;
  return P(`M${x-r-2} ${y}C${x-r-3} ${y-r-12} ${x+r+3} ${y-r-12} ${x+r+2} ${y}C${x+r+3} ${f2(y+r*.4+L*.5)} ${x+r+2} ${f2(y+r*.7+L)} ${x+r+5} ${f2(y+r*.88+L)}Q${x+r} ${f2(y+r*1.02+L)} ${f2(x+r*.6)} ${f2(y+r*.8+L)}L${f2(x-r*.6)} ${f2(y+r*.8+L)}Q${x-r} ${f2(y+r*1.02+L)} ${x-r-5} ${f2(y+r*.88+L)}C${x-r-2} ${f2(y+r*.7+L)} ${x-r-3} ${f2(y+r*.4+L*.5)} ${x-r-2} ${y}Z`,c);}
 function blk(x,y,w,h,c,r=2){return P(`M${f2(x+r)} ${f2(y)}L${f2(x+w-r)} ${f2(y)}Q${f2(x+w)} ${f2(y)} ${f2(x+w)} ${f2(y+r)}L${f2(x+w)} ${f2(y+h-r)}Q${f2(x+w)} ${f2(y+h)} ${f2(x+w-r)} ${f2(y+h)}L${f2(x+r)} ${f2(y+h)}Q${f2(x)} ${f2(y+h)} ${f2(x)} ${f2(y+h-r)}L${f2(x)} ${f2(y+r)}Q${f2(x)} ${f2(y)} ${f2(x+r)} ${f2(y)}Z`,c);}
 function hairBack(M,it){const {hx:x,hy:y,hr:r,hh:h}=M,c=it.c,T=y-h,L=x-r;const W=2*r;switch(it.s){
- case 'long':return blk(L-1.5,T-1.5,W+3,2*h+18,c);
+ case 'long':return blk(L-1.5,T-1.5,W+3,2*h+18,c,8);
  case 'wavy':{let d=`M${L-1.5} ${T+2}`;for(let i=0;i<5;i++)d+=`Q${L-4.5+(i%2)*3} ${T+6+i*7} ${L-1.5} ${T+9+i*7}`;d+=`L${x+r+1.5} ${T+44}`;for(let i=4;i>=0;i--)d+=`Q${x+r+4.5-(i%2)*3} ${T+6+i*7} ${x+r+1.5} ${T+2+i*7}`;return P(d+`Q${x+r+1.5} ${T-1.5} ${x+r-2} ${T-1.5}L${L+2} ${T-1.5}Q${L-1.5} ${T-1.5} ${L-1.5} ${T+2}Z`,c);}
  case 'princess':return P(`M${L-1.5} ${T+2}Q${L-1.5} ${T-1.5} ${L+2} ${T-1.5}L${x+r-2} ${T-1.5}Q${x+r+1.5} ${T-1.5} ${x+r+1.5} ${T+2}L${x+r+5} ${T+2*h+22}L${L-5} ${T+2*h+22}Z`,c)+[0,1,2,3].map(i=>C(L-3+i*(W+6)/3,T+2*h+22,3.2,c)).join('');
- case 'pony':return blk(x+r-2,T+2,7,h+16,c,3)+blk(L-1.5,T-1.5,W+3,h+4,c);
- case 'twin':return blk(L-6,T+5,6,h+16,c,3)+blk(x+r,T+5,6,h+16,c,3)+blk(L-1.5,T-1.5,W+3,h+4,c)+blk(L-5,T+4,4,3,'#ff8fab',1)+blk(x+r+1,T+4,4,3,'#ff8fab',1);
- case 'braid':{let q=blk(L-1.5,T-1.5,W+3,h+4,c);for(const sd of [0,1])for(let i=0;i<5;i++)q+=blk(sd?x+r-1:L-4,T+h+i*4.6,5,4.4,c,1.5);return q;}
+ case 'pony':return blk(x+r-2,T+2,7,h+16,c,3)+blk(L-1.5,T-1.5,W+3,h+4,c,8);
+ case 'twin':return blk(L-6,T+5,6,h+16,c,3)+blk(x+r,T+5,6,h+16,c,3)+blk(L-1.5,T-1.5,W+3,h+4,c,8)+blk(L-5,T+4,4,3,'#ff8fab',1)+blk(x+r+1,T+4,4,3,'#ff8fab',1);
+ case 'braid':{let q=blk(L-1.5,T-1.5,W+3,h+4,c,8);for(const sd of [0,1])for(let i=0;i<5;i++)q+=blk(sd?x+r-1:L-4,T+h+i*4.6,5,4.4,c,1.5);return q;}
  case 'curly':{let q='';for(let i=0;i<8;i++)q+=C(L-1+i*(W+2)/7,T+1,4.2,c);for(let i=0;i<4;i++){q+=C(L-1.5,T+5+i*5,4,c)+C(x+r+1.5,T+5+i*5,4,c);}return q;}
- case 'bun':return blk(x-5,T-9,10,9,c,3)+blk(L-1.5,T-1.5,W+3,h+4,c);
- case 'odango':return blk(L-1,T-8,9,9,c,3)+blk(x+r-8,T-8,9,9,c,3)+blk(L-1.5,T-1.5,W+3,h+4,c);
- default:return blk(L-1.5,T-1.5,W+3,h+4,c);}}
+ case 'bun':return blk(x-5,T-9,10,9,c,3)+blk(L-1.5,T-1.5,W+3,h+4,c,8);
+ case 'odango':return blk(L-1,T-8,9,9,c,3)+blk(x+r-8,T-8,9,9,c,3)+blk(L-1.5,T-1.5,W+3,h+4,c,8);
+ default:return blk(L-1.5,T-1.5,W+3,h+4,c,8);}}
 function hairFront(M,it){const {hx:x,hy:y,hr:r,hh:h}=M,c=it.c,T=y-h,L=x-r,W=2*r;let s='';
  if(it.s==='spiky'){let d=`M${L-1.5} ${T+9}`;[[0,-5],[.12,2],[.25,-7],[.38,1],[.5,-9],[.62,1],[.75,-7],[.88,2],[1,-5]].forEach(([fx,dy])=>d+=`L${f2(L-1.5+fx*(W+3))} ${f2(T+dy)}`);return P(d+`L${x+r+1.5} ${T+9}Z`,c);}
  if(it.s==='curly'){for(let i=0;i<6;i++)s+=C(L+1+i*(W-2)/5,T+3,3.4,c);return s;}
  // 앞머리 + 옆머리
  const side=['long','wavy','princess'].includes(it.s)?h+14:it.s==='short'||it.s==='side'?h*.95:h*.55;
- s+=blk(L-1.5,T-1.5,4,side+1.5,c,1.5)+blk(x+r-2.5,T-1.5,4,side+1.5,c,1.5);
- if(it.s==='side')s+=P(`M${L-1.5} ${T+2}Q${L-1.5} ${T-1.5} ${L+2} ${T-1.5}L${x+r-2} ${T-1.5}Q${x+r+1.5} ${T-1.5} ${x+r+1.5} ${T+2}L${x+r+1.5} ${T+5}L${L+4} ${T+10}L${L-1.5} ${T+9}Z`,c);
- else{let d=`M${L-1.5} ${T+2}Q${L-1.5} ${T-1.5} ${L+2} ${T-1.5}L${x+r-2} ${T-1.5}Q${x+r+1.5} ${T-1.5} ${x+r+1.5} ${T+2}L${x+r+1.5} ${T+7}`;const n=5;for(let i=n;i>0;i--){const x2=L-1.5+(i-1)*(W+3)/n,xm=L-1.5+(i-.5)*(W+3)/n;d+=`L${f2(xm)} ${T+(i%2?8.5:7.5)}L${f2(x2)} ${T+6}`;}s+=P(d+'Z',c);}
- s+=`<rect x="${L+2}" y="${T+.5}" width="${W-4}" height="1.6" rx=".8" fill="#fff" opacity=".35"/>`;
+ s+=blk(L-1.5,T+2,4.5,side-2,c,2.2)+blk(x+r-3,T+2,4.5,side-2,c,2.2);
+ if(it.s==='side')s+=P(`M${L-1.5} ${T+7}Q${L-1.5} ${T-1.5} ${L+7} ${T-1.5}L${x+r-7} ${T-1.5}Q${x+r+1.5} ${T-1.5} ${x+r+1.5} ${T+7}L${x+r+1.5} ${T+7}L${L+4} ${T+10}L${L-1.5} ${T+9}Z`,c);
+ else{let d=`M${L-1.5} ${T+7}Q${L-1.5} ${T-1.5} ${L+7} ${T-1.5}L${x+r-7} ${T-1.5}Q${x+r+1.5} ${T-1.5} ${x+r+1.5} ${T+7}`;const n=5;for(let i=n;i>0;i--){const x2=L-1.5+(i-1)*(W+3)/n,xm=L-1.5+(i-.5)*(W+3)/n;d+=`L${f2(xm)} ${T+(i%2?8.5:7.5)}L${f2(x2)} ${T+6}`;}s+=P(d+'Z',c);}
+ s+=`<path d="M${L+4} ${T+2.2}Q${x} ${T-.2} ${x+r-4} ${T+2.2}" fill="none" stroke="#fff" stroke-opacity=".4" stroke-width="1.6" stroke-linecap="round"/>`;
  return s;}
 // ---------- 몸 ----------
 function armD(sx,sy,hx,hy,w0,w1){const dx=hx-sx,dy=hy-sy,L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L;
  const p=(x,y)=>f2(x)+' '+f2(y);
  return `M${p(sx+nx*w0/2,sy+ny*w0/2)}L${p(hx+nx*w1/2,hy+ny*w1/2)}A${f2(w1/2)} ${f2(w1/2)} 0 0 1 ${p(hx-nx*w1/2,hy-ny*w1/2)}L${p(sx-nx*w0/2,sy-ny*w0/2)}A${f2(w0/2)} ${f2(w0/2)} 0 0 1 ${p(sx+nx*w0/2,sy+ny*w0/2)}Z`;}
 function armPts(M){const y=M.ty1+M.arm*.5+1;return M.hand.map(([hx,hy],i)=>[i?M.tx2-2.5:M.tx1+2.5,y,hx,hy]);}
-function armRect(M,i,y1,y2,c,pad=0){const [a,b]=M.ax[i];const r=1.6;return P(`M${a-pad+r} ${y1}L${b+pad-r} ${y1}Q${b+pad} ${y1} ${b+pad} ${y1+r}L${b+pad} ${y2-r}Q${b+pad} ${y2} ${b+pad-r} ${y2}L${a-pad+r} ${y2}Q${a-pad} ${y2} ${a-pad} ${y2-r}L${a-pad} ${y1+r}Q${a-pad} ${y1} ${a-pad+r} ${y1}Z`,c);}
+function armRect(M,i,y1,y2,c,pad=0){const [a,b]=M.ax[i];const r=Math.min((b-a)*.45,(y2-y1)/2);return P(`M${a-pad+r} ${y1}L${b+pad-r} ${y1}Q${b+pad} ${y1} ${b+pad} ${y1+r}L${b+pad} ${y2-r}Q${b+pad} ${y2} ${b+pad-r} ${y2}L${a-pad+r} ${y2}Q${a-pad} ${y2} ${a-pad} ${y2-r}L${a-pad} ${y1+r}Q${a-pad} ${y1} ${a-pad+r} ${y1}Z`,c);}
 function armsSkin(M){return armRect(M,0,M.ty1,M.ty2,SKIN)+armRect(M,1,M.ty1,M.ty2,SKIN);}
 function handsSkin(M){return '';}
 function arms(M,top){const sl=top?(['tank','dress','princess'].includes(top.s)?(top.s==='princess'?1:0):['tee','stripe','dots','stars','hearts','sailor','space'].includes(top.s)?1:2):1;
@@ -211,7 +213,7 @@ function arms(M,top){const sl=top?(['tank','dress','princess'].includes(top.s)?(
  for(const i of [0,1]){s+=armRect(M,i,M.ty1,y2,top.c,.4);if(top.s==='princess'){const [a,b]=M.ax[i];s+=E((a+b)/2,M.ty1+3,(b-a)*.62,4.5,top.c2||'#fff');}}
  if(top.s==='hanbok'){const cols=['#ff6b6b','#ffd43b','#69db7c','#4dabf7','#9775fa'];for(const i of [0,1]){const [a,b]=M.ax[i];cols.forEach((c,k)=>{s+=`<rect x="${a-.4}" y="${f2(M.ty1+3+k*(y2-M.ty1-3)/5)}" width="${f2(b-a+.8)}" height="${f2((y2-M.ty1-3)/5)}" fill="${c}"/>`;});}}
  return s;}
-function legD(M,i){const [a,b]=M.legs[i],t=M.ty2-3,u=M.ly2,r=1.6;return `M${a} ${t}L${b} ${t}L${b} ${u-r}Q${b} ${u} ${b-r} ${u}L${a+r} ${u}Q${a} ${u} ${a} ${u-r}Z`;}
+function legD(M,i){const [a,b]=M.legs[i],t=M.ty2-3,u=M.ly2,r=(b-a)*.42;return `M${a} ${t}L${b} ${t}L${b} ${u-r}Q${b} ${u} ${b-r} ${u}L${a+r} ${u}Q${a} ${u} ${a} ${u-r}Z`;}
 function mir(M,x){return `<g transform="matrix(-1 0 0 1 ${2*M.hx} 0)">${x}</g>`;}
 function legs(M){const l=P(legD(M,0),SKIN);return l+mir(M,l);}
 function torsoTop(M,it,uid){const c=it.c,c2=it.c2,t=M.ty1,u=M.ty2,cx=M.hx,a=M.bx1,b=M.bx2,w=b-a,ta=M.tx1,tb=M.tx2;
@@ -380,7 +382,7 @@ function fxSparkle(M,it,cat){const {hx:x,hy:y,hr:r}=M;const pos={hair:[[x-r-4,y-
  return pos.map(([a,b],i)=>twinkle(a,b,i%2?3.4:4.6,'#fcc419')+twinkle(a,b,i%2?1.8:2.6,'#fff9db')).join('');}
 
 // ---------- 전체 그리기 ----------
-function render(st,opts={}){const uid=++UID;OL='none';st=st||defaultState();const eq=st.eq||{};
+function render(st,opts={}){const uid=++UID;OL='none';SKIN=((BY[(st&&st.eq&&st.eq.skin)]||{}).c)||'#f8d33a';st=st||defaultState();const eq=st.eq||{};
  const M={...BODIES[st.body]||BODIES.round};const it=k=>BY[eq[k]]||null;
  const hair=it('hair'),top=it('top'),bot=it('bottom'),sh=it('shoes');const A_={};for(const sl in (eq.acc||{})){const a=BY[eq.acc[sl]];if(a)A_[sl]=a;}
  let s='';
@@ -399,7 +401,7 @@ function render(st,opts={}){const uid=++UID;OL='none';st=st||defaultState();cons
  if(top&&(top.s==='dress'||top.s==='princess')&&sh)s+=''; // 신발은 이미 그려짐
  if(A_.neck)s+=acc(M,A_.neck,uid);
  // 머리
- s+=blk(M.hx-M.hr,M.hy-M.hh,2*M.hr,2*M.hh,SKIN,4);
+ s+=blk(M.hx-M.hr,M.hy-M.hh,2*M.hr,2*M.hh,SKIN,8.5);
  s+=face(M,eq);
  if(A_.face&&A_.face.s!=='glasses'&&A_.face.s!=='mono')s+=acc(M,A_.face,uid);
  if(hair)s+=hairFront(M,hair);
