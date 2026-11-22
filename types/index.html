@@ -114,6 +114,34 @@ body.playing .view.on{background:rgba(238,241,247,.97);z-index:20}
 #auth .hint{font-size:12px;color:#8a92a3;margin-top:4px}
 #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#1b1f2a;color:#fff;font-weight:900;padding:12px 18px;border-radius:14px;opacity:0;transition:opacity .25s;z-index:100;pointer-events:none;max-width:90vw;text-align:center}
 #netState{font-size:12px;color:#8a92a3;font-weight:700;margin-left:auto}
+
+/* 꾸미기 */
+.avw{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start}
+.avp{position:sticky;top:0;background:#fff;border-radius:20px;padding:14px;box-shadow:0 4px 0 rgba(0,0,0,.06);text-align:center}
+.avp .stage{background:radial-gradient(circle at 50% 40%,#fff,#e7ecf7);border-radius:16px;height:340px;display:flex;align-items:center;justify-content:center}
+.avp .stage svg{height:100%;width:auto}
+.avp .nm{font-weight:900;font-size:18px;margin:10px 0 2px}
+.buybar{margin-top:10px;padding:10px;border-radius:14px;background:#f8f9fc;display:none}
+.buybar b{display:block;font-size:15px}.buybar .row2{display:flex;gap:8px;margin-top:8px}.buybar .btn{flex:1}
+.catbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.catbar button{border:none;background:#fff;border-radius:12px;padding:8px 14px;font-weight:900;font-size:14px;color:#495057;box-shadow:0 2px 0 rgba(0,0,0,.07);font-family:inherit;cursor:pointer}
+.catbar button.on{background:#3b3355;color:#fff}
+.slotbar button{padding:5px 10px;font-size:12px}
+.agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:10px}
+.ait{position:relative;background:#fff;border-radius:16px;padding:8px 6px 9px;text-align:center;cursor:pointer;border:3px solid transparent;box-shadow:0 3px 0 rgba(0,0,0,.06);transition:transform .1s}
+.ait:hover{transform:translateY(-2px)}
+.ait>svg{width:100%;height:120px;display:block}
+.ait .tico svg{width:100%;height:100%;display:block}
+.ait b{display:block;font-size:12.5px;margin-top:2px;line-height:1.25;min-height:2.5em}
+.ait .pr{display:inline-flex;align-items:center;gap:3px;margin-top:4px;font-size:13px;font-weight:900;padding:2px 9px;border-radius:10px;background:#fff4d6;color:#8a5a00}
+.ait.own .pr{background:#e9ecef;color:#495057}.ait.on .pr{background:#d3f9d8;color:#2b8a3e}
+.ait.on{border-color:#2fbf71}.ait.pv{border-color:#f59f00}
+.ait .rar{position:absolute;left:6px;top:6px;font-size:10.5px;font-weight:900;color:#fff;padding:1px 7px;border-radius:8px}
+.ait.r4{background:linear-gradient(#fff,#fff4e6)}.ait.r3{background:linear-gradient(#fff,#f3f0ff)}
+#me .av{overflow:hidden;background:#dbe4ff}#me .av svg{width:100%;height:100%;display:block}
+.row .av svg{width:100%;height:100%;display:block;border-radius:12px}.row .av.hasav{background:#dbe4ff}
+@media (max-width:720px){.avw{grid-template-columns:1fr}.avp{position:relative}.avp .stage{height:240px}.agrid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}.ait>svg{height:100px}}
+@media (max-width:480px){.logo span{width:16px;height:21px;font-size:13px;margin-right:-3px}.tab{font-size:17px;padding:5px 5px}#bar{gap:3px;padding:0 8px}#typer{padding:3px 6px 3px 4px}#me{padding:3px}}
 @media (max-width:720px){
  :root{--bar:52px}
  .tab span.t{display:none}.tab{font-size:20px;padding:6px 10px}
@@ -133,6 +161,7 @@ body.playing .view.on{background:rgba(238,241,247,.97);z-index:20}
   <button class="tab on" data-v="home">🏠<span class="t">홈</span></button>
   <button class="tab" data-v="friends">👥<span class="t">친구</span><span class="dot" id="reqDot"></span></button>
   <button class="tab" data-v="badges">🏅<span class="t">내 배지</span></button>
+  <button class="tab" data-v="avatar">👕<span class="t">꾸미기</span></button>
  </div>
  <button id="typer" title="타입터"><span id="tIco"></span><span id="tNum">0</span></button>
  <button id="me"><span class="av">ID</span><span class="nm" id="meName">-</span></button>
@@ -173,6 +202,14 @@ body.playing .view.on{background:rgba(238,241,247,.97);z-index:20}
  <div id="badgeBox"></div>
 </div></div>
 
+<div class="view" id="v-avatar"><div class="wrap">
+ <h1 class="ttl">캐릭터 꾸미기</h1>
+ <div class="sub">타입터로 옷과 장신구를 사서 내 캐릭터를 꾸며요. 아이템을 누르면 먼저 입어 볼 수 있어요!</div>
+ <div class="avw"><div class="avp"><div class="stage" id="avStage"></div><div class="nm" id="avName"></div>
+  <div class="buybar" id="buyBar"></div></div>
+  <div><div class="catbar" id="avCats"></div><div class="catbar slotbar" id="avSlots"></div><div class="agrid" id="avGrid"></div></div></div>
+</div></div>
+
 <div id="game"><iframe id="frame" allow="fullscreen; autoplay" title="게임"></iframe></div>
 
 <div id="modal"><div id="mbox"><button class="x" id="mx">✕</button><div id="mc"></div></div></div>
@@ -192,6 +229,7 @@ body.playing .view.on{background:rgba(238,241,247,.97);z-index:20}
 </div></div>
 <div id="toast"></div>
 
+<script src="avatar.js"></script>
 <script>
 (()=>{
 'use strict';
@@ -322,7 +360,7 @@ $('exitBtn').onclick=()=>{modal(`<div class="mpad"><h2>게임을 나갈까요?</
 let view='home';
 function showView(v){view=v;document.querySelectorAll('.view').forEach(e=>e.classList.toggle('on',e.id==='v-'+v));
  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===(v||'')));
- if(v==='badges')refreshBadges();if(v==='friends')renderFriends();}
+ if(v==='badges')refreshBadges();if(v==='friends')renderFriends();if(v==='avatar')renderAvatar();}
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{const v=t.dataset.v;
  if(cur){if(v==='home'){$('exitBtn').click();return;}showView(view===v?null:v);return;} // 게임 중에는 친구·배지를 위에 띄움
  showView(v);});
@@ -374,7 +412,7 @@ $('logoutBtn').onclick=()=>{if(cur)exitGame();for(const g in SAVES)upload(g);pub
 const friends=new Map(),recv=new Map(),sent=new Map();
 let stab='list';
 document.querySelectorAll('.stab').forEach(b=>b.onclick=()=>{stab=b.dataset.s;document.querySelectorAll('.stab').forEach(x=>x.classList.toggle('on',x===b));['list','add','req'].forEach(k=>$('s-'+k).style.display=k===stab?'block':'none');renderFriends();});
-function pubStatus(){if(!ME)return;pub(T('on/'+ME.idl),{on:1,g:cur||'',r:curRoom||'',t:Date.now()});}
+function pubStatus(){if(!ME)return;pub(T('on/'+ME.idl),{on:1,g:cur||'',r:curRoom||'',a:avCompact(),t:Date.now()});}
 function online(f){return f.st&&f.st.on&&Date.now()-(f.st.t||0)<80000;}
 function startSocial(){const me=ME.idl;
  sub(T('fr/'+me+'/+'),(topic,s)=>{const f=topic.split('/').pop();
@@ -409,7 +447,7 @@ function renderFriends(){
  if(view!=='friends')return;netState();
  const fl=[...friends.entries()].sort((a,b)=>(online(b[1])-online(a[1]))||a[1].id.localeCompare(b[1].id));
  $('s-list').innerHTML=fl.length?'<div class="list">'+fl.map(([k,f])=>{const on=online(f),g=on&&f.st.g&&G(f.st.g);
-  return `<div class="row"><div class="av">${esc(f.id[0].toUpperCase())}<i class="${on?'on':''}"></i></div><div class="info"><b>${esc(f.id)}</b><small style="${on?'color:#2b8a3e':''}">${on?'● ':'○ '}${statusText(f)}</small></div>
+  const fa=f.st&&avFromCompact(f.st.a);return `<div class="row"><div class="av ${fa?'hasav':''}">${fa?TAV.render(fa,{head:true}):esc(f.id[0].toUpperCase())}<i class="${on?'on':''}"></i></div><div class="info"><b>${esc(f.id)}</b><small style="${on?'color:#2b8a3e':''}">${on?'● ':'○ '}${statusText(f)}</small></div>
    ${g?(allowed(g)?`<button class="btn green" data-join="${k}">${g.room||g.id==='shrink'?'같은 방 합류':'같은 게임 하기'}</button>`:'<button class="btn gray" disabled>🔒 잠김</button>'):''}<button class="btn gray" data-rm="${k}" title="친구 삭제">✕</button></div>`;}).join('')+'</div>'
   :'<div class="empty">아직 친구가 없어요.<br>"친구 추가"에서 친구의 타입스 아이디를 검색해 보세요!</div>';
  $('reqList').innerHTML=rc?[...recv.entries()].map(([k,r])=>`<div class="row"><div class="av">${esc((r.id||k)[0].toUpperCase())}</div><div class="info"><b>${esc(r.id||k)}</b><small>친구 요청을 보냈어요</small></div><button class="btn green" data-acc="${k}">수락</button><button class="btn red" data-dec="${k}">거절</button></div>`).join('')
@@ -478,7 +516,7 @@ function tico(){return `<span class="tico">${typerSvg('100%')}</span>`;}
 $('tIco').innerHTML=typerSvg(24);
 function allBadges(){const list=[];for(const b of computeBadges())b.items.forEach(it=>list.push({...it,g:b.g}));return list;}
 function typerEarned(){return allBadges().filter(i=>i.got).reduce((a,i)=>a+TY_VAL[i.lv],0);}
-function typerSpent(){return +(LS.get('types_typer_spent_'+(ME?ME.idl:''),0))||0;}
+function typerSpent(){return +(avLoad().spent)||0;}
 function typerBal(){return Math.max(0,typerEarned()-typerSpent());}
 function renderTyper(){$('tNum').textContent=typerBal().toLocaleString();}
 const seenKey=()=>'types_tseen_'+(ME?ME.idl:'');
@@ -500,6 +538,49 @@ $('typer').onclick=e=>{e.stopPropagation();const got=allBadges().filter(i=>i.got
  $('tyX').onclick=closeModal;$('tyB').onclick=()=>{closeModal();showView('badges');};};
 let tyT=0;addEventListener('storage',()=>{clearTimeout(tyT);tyT=setTimeout(checkTyper,1200);});
 
+
+// ================= 👕 캐릭터 꾸미기 =================
+document.body.insertAdjacentHTML('afterbegin',TAV.defsSvg());
+const avKey=()=>'types_av_'+(ME?ME.idl:'');
+function avLoad(){const d=TAV.defaultState();const v=LS.get(avKey(),null);if(!v||typeof v!=='object')return d;
+ const st={...d,...v,eq:{...d.eq,...(v.eq||{}),acc:{...((v.eq&&v.eq.acc)||{})}}};if(!Array.isArray(st.own))st.own=[];if(!TAV.BODIES[st.body])st.body='round';
+ for(const k of ['hair','top','bottom','shoes'])if(!TAV.BY[st.eq[k]]||!avOwns(st,st.eq[k]))st.eq[k]=d.eq[k];
+ for(const sl in st.eq.acc)if(!TAV.BY[st.eq.acc[sl]]||!avOwns(st,st.eq.acc[sl]))delete st.eq.acc[sl];return st;}
+function avOwns(st,id){return TAV.FREE.includes(id)||st.own.includes(id);}
+let avUpT=0;function avSave(st){LS.set(avKey(),st);clearTimeout(avUpT);avUpT=setTimeout(()=>{upload('types');pubStatus();},1500);renderMeAv();renderTyper();}
+function avApply(st,it){st=JSON.parse(JSON.stringify(st));
+ if(it.cat==='body')st.body=it.body;else if(it.cat==='acc'){if(st.eq.acc[it.slot]===it.id)delete st.eq.acc[it.slot];else st.eq.acc[it.slot]=it.id;}else st.eq[it.cat]=it.id;return st;}
+function avWorn(st,it){return it.cat==='body'?st.body===it.body:it.cat==='acc'?st.eq.acc[it.slot]===it.id:st.eq[it.cat]===it.id;}
+function avCompact(st){st=st||avLoad();return {b:st.body,e:[st.eq.hair,st.eq.top,st.eq.bottom,st.eq.shoes,...Object.values(st.eq.acc)]};}
+function avFromCompact(a){if(!a||!Array.isArray(a.e))return null;const st=TAV.defaultState();st.body=TAV.BODIES[a.b]?a.b:'round';const ks=['hair','top','bottom','shoes'];
+ a.e.slice(0,12).forEach((id,i)=>{const it=TAV.BY[id];if(!it)return;if(i<4&&it.cat===ks[i])st.eq[ks[i]]=id;else if(it.cat==='acc')st.eq.acc[it.slot]=id;});return st;}
+function renderMeAv(){if(!ME)return;$('me').querySelector('.av').innerHTML=TAV.render(avLoad(),{head:true});}
+let avCat='hair',avSlot='',avPrev=null;
+function renderAvatar(){if(view!=='avatar'||!ME)return;const st=avLoad();const pv=avPrev&&TAV.BY[avPrev];const show=pv?avApply(st,pv):st;
+ if(pv&&pv.cat==='acc'&&!show.eq.acc[pv.slot])show.eq.acc[pv.slot]=pv.id;
+ $('avStage').innerHTML=TAV.render(show);$('avName').textContent=ME.id;
+ $('avCats').innerHTML=TAV.CATS.map(c=>`<button data-c="${c.k}" class="${c.k===avCat?'on':''}">${c.e} ${c.n}</button>`).join('');
+ $('avSlots').style.display=avCat==='acc'?'flex':'none';
+ $('avSlots').innerHTML=[['','전체'],...Object.entries(TAV.SLOTS)].map(([k,n])=>`<button data-s="${k}" class="${k===avSlot?'on':''}">${n}</button>`).join('');
+ const list=TAV.ITEMS.filter(i=>i.cat===avCat&&(avCat!=='acc'||!avSlot||i.slot===avSlot)).sort((a,b)=>(avOwns(st,b.id)-avOwns(st,a.id))||a.p-b.p);
+ $('avGrid').innerHTML=list.map(it=>{const own=avOwns(st,it.id),worn=avWorn(st,it),r=TAV.rarity(it.p);let tr=avApply(st,it);if(it.cat==='acc')tr.eq.acc[it.slot]=it.id;
+  return `<div class="ait r${r.k} ${own?'own':''} ${worn?'on':''} ${avPrev===it.id?'pv':''}" data-it="${it.id}"><span class="rar" style="background:${r.c}">${r.n}</span>${TAV.render(tr)}<b>${esc(it.n)}</b><span class="pr">${worn?'✅ 입는 중':own?'보유':tico()+' '+it.p}</span></div>`;}).join('');
+ // 사기 바
+ const bb=$('buyBar');if(pv&&!avOwns(st,pv.id)){const bal=typerBal(),r=TAV.rarity(pv.p);bb.style.display='block';
+  bb.innerHTML=`<b>${esc(pv.n)} <small style="color:${r.c}">· ${r.n}</small></b><div style="font-weight:900;margin-top:4px">${tico()} ${pv.p} <small style="color:#868e96">(내 타입터 ${bal})</small></div>
+  <div class="row2">${bal>=pv.p?`<button class="btn green" id="avBuy">사기</button>`:`<button class="btn gray" disabled>${pv.p-bal} 타입터가 모자라요</button>`}<button class="btn gray" id="avBack">원래대로</button></div>`;
+  if($('avBuy'))$('avBuy').onclick=()=>avBuy(pv);$('avBack').onclick=()=>{avPrev=null;renderAvatar();};}
+ else bb.style.display='none';
+ document.querySelectorAll('#avCats [data-c]').forEach(b=>b.onclick=()=>{avCat=b.dataset.c;avSlot='';renderAvatar();});
+ document.querySelectorAll('#avSlots [data-s]').forEach(b=>b.onclick=()=>{avSlot=b.dataset.s;renderAvatar();});
+ document.querySelectorAll('#avGrid [data-it]').forEach(el=>el.onclick=()=>{const it=TAV.BY[el.dataset.it];const st2=avLoad();
+  if(avOwns(st2,it.id)){avPrev=null;avSave(avApply(st2,it));}else avPrev=avPrev===it.id?null:it.id;renderAvatar();});}
+function avBuy(it){const bal=typerBal();if(bal<it.p)return;
+ modal(`<div class="mpad" style="text-align:center"><div style="width:150px;height:170px;margin:0 auto">${TAV.render(avApply(avLoad(),it))}</div><h2>'${esc(it.n)}' 살까요?</h2>
+ <p>${tico()} ${it.p} 타입터를 써요. 사고 나면 ${tico()} ${bal-it.p} 남아요.</p><div style="display:flex;gap:10px"><button class="btn green big" id="byY" style="flex:1">살래요!</button><button class="btn gray big" id="byN" style="flex:1">다음에</button></div></div>`);
+ $('byN').onclick=closeModal;$('byY').onclick=()=>{const st=avLoad();if(typerBal()<it.p||avOwns(st,it.id)){closeModal();return;}
+  st.own.push(it.id);st.spent=(+st.spent||0)+it.p;avPrev=null;avSave(avApply(st,it));closeModal();toastLong(`🎉 '${it.n}'을(를) 샀어요! 바로 입혀 줬어요`);renderAvatar();};}
+
 // ================= ☁️ 기록 이어하기 (다른 기기에서도 같은 기록) =================
 // 계정 비밀값(ME.h)으로 만든 자리에 게임 기록을 올려 두고, 다른 기기에서 로그인하면 내려받아요.
 const SAVES={
@@ -507,7 +588,8 @@ const SAVES={
  shrink:{keys:['shrinkSim_v1','shrinkSim_prefs'],score:d=>{const P=j(d.shrinkSim_v1)||{};return (P.rb||0)*1e7+(P.world||0)*1e5+(P.wins||0)*10+((P.pets||[]).length);}},
  troll:{keys:['trollJumpMap_v1'],score:d=>{const S=j(d.trollJumpMap_v1)||{};return (S.cleared?1e6:0)+(S.max||0)*1000+(S.coins||0)/100;}},
  detective:{keys:['detectiveSquirrel_v1'],score:d=>{const S=j(d.detectiveSquirrel_v1)||{};return Object.keys(S.solved||{}).length*1e4+(S.tokens||0);}},
- island:{keys:['island_name','island_badges','island_best'],score:d=>((j(d.island_badges)||[]).length)*1e5+(+d.island_best||0)}
+ island:{keys:['island_name','island_badges','island_best'],score:d=>((j(d.island_badges)||[]).length)*1e5+(+d.island_best||0)},
+ types:{get keys(){return ['types_av_'+(ME?ME.idl:'')];},score:d=>{const v=j(Object.values(d)[0])||{};return (+v.spent||0)*1000+((v.own||[]).length);}}
 };
 function j(s){try{return s?JSON.parse(s):null;}catch(e){return null;}}
 function sig(d){const s=JSON.stringify(Object.keys(d).sort().map(k=>[k,d[k]]));let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h.toString(36)+'.'+s.length;}
@@ -531,7 +613,7 @@ async function syncGame(g){const r=await getRetained(T('sv/'+ME.h+'/'+g),2500);i
  SYNC.rec[g]={t:0,sig:''};upload(g);return 'up';}
 function syncAll(){if(!ME||cur||SYNC.busy)return SYNC.p;SYNC.busy=true;SYNC.rec=LS.get(recKey(),{})||{};
  SYNC.p=Promise.all(Object.keys(SAVES).map(g=>syncGame(g).catch(()=>'-'))).then(res=>{SYNC.busy=false;
-  if(res.includes('down')){toast('☁️ 다른 기기에서 한 기록을 불러왔어요');refreshBadges();}checkTyper();return res;});return SYNC.p;}
+  if(res.includes('down')){toast('☁️ 다른 기기에서 한 기록을 불러왔어요');refreshBadges();}checkTyper();renderMeAv();if(view==='avatar')renderAvatar();return res;});return SYNC.p;}
 // 게임이 기록을 저장하면 잠시 뒤 올리기
 addEventListener('storage',e=>{if(!ME||!e.key)return;for(const g in SAVES)if(SAVES[g].keys.includes(e.key)){clearTimeout(SYNC.timers[g]);SYNC.timers[g]=setTimeout(()=>upload(g),3000);}});
 setInterval(()=>{if(ME&&cur&&SAVES[cur])upload(cur);},20000);
@@ -540,7 +622,7 @@ document.addEventListener('visibilitychange',()=>{if(!ME)return;if(document.visi
 // ================= 시작 =================
 function enter(){$('auth').style.display='none';$('meName').textContent=ME.id;$('me').querySelector('.av').textContent=ME.id[0].toUpperCase();
  connect({topic:T('on/'+ME.idl),payload:JSON.stringify({on:0,t:Date.now()}),retain:true,qos:0});
- startSocial();sub(T('parent/'+ME.idl),(t,s)=>{if(s){try{applyParent(JSON.parse(s),true);}catch(e){}}});renderCards();showView('home');syncAll();
+ startSocial();sub(T('parent/'+ME.idl),(t,s)=>{if(s){try{applyParent(JSON.parse(s),true);}catch(e){}}});renderCards();showView('home');renderMeAv();syncAll();
  // 내 계정 정보가 서버에서 사라졌으면 다시 올려 둠
  getRetained(T('acct/'+ME.idl),3000).then(r=>{if(r&&!r.offline&&!r.v)pub(T('acct/'+ME.idl),{id:ME.id,h:ME.h,t:Date.now()});});
  addEventListener('pagehide',()=>pub(T('on/'+ME.idl),{on:0,t:Date.now()}));}

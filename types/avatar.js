@@ -1,0 +1,350 @@
+/* TYPES 캐릭터 꾸미기 — 아바타 그리기 + 아이템 목록
+   window.TAV = { BODIES, ITEMS, CATS, SLOTS, render(state,opts), defaultState(), rarity(price) } */
+(function(){
+'use strict';
+const OL='#3b3355', SKIN='#ffe6c4', SKIN_D='#f4cfa4';
+let UID=0;
+
+// ---------- 체형 2개 (무료) ----------
+const BODIES={
+ round:{name:'동글동글 체형',hr:27,hx:50,hy:31,tx1:31,tx2:69,ty1:57,ty2:93,arm:11,sh:63,hand:[[18,91],[82,91]],legs:[[35,49.5],[50.5,65]],ly1:89,ly2:126},
+ slim: {name:'날씬날씬 체형',hr:23,hx:50,hy:28,tx1:36,tx2:64,ty1:52,ty2:92,arm:9,sh:58,hand:[[23,93],[77,93]],legs:[[38.5,49.5],[50.5,61.5]],ly1:88,ly2:133}
+};
+
+// ---------- 특별 색 (그라데이션) ----------
+const GR={rainbow:'url(#tav-rainbow)',fire:'url(#tav-fire)',candy:'url(#tav-candy)',mermaid:'url(#tav-mermaid)',galaxy:'url(#tav-galaxy)',gold:'url(#tav-gold)',silver:'url(#tav-silver)',glass:'url(#tav-glass)',sky:'url(#tav-sky)',sunset:'url(#tav-sunset)'};
+function defsSvg(){
+ const lg=(id,stops,v)=>`<linearGradient id="${id}" x1="0" y1="0" x2="${v?0:1}" y2="${v?1:0}">${stops.map((c,i)=>`<stop offset="${(i/(stops.length-1)).toFixed(2)}" stop-color="${c}"/>`).join('')}</linearGradient>`;
+ return `<svg width="0" height="0" style="position:absolute"><defs>
+ ${lg('tav-rainbow',['#ff6b6b','#ffa94d','#ffe066','#69db7c','#4dabf7','#9775fa'],1)}
+ ${lg('tav-fire',['#ffe066','#ff922b','#f03e3e'],1)}
+ ${lg('tav-candy',['#ffc9e3','#d0bfff','#a5d8ff'],1)}
+ ${lg('tav-mermaid',['#63e6be','#4dabf7','#b197fc'],1)}
+ ${lg('tav-galaxy',['#5f3dc4','#3b5bdb','#862e9c','#1b1f3a'],1)}
+ ${lg('tav-gold',['#fff3bf','#fcc419','#e8a200'],1)}
+ ${lg('tav-silver',['#ffffff','#dee2e6','#adb5bd'],1)}
+ ${lg('tav-glass',['#e7f5ff','#a5d8ff','#d0ebff'],1)}
+ ${lg('tav-sky',['#d0ebff','#74c0fc','#4dabf7'],1)}
+ ${lg('tav-sunset',['#ffd8a8','#ff8787','#b197fc'],1)}
+ <radialGradient id="tav-glow"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+ </defs></svg>`;}
+
+// ---------- 아이템 ----------
+// p=가격, s=모양, c=색, c2=둘째 색, fx=반짝이
+const H=(id,n,s,c,p,fx)=>({id,cat:'hair',n,s,c,p,fx});
+const T=(id,n,s,c,c2,p,fx)=>({id,cat:'top',n,s,c,c2,p,fx});
+const B=(id,n,s,c,c2,p,fx)=>({id,cat:'bottom',n,s,c,c2,p,fx});
+const S=(id,n,s,c,c2,p,fx)=>({id,cat:'shoes',n,s,c,c2,p,fx});
+const A=(id,n,slot,s,c,c2,p,fx)=>({id,cat:'acc',slot,n,s,c,c2,p,fx});
+const BODY=[{id:'body_round',cat:'body',n:'동글동글 체형',body:'round',p:0},{id:'body_slim',cat:'body',n:'날씬날씬 체형',body:'slim',p:0}];
+const HAIR=[
+ H('h_ys','노란 짧은 머리','short','#ffd43b',0),H('h_yl','노란 긴 머리','long','#ffd43b',0),
+ H('h_bs','갈색 짧은 머리','short','#a0673a',10),H('h_ks','까만 짧은 머리','short','#3a3040',10),
+ H('h_bl','갈색 긴 머리','long','#a0673a',10),H('h_kl','까만 긴 머리','long','#3a3040',10),
+ H('h_rp','빨간 포니테일','pony','#e8590c',15),H('h_bp','밤색 포니테일','pony','#7a4a2a',15),
+ H('h_ot','주황 양갈래','twin','#ff922b',15),H('h_kt','까만 양갈래','twin','#3a3040',15),
+ H('h_pb','분홍 똥머리','bun','#f783ac',20),H('h_sb','하늘 똥머리','bun','#74c0fc',20),
+ H('h_bc','갈색 곱슬머리','curly','#a0673a',20),H('h_kk','까만 삐죽 머리','spiky','#3a3040',20),
+ H('h_gs','초록 옆가르마','side','#51cf66',25),H('h_bb','갈색 땋은 머리','braid','#a0673a',25),
+ H('h_yb','금발 땋은 머리','braid','#ffd43b',30),H('h_bk','파란 삐죽 머리','spiky','#4dabf7',30),
+ H('h_vw','보라 웨이브','wavy','#9775fa',40),H('h_mw','민트 웨이브','wavy','#63e6be',40),
+ H('h_po','분홍 양쪽 똥머리','odango','#f783ac',45),H('h_so','하늘 양쪽 똥머리','odango','#74c0fc',45),
+ H('h_sl','은빛 긴 머리','long',GR.silver,60),H('h_fs','불꽃 삐죽 머리','spiky',GR.fire,80),
+ H('h_cc','솜사탕 곱슬머리','curly',GR.candy,90),H('h_gp','공주님 금빛 머리','princess',GR.gold,100,1),
+ H('h_mm','인어공주 웨이브','wavy',GR.mermaid,120,1),H('h_rb','무지개 포니테일','pony',GR.rainbow,150,1),
+ H('h_st','별빛 양갈래','twin',GR.sky,170,1),H('h_gx','은하수 공주 머리','princess',GR.galaxy,200,1)
+];
+const TOPS=[
+ T('t_gray','회색 티셔츠','tee','#c9cdd4','',0),
+ T('t_white','하얀 티셔츠','tee','#ffffff','',8),T('t_red','빨간 티셔츠','tee','#ff6b6b','',8),T('t_yel','노란 티셔츠','tee','#ffe066','',8),
+ T('t_grn','초록 티셔츠','tee','#69db7c','',10),T('t_bst','파랑 줄무늬 티','stripe','#ffffff','#4dabf7',15),T('t_rst','빨강 줄무늬 티','stripe','#ffffff','#ff6b6b',15),
+ T('t_tank','민트 민소매','tank','#63e6be','',12),T('t_hpk','분홍 후드티','hoodie','#f783ac','',25),T('t_hgr','회색 후드티','hoodie','#adb5bd','',25),
+ T('t_swh','하트 스웨터','sweater','#ffd8a8','#ff6b6b',30),T('t_sws','별 스웨터','sweater','#a5d8ff','#fcc419',30),
+ T('t_shirt','하늘 셔츠','shirt','#d0ebff','',25),T('t_dots','물방울 티셔츠','dots','#fff0f6','#f783ac',20),
+ T('t_jean','청재킷','jacket','#4c6ef5','#ffffff',40),T('t_lea','까만 재킷','jacket','#343a40','#ff6b6b',45),
+ T('t_sail','세일러 교복','sailor','#ffffff','#364fc7',45),T('t_star','별무늬 티셔츠','stars','#5c7cfa','#ffe066',35),
+ T('t_hrt','하트무늬 티셔츠','hearts','#fff0f6','#ff6b6b',35),T('t_rain','노란 우비','rain','#ffd43b','',40),
+ T('t_drs','분홍 원피스','dress','#faa2c1','#ffffff',55),T('t_drb','하늘 원피스','dress','#a5d8ff','#ffffff',55),
+ T('t_hb','색동 한복 저고리','hanbok','#ffffff','#ff6b6b',70),T('t_tux','멋쟁이 턱시도','tux','#212529','#ffffff',80),
+ T('t_space','우주비행사 옷','space','#f1f3f5','#4dabf7',100),T('t_rbt','무지개 티셔츠','tee',GR.rainbow,'',90,1),
+ T('t_prn','공주님 드레스','princess','#fcc2d7','#fff0f6',120,1),T('t_glx','은하수 후드티','hoodie',GR.galaxy,'',140,1),
+ T('t_gold','황금 왕자 옷','tux',GR.gold,'#ffffff',160,1),T('t_mer','인어공주 드레스','princess',GR.mermaid,'#e6fcf5',200,1)
+];
+const BOTS=[
+ B('b_blue','파란 바지','pants','#4dabf7','',0),
+ B('b_navy','남색 바지','pants','#364fc7','',8),B('b_blk','까만 바지','pants','#343a40','',8),B('b_beige','베이지 바지','pants','#e9d8a6','',8),
+ B('b_jean','청바지','jeans','#5c7cfa','',15),B('b_jog','운동복 바지','jog','#495057','#ffffff',15),B('b_sred','빨간 반바지','shorts','#ff6b6b','',10),
+ B('b_sgrn','초록 반바지','shorts','#51cf66','',10),B('b_sjean','청반바지','shorts','#748ffc','',12),B('b_pk','분홍 치마','skirt','#f783ac','',15),
+ B('b_yk','노란 치마','skirt','#ffd43b','',15),B('b_pl','체크 주름치마','pleat','#e03131','#ffd8a8',25),B('b_plb','남색 주름치마','pleat','#364fc7','#d0ebff',25),
+ B('b_dot','물방울 치마','dotskirt','#fff0f6','#f783ac',25),B('b_cargo','카키 건빵바지','cargo','#8f9a6b','',30),B('b_lsk','하늘 긴 치마','long','#a5d8ff','',35),
+ B('b_lsp','보라 긴 치마','long','#b197fc','',35),B('b_tutu','분홍 발레 치마','tutu','#fcc2d7','',45),B('b_tutuw','하얀 발레 치마','tutu','#ffffff','',45),
+ B('b_ovr','멜빵바지','overall','#4c6ef5','#ffd43b',50),B('b_star','별무늬 바지','starpants','#3b5bdb','#ffe066',55),
+ B('b_hb','한복 치마','long','#f783ac','#ffd8a8',70),B('b_cloud','구름 치마','cloud','#ffffff','#a5d8ff',75,1),
+ B('b_rbs','무지개 치마','skirt',GR.rainbow,'',90,1),B('b_rbp','무지개 바지','pants',GR.rainbow,'',90,1),B('b_gold','황금 바지','pants',GR.gold,'',110,1),
+ B('b_glx','은하수 바지','starpants',GR.galaxy,'#ffffff',130,1),B('b_cnd','솜사탕 발레 치마','tutu',GR.candy,'',140,1),
+ B('b_sun','노을빛 긴 치마','long',GR.sunset,'',150,1),B('b_mer','인어 꼬리','mermaid',GR.mermaid,'#e6fcf5',200,1)
+];
+const SHOES=[
+ S('s_white','하얀 운동화','sneak','#ffffff','#ced4da',0),
+ S('s_red','빨간 운동화','sneak','#ff6b6b','#ffffff',8),S('s_blue','파란 운동화','sneak','#4dabf7','#ffffff',8),S('s_blk','까만 운동화','sneak','#343a40','#ffffff',8),
+ S('s_pink','분홍 운동화','sneak','#f783ac','#ffffff',10),S('s_sand','여름 샌들','sandal','#a0673a','',12),S('s_mj','빨간 구두','mary','#e03131','',20),
+ S('s_mjb','까만 구두','mary','#343a40','',20),S('s_rain','노란 장화','rainboot','#ffd43b','',20),S('s_boot','갈색 부츠','boot','#8d5a32','',30),
+ S('s_bootw','하얀 털부츠','furboot','#ffffff','#e9ecef',35),S('s_skate','롤러스케이트','skate','#ff8787','#ffd43b',50),S('s_light','반짝 운동화','light','#ffffff','',60,1),
+ S('s_gld','황금 구두','mary',GR.gold,'',80,1),S('s_rbs','무지개 운동화','sneak',GR.rainbow,'#ffffff',80,1),S('s_cloud','구름 신발','cloud','#ffffff','#a5d8ff',100,1),
+ S('s_wing','날개 운동화','wing','#ffffff','#ffd43b',120,1),S('s_glass','유리 구두','mary',GR.glass,'',150,1),S('s_rocket','로켓 부츠','rocket','#adb5bd','#ff6b6b',180,1),
+ S('s_star','별빛 부츠','boot',GR.galaxy,'#ffe066',160,1)
+];
+const ACCS=[
+ // 모자·머리
+ A('a_capr','빨간 야구모자','hat','cap','#ff6b6b','',10),A('a_capb','파란 야구모자','hat','cap','#4dabf7','',10),A('a_party','파티 고깔모자','hat','party','#ffd43b','#f783ac',15),
+ A('a_beanie','털모자','hat','beanie','#ff922b','#ffffff',15),A('a_ribbon','리본 머리띠','hat','ribbon','#ff6b6b','',15),A('a_straw','밀짚모자','hat','straw','#ffe8a3','#ff6b6b',20),
+ A('a_chef','요리사 모자','hat','chef','#ffffff','',25),A('a_cat','고양이 귀','hat','catear','#ffd8a8','#ffc9c9',30),A('a_bun','토끼 귀','hat','bunny','#ffffff','#ffc9e3',30),
+ A('a_bear','곰돌이 귀','hat','bear','#a0673a','#e0b088',30),A('a_fox','여우 귀','hat','fox','#ff922b','#ffffff',40),A('a_flw','꽃 화관','hat','flower','#ff8fab','#69db7c',45),
+ A('a_head','헤드폰','hat','phones','#845ef7','#343a40',50),A('a_wiz','별 마법사 모자','hat','wizard','#5f3dc4','#ffe066',60),A('a_halo','천사 링','hat','halo','#ffe066','',100,1),
+ A('a_uni','유니콘 뿔','hat','unicorn',GR.rainbow,'#ffffff',110,1),A('a_tiara','반짝 티아라','hat','tiara','#e9ecef','#74c0fc',120,1),A('a_crown','황금 왕관','hat','crown',GR.gold,'#ff6b6b',150,1),
+ // 얼굴
+ A('a_blush','하트 볼 스티커','face','blushheart','#ff6b6b','',10),A('a_whisk','고양이 수염','face','whisker','#3b3355','',12),A('a_round','동그란 안경','face','glasses','#3b3355','',15),
+ A('a_stg','별 선글라스','face','starglass','#fcc419','#3b3355',30),A('a_htg','하트 선글라스','face','heartglass','#ff6b6b','#3b3355',30),A('a_mono','멋쟁이 외눈 안경','face','mono',GR.gold,'',40),
+ // 목
+ A('a_scarf','빨간 목도리','neck','scarf','#ff6b6b','#ffffff',15),A('a_bow','나비넥타이','neck','bowtie','#e03131','',15),A('a_hneck','하트 목걸이','neck','heartneck','#ff6b6b','#fcc419',40),
+ A('a_rscarf','무지개 목도리','neck','scarf',GR.rainbow,'#ffffff',50),A('a_pearl','진주 목걸이','neck','pearl','#ffffff','',60),A('a_medal','금메달','neck','medal',GR.gold,'#4dabf7',70,1),
+ // 등
+ A('a_bag','노란 책가방','back','bag','#ffd43b','#ff922b',20),A('a_bbag','곰돌이 가방','back','bearbag','#a0673a','#e0b088',35),A('a_cape','빨간 망토','back','cape','#e03131','',50),
+ A('a_bat','꼬마 박쥐 날개','back','batwing','#7048e8','',60),A('a_fairy','요정 날개','back','fairy','#c5f6fa','#99e9f2',90,1),A('a_bfly','나비 날개','back','butterfly','#ffa8a8','#ffd43b',100,1),
+ A('a_angel','천사 날개','back','angel','#ffffff','#e7f5ff',120,1),A('a_rcape','무지개 망토','back','cape',GR.rainbow,'',130,1),A('a_dragon','아기 용 날개','back','dragon','#51cf66','#ffe066',160,1),
+ // 꼬리
+ A('a_ctail','고양이 꼬리','tail','cattail','#ffd8a8','',30),A('a_ftail','여우 꼬리','tail','foxtail','#ff922b','#ffffff',50),
+ // 손
+ A('a_candy','막대사탕','hand','lolli','#ff6b6b','#ffffff',15),A('a_ice','아이스크림','hand','icecream','#fcc2d7','#e0b088',20),A('a_bal','빨간 풍선','hand','balloon','#ff6b6b','',20),
+ A('a_umb','하늘 우산','hand','umbrella','#74c0fc','#ffffff',25),A('a_flb','꽃다발','hand','bouquet','#ff8fab','#69db7c',30),A('a_hbal','하트 풍선','hand','heartballoon','#f783ac','',35),
+ A('a_wand','별 요술봉','hand','wand','#ffe066','#f783ac',70,1),
+ // 오라
+ A('a_spark','반짝이 오라','aura','sparkle','#ffe066','',120,1),A('a_haura','하트 오라','aura','hearts','#ff8fab','',150,1),A('a_raura','무지개 오라','aura','rainbow',GR.rainbow,'',200,1),
+ A('a_meteor','별똥별 오라','aura','meteor','#ffe066','#a5d8ff',250,1),
+ // 펫
+ A('a_chick','어깨 위 병아리','pet','chick','#ffe066','#ff922b',60),A('a_kitty','어깨 위 아기 고양이','pet','kitty','#ffd8a8','#ff922b',80),A('a_baby','어깨 위 아기 용','pet','babydragon','#69db7c','#ffe066',300,1)
+];
+const ITEMS=[...BODY,...HAIR,...TOPS,...BOTS,...SHOES,...ACCS];
+const BY={};ITEMS.forEach(i=>BY[i.id]=i);
+const CATS=[{k:'body',n:'체형',e:'🧍'},{k:'hair',n:'머리',e:'💇'},{k:'top',n:'상의',e:'👕'},{k:'bottom',n:'하의',e:'👖'},{k:'shoes',n:'신발',e:'👟'},{k:'acc',n:'장신구',e:'💍'}];
+const SLOTS={hat:'모자·머리',face:'얼굴',neck:'목',back:'등',tail:'꼬리',hand:'손',aura:'오라',pet:'펫'};
+function rarity(p){return p<=0?{k:0,n:'기본',c:'#868e96'}:p<=20?{k:1,n:'일반',c:'#2b8a3e'}:p<=60?{k:2,n:'희귀',c:'#1971c2'}:p<=120?{k:3,n:'영웅',c:'#7048e8'}:{k:4,n:'전설',c:'#e8590c'};}
+function defaultState(){return {v:1,body:'round',eq:{hair:'h_ys',top:'t_gray',bottom:'b_blue',shoes:'s_white',acc:{}},own:[],spent:0};}
+const FREE=ITEMS.filter(i=>i.p===0).map(i=>i.id);
+
+// ---------- 그리기 도우미 ----------
+const f2=n=>(+n).toFixed(1);
+function cap(x1,y1,x2,y2,w,c){return `<line x1="${f2(x1)}" y1="${f2(y1)}" x2="${f2(x2)}" y2="${f2(y2)}" stroke="${OL}" stroke-width="${f2(w+2.4)}" stroke-linecap="round"/><line x1="${f2(x1)}" y1="${f2(y1)}" x2="${f2(x2)}" y2="${f2(y2)}" stroke="${c}" stroke-width="${f2(w)}" stroke-linecap="round"/>`;}
+const P=(d,c,extra='')=>`<path d="${d}" fill="${c}" stroke="${OL}" stroke-width="1.3" stroke-linejoin="round" ${extra}/>`;
+const PN=(d,c,extra='')=>`<path d="${d}" fill="${c}" ${extra}/>`;
+const C=(x,y,r,c,extra='')=>`<circle cx="${f2(x)}" cy="${f2(y)}" r="${f2(r)}" fill="${c}" stroke="${OL}" stroke-width="1.3" ${extra}/>`;
+const CN=(x,y,r,c,extra='')=>`<circle cx="${f2(x)}" cy="${f2(y)}" r="${f2(r)}" fill="${c}" ${extra}/>`;
+const E=(x,y,rx,ry,c,extra='')=>`<ellipse cx="${f2(x)}" cy="${f2(y)}" rx="${f2(rx)}" ry="${f2(ry)}" fill="${c}" stroke="${OL}" stroke-width="1.3" ${extra}/>`;
+function star(x,y,r,c,ol){let d='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;d+=(i?'L':'M')+f2(x+Math.cos(a)*rr)+' '+f2(y+Math.sin(a)*rr);}return ol?P(d+'Z',c):PN(d+'Z',c);}
+function heart(x,y,s,c,ol){const d=`M${f2(x)} ${f2(y+s*.9)}C${f2(x-s*1.3)} ${f2(y+s*.1)} ${f2(x-s*.9)} ${f2(y-s*.9)} ${f2(x)} ${f2(y-s*.3)}C${f2(x+s*.9)} ${f2(y-s*.9)} ${f2(x+s*1.3)} ${f2(y+s*.1)} ${f2(x)} ${f2(y+s*.9)}Z`;return ol?P(d,c):PN(d,c);}
+function twinkle(x,y,r,c='#fff'){return `<path d="M${f2(x)} ${f2(y-r)}Q${f2(x)} ${f2(y)} ${f2(x+r)} ${f2(y)}Q${f2(x)} ${f2(y)} ${f2(x)} ${f2(y+r)}Q${f2(x)} ${f2(y)} ${f2(x-r)} ${f2(y)}Q${f2(x)} ${f2(y)} ${f2(x)} ${f2(y-r)}Z" fill="${c}"/>`;}
+function torsoPath(M,ext=0,flare=0){const {tx1:a,tx2:b,ty1:t,ty2:u}=M,bot=u+ext;
+ return `M${a+5} ${t}Q${a} ${t} ${a} ${t+6}L${a-1-flare} ${bot-3}Q${a-1-flare} ${bot} ${a+3-flare} ${bot}L${b-3+flare} ${bot}Q${b+1+flare} ${bot} ${b+1+flare} ${bot-3}L${b} ${t+6}Q${b} ${t} ${b-5} ${t}Z`;}
+
+// ---------- 머리카락 ----------
+function bangs(M,c,kind){const {hx:x,hy:y,hr:r}=M;
+ if(kind==='side')return P(`M${x-r-1} ${y+4}A${r+1} ${r+2} 0 0 1 ${x+r+1} ${y+4}L${x+r-1} ${y-r*.05}Q${x+r*.2} ${y-r*.2} ${x-r*.55} ${y+r*.15}Q${x-r*.75} ${y-r*.1} ${x-r+1} ${y+r*.1}L${x-r-1} ${y+4}Z`,c);
+ if(kind==='spiky'){let d=`M${x-r-1} ${y+3}`;const pts=[[-1.1,-.2],[-1.2,-.9],[-.7,-.75],[-.6,-1.45],[-.15,-1.05],[.2,-1.6],[.45,-1.05],[.95,-1.35],[.85,-.7],[1.25,-.7],[1.05,-.1]];pts.forEach(([a,b])=>d+=`L${f2(x+a*r)} ${f2(y+b*r)}`);d+=`L${x+r+1} ${y+3}L${x+r-2} ${y-r*.2}Q${x} ${y-r*.5} ${x-r+2} ${y-r*.2}Z`;return P(d,c);}
+ if(kind==='curly'){let s='';for(let i=0;i<7;i++){const a=Math.PI+i*Math.PI/6;s+=C(x+Math.cos(a)*r*.92,y-r*.12+Math.sin(a)*r*.92,r*.36,c);}return s;}
+ return P(`M${x-r-1} ${y+4}A${r+1} ${r+2} 0 0 1 ${x+r+1} ${y+4}L${x+r-2} ${y-r*.15}Q${x+r*.62} ${y+r*.05} ${x+r*.35} ${y-r*.22}Q${x+r*.12} ${y+r*.06} ${x-r*.1} ${y-r*.24}Q${x-r*.35} ${y+r*.06} ${x-r*.55} ${y-r*.2}Q${x-r*.8} ${y+r*.05} ${x-r+2} ${y-r*.15}L${x-r-1} ${y+4}Z`,c);}
+function hairBack(M,it){const {hx:x,hy:y,hr:r}=M,c=it.c;switch(it.s){
+ case 'long':return P(`M${x-r-3} ${y}Q${x-r-4} ${y+r+16} ${x-r+1} ${y+r+20}L${x+r-1} ${y+r+20}Q${x+r+4} ${y+r+16} ${x+r+3} ${y}A${r+3} ${r+3} 0 0 0 ${x-r-3} ${y}Z`,c);
+ case 'wavy':{let d=`M${x-r-3} ${y}`;for(let i=0;i<4;i++)d+=`Q${x-r-7+(i%2)*6} ${y+6+i*6} ${x-r-3} ${y+9+i*6}`;d+=`L${x+r+3} ${y+33}`;for(let i=3;i>=0;i--)d+=`Q${x+r+7-(i%2)*6} ${y+6+i*6} ${x+r+3} ${y+3+i*6}`;d+=`A${r+3} ${r+3} 0 0 0 ${x-r-3} ${y}Z`;return P(d,c);}
+ case 'princess':{let s=P(`M${x-r-4} ${y}Q${x-r-7} ${y+r+30} ${x-r+2} ${y+r+34}L${x+r-2} ${y+r+34}Q${x+r+7} ${y+r+30} ${x+r+4} ${y}A${r+4} ${r+4} 0 0 0 ${x-r-4} ${y}Z`,c);
+  for(const k of [-1,1])for(let i=0;i<3;i++)s+=C(x+k*(r+1-i*.5),y+r+12+i*8,4.2,c);return s;}
+ case 'pony':return P(`M${x+r*.6} ${y-r*.75}Q${x+r+16} ${y-r*.4} ${x+r+12} ${y+r+6}Q${x+r+8} ${y+r+12} ${x+r+3} ${y+r+4}Q${x+r+7} ${y} ${x+r*.4} ${y-r*.5}Z`,c)+C(x,y-1,r+2,c);
+ case 'twin':{let s='';for(const k of [-1,1])s+=P(`M${x+k*r*.8} ${y-r*.5}Q${x+k*(r+13)} ${y-r*.2} ${x+k*(r+9)} ${y+r+10}Q${x+k*(r+6)} ${y+r+16} ${x+k*(r+2)} ${y+r+6}Q${x+k*(r+4)} ${y+2} ${x+k*r*.6} ${y-r*.2}Z`,c)+C(x+k*(r*.8),y-r*.55,3,'#ff8fab');return s+C(x,y-1,r+2,c);}
+ case 'braid':{let s=C(x,y-1,r+2,c);for(const k of [-1,1]){for(let i=0;i<5;i++)s+=E(x+k*(r-1),y+r*.4+i*5.5,4.2,3.6,c);s+=C(x+k*(r-1),y+r*.4+28,2.4,'#ff8fab');}return s;}
+ case 'curly':{let s='';for(let i=0;i<12;i++){const a=i*Math.PI*2/12;s+=C(x+Math.cos(a)*(r+2),y+2+Math.sin(a)*(r+2),r*.42,c);}return s+CN(x,y+2,r+2,c);}
+ case 'bun':return C(x,y-r-3,r*.5,c)+C(x,y-1,r+1.5,c);
+ case 'odango':return C(x-r*.75,y-r*.85,r*.42,c)+C(x+r*.75,y-r*.85,r*.42,c)+C(x,y-1,r+1.5,c);
+ default:return C(x,y-1,r+2,c);}}
+function hairFront(M,it){const k=it.s==='spiky'?'spiky':it.s==='curly'?'curly':it.s==='side'?'side':'bang';let s=bangs(M,it.c,k);
+ const {hx:x,hy:y,hr:r}=M;
+ if(it.s==='long'||it.s==='wavy'||it.s==='princess')for(const q of [-1,1])s+=P(`M${x+q*(r+1)} ${y}Q${x+q*(r+3)} ${y+r*.8} ${x+q*(r-1)} ${y+r+4}Q${x+q*(r-4)} ${y+r*.5} ${x+q*(r-2)} ${y-r*.1}Z`,it.c);
+ return s;}
+
+// ---------- 몸 ----------
+function arms(M,top){const sl=top?(['tank','dress','princess'].includes(top.s)?(top.s==='princess'?1:0):['tee','stripe','dots','stars','hearts','sailor','space'].includes(top.s)?1:2):1;
+ let s='';const [x1,x2]=[M.tx1+3,M.tx2-3],y=M.sh-2;
+ M.hand.forEach(([hx,hy],i)=>{const sx=i?x2:x1;s+=cap(sx,y,hx,hy,M.arm,SKIN);
+  if(top&&sl){const t=sl===1?.38:.86;const ex=sx+(hx-sx)*t,ey=y+(hy-y)*t;s+=cap(sx,y,ex,ey,M.arm+1.6,top.s==='jacket'||top.s==='tux'?top.c:top.c);
+   if(top.s==='princess')s+=C(sx+(hx-sx)*.18,y+(hy-y)*.18,M.arm*.85,top.c2||'#fff');}
+  s+=C(hx,hy,M.arm*.62,SKIN);});return s;}
+function legs(M){let s='';M.legs.forEach(([a,b])=>{s+=P(`M${a} ${M.ly1-6}L${a} ${M.ly2-2}Q${a} ${M.ly2+1} ${a+3} ${M.ly2+1}L${b-3} ${M.ly2+1}Q${b} ${M.ly2+1} ${b} ${M.ly2-2}L${b} ${M.ly1-6}Z`,SKIN);});return s;}
+function torsoTop(M,it,uid){const c=it.c,c2=it.c2,{tx1:a,tx2:b,ty1:t,ty2:u}=M,cx=(a+b)/2,w=b-a;let s='';
+ const clip=(inner,ext=0,fl=0)=>`<clipPath id="tc${uid}"><path d="${torsoPath(M,ext,fl)}"/></clipPath><g clip-path="url(#tc${uid})">${inner}</g>`;
+ const collar=()=>P(`M${cx-6} ${t-.5}Q${cx} ${t+5} ${cx+6} ${t-.5}`,'none');
+ switch(it.s){
+ case 'tank':s+=P(`M${a+6} ${t+3}L${a+3} ${t+8}L${a-1} ${u-3}Q${a-1} ${u} ${a+3} ${u}L${b-3} ${u}Q${b+1} ${u} ${b+1} ${u-3}L${b-3} ${t+8}L${b-6} ${t+3}Q${cx} ${t+9} ${a+6} ${t+3}Z`,c);break;
+ case 'dress':s+=P(torsoPath(M,16,7),c)+P(`M${a-1} ${u-2}L${b+1} ${u-2}`,'none')+P(`M${a-7} ${u+13}Q${cx} ${u+17} ${b+7} ${u+13}`,'none','stroke-dasharray="2 2"')+collar();
+  s+=C(cx,u-2,2.5,c2);break;
+ case 'princess':s+=P(torsoPath(M,22,12),c);s+=clip(`<rect x="${a-14}" y="${u-4}" width="${w+28}" height="5" fill="${c2}"/>`+[0,1,2,3,4].map(i=>CN(a-8+i*(w+16)/4,u+20,4,c2)).join(''),22,12);
+  s+=P(torsoPath(M,22,12),'none')+heart(cx,t+8,3,'#ff6b6b');break;
+ case 'stripe':s+=P(torsoPath(M),c)+clip([0,1,2,3,4,5].map(i=>`<rect x="${a-2}" y="${t+3+i*6.5}" width="${w+4}" height="3.2" fill="${c2}"/>`).join(''))+P(torsoPath(M),'none')+collar();break;
+ case 'dots':s+=P(torsoPath(M),c)+clip([...Array(12)].map((_,i)=>CN(a+3+(i%4)*w/3.6+(Math.floor(i/4)%2)*4,t+6+Math.floor(i/4)*11,2.2,c2)).join(''))+P(torsoPath(M),'none')+collar();break;
+ case 'stars':s+=P(torsoPath(M),c)+clip([...Array(9)].map((_,i)=>star(a+4+(i%3)*w/2.6+(Math.floor(i/3)%2)*4,t+7+Math.floor(i/3)*12,3,c2)).join(''))+P(torsoPath(M),'none')+collar();break;
+ case 'hearts':s+=P(torsoPath(M),c)+clip([...Array(9)].map((_,i)=>heart(a+4+(i%3)*w/2.6+(Math.floor(i/3)%2)*4,t+7+Math.floor(i/3)*12,2.6,c2)).join(''))+P(torsoPath(M),'none')+collar();break;
+ case 'hoodie':s+=P(`M${cx-12} ${t+2}Q${cx} ${t-6} ${cx+12} ${t+2}Q${cx} ${t+9} ${cx-12} ${t+2}Z`,c)+P(torsoPath(M),c)+P(`M${cx-8} ${u-13}L${cx+8} ${u-13}L${cx+10} ${u-4}L${cx-10} ${u-4}Z`,c)+cap(cx-3,t+4,cx-3,t+13,.8,'#fff')+cap(cx+3,t+4,cx+3,t+13,.8,'#fff');
+  if(c.startsWith('url'))s+=star(a+6,t+10,2.2,'#fff')+star(b-7,t+20,1.6,'#fff')+star(cx+4,u-8,1.4,'#fff');break;
+ case 'sweater':s+=P(torsoPath(M),c)+`<rect x="${a}" y="${u-4}" width="${w}" height="4" fill="${c}" stroke="${OL}" stroke-width="1"/>`+(it.id==='t_sws'?star(cx,t+15,7,c2,1):heart(cx,t+15,6,c2,1))+collar();break;
+ case 'shirt':s+=P(torsoPath(M),c)+P(`M${cx} ${t+1}L${cx-8} ${t-1}L${cx-6} ${t+6}Z`,'#fff')+P(`M${cx} ${t+1}L${cx+8} ${t-1}L${cx+6} ${t+6}Z`,'#fff')+[0,1,2,3].map(i=>CN(cx,t+8+i*7,1.2,OL)).join('')+cap(cx,t+2,cx,u,.01,OL);break;
+ case 'jacket':s+=P(torsoPath(M),c2)+P(`M${a+5} ${t}Q${a} ${t} ${a} ${t+6}L${a-1} ${u-3}Q${a-1} ${u} ${a+3} ${u}L${cx-4} ${u}L${cx-4} ${t+12}L${cx-8} ${t}Z`,c)+P(`M${b-5} ${t}Q${b} ${t} ${b} ${t+6}L${b+1} ${u-3}Q${b+1} ${u} ${b-3} ${u}L${cx+4} ${u}L${cx+4} ${t+12}L${cx+8} ${t}Z`,c);break;
+ case 'sailor':s+=P(torsoPath(M),c)+P(`M${a+2} ${t+1}L${cx} ${t+14}L${b-2} ${t+1}L${b-4} ${t+10}L${cx} ${t+20}L${a+4} ${t+10}Z`,c2)+P(`M${cx-6} ${t+19}L${cx} ${t+16}L${cx+6} ${t+19}L${cx+5} ${t+24}L${cx} ${t+21}L${cx-5} ${t+24}Z`,'#ff6b6b');break;
+ case 'rain':s+=P(torsoPath(M,4,2),c)+P(`M${cx-11} ${t+1}Q${cx} ${t-7} ${cx+11} ${t+1}Q${cx} ${t+7} ${cx-11} ${t+1}Z`,c)+[0,1,2].map(i=>C(cx,t+9+i*8,1.6,'#fff')).join('');break;
+ case 'hanbok':{const cols=['#ff6b6b','#ffd43b','#69db7c','#4dabf7','#9775fa'];s+=P(torsoPath(M,-6),c);s+=P(`M${cx-6} ${t}L${cx+8} ${t+18}`,'none');s+=P(`M${cx-1} ${t+16}Q${cx-8} ${t+30} ${cx-4} ${t+33}L${cx-1} ${t+19}Q${cx+4} ${t+32} ${cx+1} ${t+34}Q${cx+5} ${t+24} ${cx-1} ${t+16}Z`,c2);
+  M._hanbok=cols;break;}
+ case 'tux':s+=P(torsoPath(M),c)+P(`M${cx-6} ${t}L${cx} ${t+16}L${cx+6} ${t}Z`,c2)+P(`M${cx-6} ${t+3}L${cx} ${t+5}L${cx+6} ${t+3}L${cx+6} ${t+8}L${cx} ${t+6}L${cx-6} ${t+8}Z`,'#e03131')+[0,1].map(i=>CN(cx,t+20+i*6,1.3,'#fff')).join('');break;
+ case 'space':s+=P(torsoPath(M),c)+`<rect x="${a+1}" y="${u-9}" width="${w-2}" height="5" fill="#adb5bd" stroke="${OL}" stroke-width="1"/>`+C(a+8,t+11,4.5,c2)+star(a+8,t+11,2.6,'#fff')+`<rect x="${b-13}" y="${t+8}" width="8" height="6" rx="1.5" fill="#ff6b6b" stroke="${OL}" stroke-width="1"/>`;break;
+ default:s+=P(torsoPath(M),c)+collar();}
+ if(it.s==='hanbok'){const cols=M._hanbok;}
+ return s;}
+function sleevesHanbok(M,top){if(!top||top.s!=='hanbok')return '';const cols=['#ff6b6b','#ffd43b','#69db7c','#4dabf7','#9775fa'];let s='';const y=M.sh-2;
+ M.hand.forEach(([hx,hy],i)=>{const sx=i?M.tx2-3:M.tx1+3;for(let k=0;k<5;k++){const t0=.12+k*.15,t1=t0+.15;s+=`<line x1="${f2(sx+(hx-sx)*t0)}" y1="${f2(y+(hy-y)*t0)}" x2="${f2(sx+(hx-sx)*t1)}" y2="${f2(y+(hy-y)*t1)}" stroke="${cols[k]}" stroke-width="${M.arm+1.2}"/>`;}});return s;}
+function bottom(M,it,uid){const c=it.c,c2=it.c2,[[la,lb],[ra,rb]]=M.legs,top=M.ty2-5,y1=M.ly1,y2=M.ly2,cx=(la+rb)/2;let s='';
+ const pants=(end)=>P(`M${la-1} ${top}L${rb+1} ${top}L${rb+1} ${end}L${ra-.5} ${end}L${ra-.5} ${y1+2}Q${cx} ${y1-2} ${lb+.5} ${y1+2}L${lb+.5} ${end}L${la-1} ${end}Z`,c);
+ const skirt=(len,fl)=>P(`M${la} ${top}L${rb} ${top}L${rb+fl} ${y1+len}Q${cx} ${y1+len+3} ${la-fl} ${y1+len}Z`,c);
+ switch(it.s){
+ case 'shorts':s+=pants(y1+9);break;
+ case 'jeans':s+=pants(y2-4)+cap(la+3,y1+3,la+3,y2-6,.01,'#3b5bdb')+cap(rb-3,y1+3,rb-3,y2-6,.01,'#3b5bdb')+P(`M${la+1} ${top+3}Q${la+5} ${top+8} ${la+8} ${top+3}`,'none');break;
+ case 'jog':s+=pants(y2-4)+`<rect x="${la-1}" y="${top+3}" width="2.6" height="${y2-top-8}" fill="${c2}"/><rect x="${rb-1.6}" y="${top+3}" width="2.6" height="${y2-top-8}" fill="${c2}"/>`+`<rect x="${la-1}" y="${y2-7}" width="${lb-la+1.5}" height="3" fill="${c}" stroke="${OL}" stroke-width="1"/><rect x="${ra-.5}" y="${y2-7}" width="${rb-ra+1.5}" height="3" fill="${c}" stroke="${OL}" stroke-width="1"/>`;break;
+ case 'cargo':s+=pants(y2-4)+`<rect x="${la}" y="${y1+8}" width="6" height="7" rx="1" fill="${c}" stroke="${OL}" stroke-width="1"/><rect x="${rb-6}" y="${y1+8}" width="6" height="7" rx="1" fill="${c}" stroke="${OL}" stroke-width="1"/>`;break;
+ case 'starpants':s+=pants(y2-4)+`<clipPath id="bc${uid}"><path d="M${la-1} ${top}L${rb+1} ${top}L${rb+1} ${y2-4}L${la-1} ${y2-4}Z"/></clipPath><g clip-path="url(#bc${uid})">`+[...Array(8)].map((_,i)=>star(la+2+(i%2)*(rb-la-4)+(Math.floor(i/2)%2?3:0)*(i%2?-1:1),top+5+Math.floor(i/2)*9,2.2,c2)).join('')+'</g>';break;
+ case 'overall':s+=pants(y2-4)+P(`M${cx-8} ${top-12}L${cx+8} ${top-12}L${cx+8} ${top+2}L${cx-8} ${top+2}Z`,c)+cap(cx-7,top-12,M.tx1+5,M.ty1+1,1.4,c)+cap(cx+7,top-12,M.tx2-5,M.ty1+1,1.4,c)+C(cx-5,top-9,1.4,c2)+C(cx+5,top-9,1.4,c2);break;
+ case 'skirt':s+=skirt(10,4);break;
+ case 'pleat':s+=skirt(11,4)+`<clipPath id="bc${uid}"><path d="M${la} ${top}L${rb} ${top}L${rb+4} ${y1+11}L${la-4} ${y1+11}Z"/></clipPath><g clip-path="url(#bc${uid})">`+[0,1,2,3,4].map(i=>`<rect x="${la-4+i*(rb-la+8)/5}" y="${top}" width="1.2" height="20" fill="${OL}" opacity=".35"/>`).join('')+`<rect x="${la-6}" y="${top+6}" width="${rb-la+12}" height="1.8" fill="${c2}"/><rect x="${la-6}" y="${top+12}" width="${rb-la+12}" height="1.8" fill="${c2}"/></g>`+skirt(11,4).replace(`fill="${c}"`,'fill="none"');break;
+ case 'dotskirt':s+=skirt(11,5)+[...Array(7)].map((_,i)=>CN(la+(i%4)*(rb-la)/3,top+5+Math.floor(i/4)*8+(i%2),1.8,c2)).join('');break;
+ case 'long':s+=P(`M${la} ${top}L${rb} ${top}L${rb+7} ${y2-3}Q${cx} ${y2} ${la-7} ${y2-3}Z`,c);if(c2)s+=`<rect x="${la-1}" y="${top}" width="${rb-la+2}" height="4" fill="${c2}" stroke="${OL}" stroke-width="1"/>`;break;
+ case 'tutu':for(let k=2;k>=0;k--){let d=`M${la-2-k*3} ${top+4+k*3}`;const n=6;for(let i=0;i<=n;i++){const x=la-2-k*3+i*(rb-la+4+k*6)/n;d+=`Q${x-2} ${y1+8+k*2} ${x} ${top+4+k*3}`;}s+=P(d+'Z',c,k?'opacity=".9"':'');}s+=`<rect x="${la}" y="${top}" width="${rb-la}" height="5" rx="2" fill="${c}" stroke="${OL}" stroke-width="1.2"/>`;break;
+ case 'cloud':s+=skirt(8,4);for(let i=0;i<6;i++)s+=C(la-3+i*(rb-la+6)/5,y1+9,3.6,c);s+=CN(la+5,top+5,2,c2)+CN(rb-6,top+8,1.6,c2);break;
+ case 'mermaid':s+=P(`M${la-1} ${top}L${rb+1} ${top}Q${rb+2} ${y1+12} ${cx+4} ${y2-4}L${cx+13} ${y2+6}Q${cx} ${y2+1} ${cx-13} ${y2+6}L${cx-4} ${y2-4}Q${la-2} ${y1+12} ${la-1} ${top}Z`,c)+[0,1,2].map(i=>P(`M${cx-6+i*3} ${y1+i*7}Q${cx-3+i*3} ${y1+3+i*7} ${cx+i*3} ${y1+i*7}`,'none','opacity=".5"')).join('');break;
+ default:s+=pants(y2-4);}
+ return s;}
+function shoes(M,it,bot){if(bot&&bot.s==='mermaid')return '';const c=it.c,c2=it.c2;let s='';
+ M.legs.forEach(([a,b],i)=>{const y=M.ly2,cx=(a+b)/2,w=b-a+3;const s0=s.length;
+ switch(it.s){
+ case 'sandal':s+=`<rect x="${a-1.5}" y="${y-1}" width="${w}" height="3" rx="1.5" fill="${c}" stroke="${OL}" stroke-width="1.1"/>`+cap(a+1,y-3,b-1,y-1,1.2,c);break;
+ case 'mary':s+=P(`M${a-1.5} ${y-3}Q${a-1.5} ${y+3} ${cx} ${y+3}Q${b+1.5} ${y+3} ${b+1.5} ${y-3}Z`,c)+cap(a,y-4.5,b,y-4.5,1,c)+CN(cx-2,y,1,'#fff','opacity=".8"');break;
+ case 'rainboot':s+=P(`M${a-1} ${y-11}L${b+1} ${y-11}L${b+1} ${y-1}Q${b+3} ${y+3} ${cx} ${y+3}L${a-1.5} ${y+3}Z`,c);break;
+ case 'boot':s+=P(`M${a-1} ${y-9}L${b+1} ${y-9}L${b+1} ${y}Q${b+3} ${y+3} ${cx} ${y+3}L${a-1.5} ${y+3}Z`,c)+(c2?star(cx,y-4,2.4,c2):'');break;
+ case 'furboot':s+=P(`M${a-1} ${y-8}L${b+1} ${y-8}L${b+1} ${y}Q${b+3} ${y+3} ${cx} ${y+3}L${a-1.5} ${y+3}Z`,c)+[0,1,2].map(k=>C(a+k*(b-a)/2,y-8,2,c2)).join('');break;
+ case 'skate':s+=P(`M${a-1.5} ${y-4}L${b+1.5} ${y-4}L${b+2} ${y+1}L${a-2} ${y+1}Z`,c)+C(a+.5,y+3.4,1.8,c2)+C(b-.5,y+3.4,1.8,c2);break;
+ case 'cloud':for(let k=0;k<3;k++)s+=C(a+k*(b-a)/2,y+1,2.8,c);s+=CN(cx,y,1.2,c2);break;
+ case 'wing':s+=P(`M${a-1.5} ${y-3}Q${a-1.5} ${y+3} ${cx} ${y+3}Q${b+1.5} ${y+3} ${b+1.5} ${y-3}Z`,c)+P(i?`M${b+1} ${y-2}Q${b+8} ${y-8} ${b+7} ${y-1}Q${b+5} ${y} ${b+1} ${y}Z`:`M${a-1} ${y-2}Q${a-8} ${y-8} ${a-7} ${y-1}Q${a-5} ${y} ${a-1} ${y}Z`,c2);break;
+ case 'rocket':s+=P(`M${a-1} ${y-8}L${b+1} ${y-8}L${b+1.5} ${y+2}L${a-1.5} ${y+2}Z`,c)+`<rect x="${a-1}" y="${y-5}" width="${b-a+2}" height="2" fill="${c2}"/>`+P(`M${a+.5} ${y+2.5}Q${cx} ${y+12} ${b-.5} ${y+2.5}Z`,'url(#tav-fire)','stroke="none"');break;
+ case 'light':s+=P(`M${a-1.5} ${y-3}Q${a-1.5} ${y+3} ${cx} ${y+3}Q${b+1.5} ${y+3} ${b+1.5} ${y-3}Z`,c)+`<rect x="${a-1}" y="${y+1}" width="${w-1}" height="2.2" rx="1" fill="url(#tav-rainbow)"/>`;break;
+ default:s+=P(`M${a-1.5} ${y-3}Q${a-1.5} ${y+3.2} ${cx} ${y+3.2}Q${b+2} ${y+3.2} ${b+2} ${y-3}Z`,c)+`<rect x="${a-1.3}" y="${y+1.2}" width="${w-.4}" height="1.8" rx=".9" fill="${c2||'#fff'}"/>`+CN(cx,y-1,.7,OL)+CN(cx+2,y-1,.7,OL);}
+ s=s.slice(0,s0)+`<g transform="translate(${f2(cx)} ${f2(y-2)}) scale(1.3) translate(${f2(-cx)} ${f2(-y+2)})">`+s.slice(s0)+'</g>';});
+ return s;}
+function face(M){const {hx:x,hy:y,hr:r}=M;let s='';
+ for(const k of [-1,1]){s+=`<ellipse cx="${f2(x+k*r*.38)}" cy="${f2(y+r*.14)}" rx="${f2(r*.11)}" ry="${f2(r*.15)}" fill="#2b2540"/>`+CN(x+k*r*.38+r*.04,y+r*.08,r*.045,'#fff');
+  s+=`<ellipse cx="${f2(x+k*r*.62)}" cy="${f2(y+r*.42)}" rx="${f2(r*.15)}" ry="${f2(r*.08)}" fill="#ff8fab" opacity=".55"/>`;}
+ s+=`<path d="M${f2(x-r*.16)} ${f2(y+r*.42)}Q${f2(x)} ${f2(y+r*.6)} ${f2(x+r*.16)} ${f2(y+r*.42)}" fill="none" stroke="#2b2540" stroke-width="1.3" stroke-linecap="round"/>`;return s;}
+
+// ---------- 장신구 ----------
+function acc(M,it,uid,layer){const raw=acc0(M,it,uid);const x=M.hx;
+ if(['batwing','fairy','butterfly','angel','dragon'].includes(it.s))return `<g transform="translate(${x} ${M.ty1+6}) scale(1.35) translate(${-x} ${-M.ty1-6})">${raw}</g>`;
+ if(it.slot==='pet'){const px=M.tx1,py=M.ty1-6;return `<g transform="translate(${px} ${py+5}) scale(1.75) translate(${-px} ${-py-5})">${raw}</g>`;}
+ if(it.slot==='aura')return `<g opacity=".95">${raw}</g>`;return raw;}
+function acc0(M,it,uid){const {hx:x,hy:y,hr:r}=M,c=it.c,c2=it.c2;const top=y-r;let s='';
+ const [rhx,rhy]=M.hand[1];
+ switch(it.s){
+ // 모자
+ case 'cap':return P(`M${x-r-1} ${y-r*.25}A${r+1} ${r*.95} 0 0 1 ${x+r+1} ${y-r*.25}Z`,c)+P(`M${x+r*.3} ${y-r*.3}Q${x+r+12} ${y-r*.35} ${x+r+10} ${y-r*.12}Q${x+r*.6} ${y-r*.1} ${x+r*.3} ${y-r*.3}Z`,c)+C(x,top-.5,1.8,c);
+ case 'party':return P(`M${x-8} ${top+4}L${x+1} ${top-20}L${x+9} ${top+4}Z`,c)+P(`M${x-5} ${top-4}L${x+6} ${top-7}`,'none','stroke="'+c2+'" stroke-width="2.4"')+C(x+1,top-21,3,c2);
+ case 'beanie':return P(`M${x-r-1} ${y-r*.15}Q${x-r-1} ${top-6} ${x} ${top-7}Q${x+r+1} ${top-6} ${x+r+1} ${y-r*.15}Z`,c)+`<rect x="${x-r-2}" y="${y-r*.3}" width="${2*r+4}" height="6" rx="3" fill="${c2}" stroke="${OL}" stroke-width="1.2"/>`+C(x,top-8,4,c2);
+ case 'ribbon':return P(`M${x-r} ${y-r*.3}A${r} ${r} 0 0 1 ${x+r} ${y-r*.3}`,'none','stroke-width="1"')+`<path d="M${x-r} ${y-r*.3}A${r} ${r} 0 0 1 ${x+r} ${y-r*.3}" fill="none" stroke="${c}" stroke-width="3"/>`+P(`M${x+r*.35} ${top+2}L${x+r*.35-10} ${top-6}L${x+r*.35-10} ${top+8}Z`,c)+P(`M${x+r*.35} ${top+2}L${x+r*.35+10} ${top-6}L${x+r*.35+10} ${top+8}Z`,c)+C(x+r*.35,top+2,2.6,c);
+ case 'straw':return E(x,y-r*.35,r+11,4.5,c)+P(`M${x-r*.8} ${y-r*.35}Q${x-r*.8} ${top-7} ${x} ${top-7}Q${x+r*.8} ${top-7} ${x+r*.8} ${y-r*.35}Z`,c)+`<rect x="${x-r*.8}" y="${y-r*.55}" width="${r*1.6}" height="3.5" fill="${c2}"/>`;
+ case 'chef':return `<rect x="${x-r*.75}" y="${top-5}" width="${r*1.5}" height="9" fill="${c}" stroke="${OL}" stroke-width="1.3"/>`+C(x-r*.5,top-9,6,c)+C(x+r*.5,top-9,6,c)+C(x,top-12,7,c)+`<rect x="${x-r*.75+1}" y="${top-6}" width="${r*1.5-2}" height="6" fill="${c}"/>`;
+ case 'catear':case 'fox':{for(const k of [-1,1]){s+=P(`M${x+k*r*.35} ${top+3}L${x+k*r*.85} ${top-(it.s==='fox'?13:10)}L${x+k*r*.95} ${top+8}Z`,c)+PN(`M${x+k*r*.5} ${top+3}L${x+k*r*.82} ${top-(it.s==='fox'?8:6)}L${x+k*r*.85} ${top+6}Z`,c2);}return s;}
+ case 'bunny':{for(const k of [-1,1])s+=E(x+k*r*.4,top-9,4.5,12,c,`transform="rotate(${k*12} ${x+k*r*.4} ${top})"`)+`<ellipse cx="${x+k*r*.4}" cy="${top-9}" rx="2.2" ry="8.5" fill="${c2}" transform="rotate(${k*12} ${x+k*r*.4} ${top})"/>`;return s;}
+ case 'bear':{for(const k of [-1,1])s+=C(x+k*r*.72,top+3,5.5,c)+CN(x+k*r*.72,top+3,3,c2);return s;}
+ case 'flower':{const cols=['#ff8fab','#ffd43b','#b197fc','#ff8fab','#74c0fc','#ffd43b','#ff8fab'];for(let i=0;i<7;i++){const a=Math.PI*(1.05+i*.15),fx=x+Math.cos(a)*(r+1),fy=y-r*.15+Math.sin(a)*(r+1);s+=CN(fx-3,fy,3,c2)+[0,1,2,3,4].map(k=>CN(fx+Math.cos(k*1.256)*2.4,fy+Math.sin(k*1.256)*2.4,2,cols[i])).join('')+CN(fx,fy,1.4,'#fff3bf');}return s;}
+ case 'phones':return `<path d="M${x-r-1} ${y}A${r+1} ${r+3} 0 0 1 ${x+r+1} ${y}" fill="none" stroke="${OL}" stroke-width="5"/><path d="M${x-r-1} ${y}A${r+1} ${r+3} 0 0 1 ${x+r+1} ${y}" fill="none" stroke="${c}" stroke-width="3"/>`+E(x-r-1,y+1,4,6.5,c)+E(x+r+1,y+1,4,6.5,c)+CN(x-r-1,y+1,2,c2)+CN(x+r+1,y+1,2,c2);
+ case 'wizard':return E(x,y-r*.45,r+7,4,c)+P(`M${x-r*.8} ${y-r*.45}Q${x-2} ${top-14} ${x+8} ${top-24}Q${x+3} ${top-10} ${x+r*.8} ${y-r*.45}Z`,c)+star(x-2,top-5,3.4,c2)+star(x+6,top+2,2,c2);
+ case 'halo':return `<ellipse cx="${x}" cy="${top-7}" rx="${r*.75}" ry="3.6" fill="none" stroke="${OL}" stroke-width="4.6"/><ellipse cx="${x}" cy="${top-7}" rx="${r*.75}" ry="3.6" fill="none" stroke="${c}" stroke-width="2.8"/>`+twinkle(x+r*.8,top-10,3);
+ case 'unicorn':return P(`M${x-4} ${top+3}L${x} ${top-16}L${x+4} ${top+3}Z`,c)+P(`M${x-3} ${top-3}L${x+3} ${top-6}M${x-2} ${top-9}L${x+2} ${top-11}`,'none','opacity=".6"')+twinkle(x+7,top-12,3);
+ case 'tiara':return P(`M${x-r*.7} ${top+5}L${x-r*.6} ${top-3}L${x-r*.3} ${top+1}L${x} ${top-7}L${x+r*.3} ${top+1}L${x+r*.6} ${top-3}L${x+r*.7} ${top+5}Z`,c)+C(x,top-1,2.2,c2)+CN(x-r*.45,top+2,1.3,'#f783ac')+CN(x+r*.45,top+2,1.3,'#f783ac')+twinkle(x-r*.9,top-5,2.6);
+ case 'crown':return P(`M${x-r*.75} ${top+5}L${x-r*.8} ${top-9}L${x-r*.4} ${top-2}L${x} ${top-12}L${x+r*.4} ${top-2}L${x+r*.8} ${top-9}L${x+r*.75} ${top+5}Z`,c)+C(x,top,2.2,c2)+C(x-r*.48,top+1,1.6,'#4dabf7')+C(x+r*.48,top+1,1.6,'#51cf66')+twinkle(x+r,top-8,3);
+ // 얼굴
+ case 'blushheart':return heart(x-r*.62,y+r*.42,2.4,c)+heart(x+r*.62,y+r*.42,2.4,c);
+ case 'whisker':{for(const k of [-1,1])for(const d of [-2,1])s+=`<path d="M${x+k*r*.45} ${y+r*.45}L${x+k*(r+3)} ${y+r*.45+d}" stroke="${c}" stroke-width="1" stroke-linecap="round"/>`;return s+CN(x,y+r*.33,1.6,'#ff8fab');}
+ case 'glasses':return `<circle cx="${x-r*.38}" cy="${y+r*.14}" r="${r*.27}" fill="#fff" fill-opacity=".25" stroke="${c}" stroke-width="1.6"/><circle cx="${x+r*.38}" cy="${y+r*.14}" r="${r*.27}" fill="#fff" fill-opacity=".25" stroke="${c}" stroke-width="1.6"/><path d="M${x-r*.11} ${y+r*.12}L${x+r*.11} ${y+r*.12}" stroke="${c}" stroke-width="1.6"/>`;
+ case 'starglass':return star(x-r*.38,y+r*.14,r*.36,c,1)+star(x+r*.38,y+r*.14,r*.36,c,1)+`<path d="M${x-r*.1} ${y+r*.1}L${x+r*.1} ${y+r*.1}" stroke="${OL}" stroke-width="1.5"/>`;
+ case 'heartglass':return heart(x-r*.38,y+r*.14,r*.26,c,1)+heart(x+r*.38,y+r*.14,r*.26,c,1)+`<path d="M${x-r*.12} ${y+r*.1}L${x+r*.12} ${y+r*.1}" stroke="${OL}" stroke-width="1.5"/>`;
+ case 'mono':return `<circle cx="${x+r*.38}" cy="${y+r*.14}" r="${r*.28}" fill="#fff" fill-opacity=".3" stroke="${c}" stroke-width="2"/><path d="M${x+r*.62} ${y+r*.28}Q${x+r*.75} ${y+r*.9} ${x+r*.5} ${y+r*1.3}" fill="none" stroke="${c}" stroke-width="1"/>`;
+ // 목
+ case 'scarf':return P(`M${x-r*.7} ${M.ty1-2}Q${x} ${M.ty1+5} ${x+r*.7} ${M.ty1-2}L${x+r*.7} ${M.ty1+3}Q${x} ${M.ty1+10} ${x-r*.7} ${M.ty1+3}Z`,c)+P(`M${x+4} ${M.ty1+4}L${x+9} ${M.ty1+18}L${x+3} ${M.ty1+18}L${x} ${M.ty1+5}Z`,c);
+ case 'bowtie':return P(`M${x} ${M.ty1+2}L${x-7} ${M.ty1-2}L${x-7} ${M.ty1+6}Z`,c)+P(`M${x} ${M.ty1+2}L${x+7} ${M.ty1-2}L${x+7} ${M.ty1+6}Z`,c)+C(x,M.ty1+2,2,c);
+ case 'heartneck':return `<path d="M${x-8} ${M.ty1}Q${x} ${M.ty1+8} ${x+8} ${M.ty1}" fill="none" stroke="${c2}" stroke-width="1.2"/>`+heart(x,M.ty1+8,3,c,1);
+ case 'pearl':{for(let i=0;i<9;i++){const a=Math.PI*(.15+i*.0875);s+=C(x-Math.cos(a)*9,M.ty1-1+Math.sin(a)*7,1.5,c);}return s;}
+ case 'medal':return P(`M${x-5} ${M.ty1-1}L${x} ${M.ty1+10}L${x+5} ${M.ty1-1}`,'none','stroke="'+c2+'" stroke-width="3"')+C(x,M.ty1+13,5,c)+star(x,M.ty1+13,2.8,'#fff3bf');
+ // 등
+ case 'bag':return `<rect x="${x-r*.85}" y="${M.ty1+2}" width="${r*1.7}" height="${M.ty2-M.ty1-4}" rx="5" fill="${c}" stroke="${OL}" stroke-width="1.3" transform="translate(${r*.6} 0)"/>`;
+ case 'bearbag':return C(x+r*.7,M.ty1+14,r*.6,c)+C(x+r*.35,M.ty1+3,3.4,c)+C(x+r*1.05,M.ty1+3,3.4,c);
+ case 'cape':return P(`M${M.tx1+3} ${M.ty1}L${M.tx2-3} ${M.ty1}L${M.tx2+10} ${M.ly1+18}Q${x} ${M.ly1+22} ${M.tx1-10} ${M.ly1+18}Z`,c);
+ case 'batwing':{for(const k of [-1,1])s+=P(`M${x+k*6} ${M.ty1+8}Q${x+k*26} ${M.ty1-10} ${x+k*34} ${M.ty1+2}Q${x+k*28} ${M.ty1+6} ${x+k*29} ${M.ty1+13}Q${x+k*22} ${M.ty1+10} ${x+k*20} ${M.ty1+17}Q${x+k*14} ${M.ty1+12} ${x+k*6} ${M.ty1+16}Z`,c);return s;}
+ case 'fairy':case 'butterfly':{for(const k of [-1,1])s+=E(x+k*17,M.ty1+3,13,9,c,`transform="rotate(${k*-25} ${x+k*17} ${M.ty1+3})" opacity="${it.s==='fairy'?.85:1}"`)+E(x+k*14,M.ty1+19,8,7,c2,`transform="rotate(${k*20} ${x+k*14} ${M.ty1+19})" opacity="${it.s==='fairy'?.85:1}"`)+(it.s==='butterfly'?CN(x+k*18,M.ty1+3,3,'#fff','opacity=".7"'):twinkle(x+k*22,M.ty1-2,2.5));return s;}
+ case 'angel':{for(const k of [-1,1]){let d=`M${x+k*5} ${M.ty1+6}Q${x+k*20} ${M.ty1-14} ${x+k*36} ${M.ty1-6}`;d+=`Q${x+k*32} ${M.ty1} ${x+k*34} ${M.ty1+4}Q${x+k*28} ${M.ty1+6} ${x+k*29} ${M.ty1+11}Q${x+k*22} ${M.ty1+11} ${x+k*22} ${M.ty1+17}Q${x+k*14} ${M.ty1+16} ${x+k*5} ${M.ty1+18}Z`;s+=P(d,c);}return s;}
+ case 'dragon':{for(const k of [-1,1])s+=P(`M${x+k*5} ${M.ty1+6}L${x+k*30} ${M.ty1-12}L${x+k*32} ${M.ty1+8}Q${x+k*26} ${M.ty1+6} ${x+k*25} ${M.ty1+14}Q${x+k*19} ${M.ty1+10} ${x+k*16} ${M.ty1+18}Q${x+k*11} ${M.ty1+13} ${x+k*5} ${M.ty1+18}Z`,c)+`<path d="M${x+k*7} ${M.ty1+10}L${x+k*29} ${M.ty1-9}" stroke="${c2}" stroke-width="1.5"/>`;return s;}
+ case 'cattail':return `<path d="M${x+8} ${M.ty2-2}Q${x+28} ${M.ty2+4} ${x+26} ${M.ty2-16}Q${x+25} ${M.ty2-24} ${x+31} ${M.ty2-24}" fill="none" stroke="${OL}" stroke-width="6.4" stroke-linecap="round"/><path d="M${x+8} ${M.ty2-2}Q${x+28} ${M.ty2+4} ${x+26} ${M.ty2-16}Q${x+25} ${M.ty2-24} ${x+31} ${M.ty2-24}" fill="none" stroke="${c}" stroke-width="4" stroke-linecap="round"/>`;
+ case 'foxtail':return P(`M${x+8} ${M.ty2}Q${x+34} ${M.ty2+6} ${x+32} ${M.ty2-18}Q${x+31} ${M.ty2-28} ${x+24} ${M.ty2-24}Q${x+26} ${M.ty2-8} ${x+8} ${M.ty2-8}Z`,c)+P(`M${x+32} ${M.ty2-18}Q${x+31} ${M.ty2-28} ${x+24} ${M.ty2-24}Q${x+28} ${M.ty2-16} ${x+31} ${M.ty2-14}Z`,c2);
+ // 손
+ case 'lolli':return cap(rhx,rhy,rhx+2,rhy-16,1.2,'#fff')+C(rhx+2,rhy-20,6,c)+`<path d="M${rhx+2} ${rhy-20}m-3 0a3 3 0 1 1 3 3" fill="none" stroke="${c2}" stroke-width="1.6"/>`;
+ case 'icecream':return P(`M${rhx-4} ${rhy-4}L${rhx+4} ${rhy-4}L${rhx} ${rhy+7}Z`,c2)+C(rhx,rhy-7,4.6,c)+CN(rhx+1,rhy-12,1.6,'#ff6b6b');
+ case 'balloon':return `<path d="M${rhx} ${rhy}Q${rhx+6} ${rhy-20} ${rhx+4} ${rhy-34}" fill="none" stroke="${OL}" stroke-width=".8"/>`+E(rhx+4,rhy-42,8,10,c)+CN(rhx+1,rhy-46,2,'#fff','opacity=".6"');
+ case 'heartballoon':return `<path d="M${rhx} ${rhy}Q${rhx+6} ${rhy-20} ${rhx+4} ${rhy-32}" fill="none" stroke="${OL}" stroke-width=".8"/>`+heart(rhx+4,rhy-41,8,c,1)+CN(rhx,rhy-45,1.8,'#fff','opacity=".6"');
+ case 'umbrella':return cap(rhx,rhy+2,rhx,rhy-30,.9,OL)+P(`M${rhx-20} ${rhy-28}Q${rhx} ${rhy-50} ${rhx+20} ${rhy-28}Q${rhx+13} ${rhy-31} ${rhx+7} ${rhy-28}Q${rhx} ${rhy-31} ${rhx-7} ${rhy-28}Q${rhx-13} ${rhy-31} ${rhx-20} ${rhy-28}Z`,c)+PN(`M${rhx} ${rhy-45}Q${rhx-4} ${rhy-36} ${rhx-7} ${rhy-28}L${rhx+7} ${rhy-28}Q${rhx+4} ${rhy-36} ${rhx} ${rhy-45}Z`,c2,'opacity=".7"');
+ case 'bouquet':return P(`M${rhx-4} ${rhy-3}L${rhx+4} ${rhy-3}L${rhx+1} ${rhy+6}L${rhx-1} ${rhy+6}Z`,c2)+C(rhx-4,rhy-7,3.4,c)+C(rhx+4,rhy-7,3.4,'#ffd43b')+C(rhx,rhy-11,3.4,'#b197fc');
+ case 'wand':return cap(rhx,rhy+2,rhx+6,rhy-16,1.2,'#fff')+star(rhx+7,rhy-20,6,c,1)+twinkle(rhx+15,rhy-26,2.6,c2)+twinkle(rhx-1,rhy-25,2,c);
+ // 오라 (뒤)
+ case 'sparkle':{const pts=[[-34,10],[34,-4],[-28,-14],[30,40],[-32,62],[36,80],[-20,96],[24,104]];return pts.map(([a,b],i)=>twinkle(x+a,y+b,i%2?4:6,'#fcc419')+twinkle(x+a,y+b,i%2?2:3,'#fff9db')).join('');}
+ case 'hearts':{const pts=[[-32,6],[33,-6],[-30,50],[34,44],[-26,96],[30,100]];return pts.map(([a,b],i)=>heart(x+a,y+b,i%2?3:4,c)).join('');}
+ case 'rainbow':return `<path d="M${x-40} ${y+40}A40 46 0 0 1 ${x+40} ${y+40}" fill="none" stroke="${c}" stroke-width="9" opacity=".55"/>`+twinkle(x-34,y-6,3)+twinkle(x+36,y+2,3);
+ case 'meteor':{let q='';[[-36,-10],[30,20],[-30,70]].forEach(([a,b])=>{q+=`<path d="M${x+a} ${y+b}l14 -9" stroke="${c2}" stroke-width="2.4" stroke-linecap="round" opacity=".8"/>`+star(x+a+15,y+b-10,4,c,1);});return q+twinkle(x+34,y+60,3,c)+twinkle(x-36,y+30,2.6,c);}
+ // 펫
+ case 'chick':{const px=M.tx1+1,py=M.ty1-5;return C(px,py,5.5,c)+CN(px+2,py-1,.9,'#2b2540')+P(`M${px+5} ${py}L${px+8} ${py+1}L${px+5} ${py+2}Z`,c2)+P(`M${px-1} ${py-5}Q${px} ${py-8} ${px+1} ${py-5}`,'none');}
+ case 'kitty':{const px=M.tx1+1,py=M.ty1-6;return P(`M${px-5} ${py-3}L${px-4} ${py-9}L${px-1} ${py-5}Z`,c)+P(`M${px+5} ${py-3}L${px+4} ${py-9}L${px+1} ${py-5}Z`,c)+C(px,py,6,c)+CN(px-2,py,.9,'#2b2540')+CN(px+2,py,.9,'#2b2540')+CN(px,py+2,.8,'#ff8fab')+P(`M${px-3} ${py-5}L${px-2} ${py-3}M${px+3} ${py-5}L${px+2} ${py-3}`,'none','stroke="'+c2+'"');}
+ case 'babydragon':{const px=M.tx1,py=M.ty1-7;return P(`M${px-3} ${py-2}L${px-11} ${py-9}L${px-9} ${py+1}Z`,c2)+P(`M${px+3} ${py-2}L${px+11} ${py-9}L${px+9} ${py+1}Z`,c2)+C(px,py,6.5,c)+P(`M${px-2} ${py-6}L${px-1} ${py-10}L${px} ${py-6}M${px+1} ${py-6}L${px+2} ${py-10}L${px+3} ${py-6}`,c2)+CN(px-2.2,py-.5,1,'#2b2540')+CN(px+2.2,py-.5,1,'#2b2540')+CN(px,py+3,1.6,'#d3f9d8')+twinkle(px+9,py-9,2.2,'#ffe066');}
+ }return s;}
+function fxSparkle(M,it,cat){const {hx:x,hy:y,hr:r}=M;const pos={hair:[[x-r-4,y-r],[x+r+5,y-r*.6],[x+r*.6,y-r-5]],top:[[M.tx1-2,M.ty1+8],[M.tx2+3,M.ty1+20]],bottom:[[M.legs[0][0]-5,M.ly1+6],[M.legs[1][1]+5,M.ly1+14]],shoes:[[M.legs[0][0]-5,M.ly2-3],[M.legs[1][1]+6,M.ly2]],acc:[]}[cat]||[];
+ return pos.map(([a,b],i)=>twinkle(a,b,i%2?3.4:4.6,'#fcc419')+twinkle(a,b,i%2?1.8:2.6,'#fff9db')).join('');}
+
+// ---------- 전체 그리기 ----------
+function render(st,opts={}){const uid=++UID;st=st||defaultState();const eq=st.eq||{};
+ const M={...BODIES[st.body]||BODIES.round};const it=k=>BY[eq[k]]||null;
+ const hair=it('hair'),top=it('top'),bot=it('bottom'),sh=it('shoes');const A_={};for(const sl in (eq.acc||{})){const a=BY[eq.acc[sl]];if(a)A_[sl]=a;}
+ let s='';
+ if(A_.aura)s+=acc(M,A_.aura,uid);
+ if(A_.back)s+=acc(M,A_.back,uid);
+ if(A_.tail)s+=acc(M,A_.tail,uid);
+ if(hair)s+=hairBack(M,hair);
+ s+=legs(M);
+ if(sh)s+=shoes(M,sh,bot);
+ if(bot&&bot.s!=='overall')s+=bottom(M,bot,uid);
+ s+=arms(M,top)+sleevesHanbok(M,top);
+ if(top)s+=torsoTop(M,top,uid);
+ if(bot&&bot.s==='overall')s+=bottom(M,bot,uid);
+ if(top&&(top.s==='dress'||top.s==='princess')&&sh)s+=''; // 신발은 이미 그려짐
+ if(A_.neck)s+=acc(M,A_.neck,uid);
+ // 머리
+ s+=C(M.hx,M.hy,M.hr,SKIN);
+ s+=face(M);
+ if(A_.face&&A_.face.s!=='glasses'&&A_.face.s!=='mono')s+=acc(M,A_.face,uid);
+ if(hair)s+=hairFront(M,hair);
+ if(A_.face&&(A_.face.s==='glasses'||A_.face.s==='mono'))s+=acc(M,A_.face,uid);
+ if(A_.hat)s+=acc(M,A_.hat,uid);
+ if(A_.hand)s+=acc(M,A_.hand,uid);
+ if(A_.pet)s+=acc(M,A_.pet,uid);
+ // 반짝이
+ for(const [k,v] of [['hair',hair],['top',top],['bottom',bot],['shoes',sh]])if(v&&v.fx)s+=fxSparkle(M,v,k);
+ const vb=opts.head?`${M.hx-M.hr-6} ${M.hy-M.hr-8} ${2*M.hr+12} ${2*M.hr+14}`:'4 -14 92 152';
+ return `<svg viewBox="${vb}" ${opts.size?`width="${opts.size}" height="${opts.size}"`:''} class="tav" xmlns="http://www.w3.org/2000/svg">${s}</svg>`;}
+
+window.TAV={BODIES,ITEMS,BY,CATS,SLOTS,FREE,render,defaultState,rarity,defsSvg};
+})();
