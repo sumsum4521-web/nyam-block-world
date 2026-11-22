@@ -301,11 +301,11 @@ function applyNick(id,name){
 
 // ================= 게임 실행 =================
 let cur=null,curRoom='';
-function launch(id,opts={}){const g=G(id);cur=id;curRoom=g.room?(opts.room||'main'):'';
+function launch(id,opts={}){if(SYNC.busy){toast('☁️ 기록 불러오는 중…');SYNC.p.then(()=>launch(id,opts));return;}const g=G(id);cur=id;curRoom=g.room?(opts.room||'main'):'';
  const url=g.url+(g.room?('?room='+encodeURIComponent(curRoom)):'');
  $('frame').src=url;$('game').style.display='block';document.body.classList.add('playing');$('exitBtn').style.display='block';
  showView(null);pubStatus();setTimeout(()=>{try{$('frame').focus();}catch(e){}},300);}
-function exitGame(){$('frame').src='about:blank';$('game').style.display='none';document.body.classList.remove('playing');$('exitBtn').style.display='none';cur=null;curRoom='';showView('home');pubStatus();refreshBadges();}
+function exitGame(){if(cur&&SAVES[cur]){const g=cur;setTimeout(()=>upload(g),400);}$('frame').src='about:blank';$('game').style.display='none';document.body.classList.remove('playing');$('exitBtn').style.display='none';cur=null;curRoom='';showView('home');pubStatus();refreshBadges();}
 $('exitBtn').onclick=()=>{modal(`<div class="mpad"><h2>게임을 나갈까요?</h2><p>홈 화면으로 돌아가요. 게임 기록은 저장돼요.</p><div style="display:flex;gap:10px"><button class="btn red big" id="exYes" style="flex:1">나가기</button><button class="btn gray big" id="exNo" style="flex:1">계속 하기</button></div></div>`);
  $('exYes').onclick=()=>{closeModal();exitGame();};$('exNo').onclick=closeModal;};
 
@@ -359,7 +359,7 @@ async function doAuth(){const id=$('aId').value.trim(),pin=$('aPin').value.trim(
  else{if(!r.v){err.textContent='없는 아이디예요. 처음이라면 회원가입을 눌러 주세요';return;}if(r.v.h!==h){err.textContent='비밀번호가 맞지 않아요';return;}}
  ME={id:r.v&&r.v.id||id,idl,h};LS.set('types_account',ME);enter();}
 $('aGo').onclick=doAuth;['aId','aPin','aPin2'].forEach(k=>$(k).addEventListener('keydown',e=>{if(e.key==='Enter')doAuth();}));
-$('logoutBtn').onclick=()=>{if(cur)exitGame();pub(T('on/'+ME.idl),{on:0,t:Date.now()});setTimeout(()=>{try{localStorage.removeItem('types_account');}catch(e){}location.reload();},300);};
+$('logoutBtn').onclick=()=>{if(cur)exitGame();for(const g in SAVES)upload(g);pub(T('on/'+ME.idl),{on:0,t:Date.now()});setTimeout(()=>{try{localStorage.removeItem('types_account');}catch(e){}location.reload();},300);};
 
 // ================= 친구 =================
 const friends=new Map(),recv=new Map(),sent=new Map();
@@ -449,10 +449,48 @@ function refreshBadges(){if(view!=='badges')return;const data=computeBadges();le
   return `<div class="bgame"><h3>《${g.name}》 <small>${b.items.filter(i=>i.got).length} / ${b.items.length}${b.extra?' · '+b.extra:''}</small></h3><div class="bgrid">${b.items.map(i=>`<div class="badge ${i.got?'':'lock'}">${badgeSvg(i.got?b.color:'#adb5bd',i.l,i.shape)}<b>${i.n}</b><small>${i.got?i.d:'🔒 '+i.d}</small></div>`).join('')}</div></div>`;}).join('')
   +`<div style="text-align:center;color:#6b7385;font-weight:700;margin-top:6px">모은 배지 ${got} / ${total}</div>`;}
 
+
+// ================= ☁️ 기록 이어하기 (다른 기기에서도 같은 기록) =================
+// 계정 비밀값(ME.h)으로 만든 자리에 게임 기록을 올려 두고, 다른 기기에서 로그인하면 내려받아요.
+const SAVES={
+ nyam:{keys:['nyamBlockWorld_v1'],score:d=>{const D=j(d.nyamBlockWorld_v1)||{};return (D.reb||0)*1e6+(D.best||0);}},
+ shrink:{keys:['shrinkSim_v1','shrinkSim_prefs'],score:d=>{const P=j(d.shrinkSim_v1)||{};return (P.rb||0)*1e7+(P.world||0)*1e5+(P.wins||0)*10+((P.pets||[]).length);}},
+ troll:{keys:['trollJumpMap_v1'],score:d=>{const S=j(d.trollJumpMap_v1)||{};return (S.cleared?1e6:0)+(S.max||0)*1000+(S.coins||0)/100;}},
+ detective:{keys:['detectiveSquirrel_v1'],score:d=>{const S=j(d.detectiveSquirrel_v1)||{};return Object.keys(S.solved||{}).length*1e4+(S.tokens||0);}},
+ island:{keys:['island_name','island_badges','island_best'],score:d=>((j(d.island_badges)||[]).length)*1e5+(+d.island_best||0)}
+};
+function j(s){try{return s?JSON.parse(s):null;}catch(e){return null;}}
+function sig(d){const s=JSON.stringify(Object.keys(d).sort().map(k=>[k,d[k]]));let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h.toString(36)+'.'+s.length;}
+function readLocal(g){const d={};for(const k of SAVES[g].keys){const v=LS.raw(k);if(v!==null)d[k]=v;}return d;}
+const SYNC={busy:false,p:Promise.resolve(),rec:{},timers:{}};
+const recKey=()=>'types_sync_'+(ME?ME.idl:'');
+function saveRec(){LS.set(recKey(),SYNC.rec);}
+function upload(g){if(!ME||!anyUp())return false;const d=readLocal(g);if(!Object.keys(d).length)return false;const sg=sig(d);
+ const r=SYNC.rec[g];if(r&&r.sig===sg)return true; // 바뀐 게 없음
+ const t=Date.now();pub(T('sv/'+ME.h+'/'+g),{t,d});SYNC.rec[g]={t,sig:sg};saveRec();return true;}
+async function syncGame(g){const r=await getRetained(T('sv/'+ME.h+'/'+g),2500);if(r.offline)return 'off';
+ const c=r.v&&r.v.d?r.v:null,L=readLocal(g),hasL=Object.keys(L).length>0,rec=SYNC.rec[g];
+ const apply=()=>{for(const k of SAVES[g].keys){if(k in c.d)LS.setRaw(k,c.d[k]);}SYNC.rec[g]={t:c.t,sig:sig(readLocal(g))};saveRec();return 'down';};
+ if(!c){return hasL&&upload(g)?'up':'-';}
+ if(!hasL)return apply();
+ const localChanged=!rec||rec.sig!==sig(L),cloudChanged=!rec||rec.t!==c.t;
+ if(!localChanged)return cloudChanged?apply():'-';
+ if(!cloudChanged){upload(g);return 'up';}
+ // 두 기기에서 모두 바뀜 → 더 많이 한 기록으로
+ if(SAVES[g].score(c.d)>SAVES[g].score(L))return apply();
+ SYNC.rec[g]={t:0,sig:''};upload(g);return 'up';}
+function syncAll(){if(!ME||cur||SYNC.busy)return SYNC.p;SYNC.busy=true;SYNC.rec=LS.get(recKey(),{})||{};
+ SYNC.p=Promise.all(Object.keys(SAVES).map(g=>syncGame(g).catch(()=>'-'))).then(res=>{SYNC.busy=false;
+  if(res.includes('down')){toast('☁️ 다른 기기에서 한 기록을 불러왔어요');refreshBadges();}return res;});return SYNC.p;}
+// 게임이 기록을 저장하면 잠시 뒤 올리기
+addEventListener('storage',e=>{if(!ME||!e.key)return;for(const g in SAVES)if(SAVES[g].keys.includes(e.key)){clearTimeout(SYNC.timers[g]);SYNC.timers[g]=setTimeout(()=>upload(g),3000);}});
+setInterval(()=>{if(ME&&cur&&SAVES[cur])upload(cur);},20000);
+document.addEventListener('visibilitychange',()=>{if(!ME)return;if(document.visibilityState==='hidden'){if(cur&&SAVES[cur])upload(cur);}else if(!cur)syncAll();});
+
 // ================= 시작 =================
 function enter(){$('auth').style.display='none';$('meName').textContent=ME.id;$('me').querySelector('.av').textContent=ME.id[0].toUpperCase();
  connect({topic:T('on/'+ME.idl),payload:JSON.stringify({on:0,t:Date.now()}),retain:true,qos:0});
- startSocial();sub(T('parent/'+ME.idl),(t,s)=>{if(s){try{applyParent(JSON.parse(s),true);}catch(e){}}});renderCards();showView('home');
+ startSocial();sub(T('parent/'+ME.idl),(t,s)=>{if(s){try{applyParent(JSON.parse(s),true);}catch(e){}}});renderCards();showView('home');syncAll();
  // 내 계정 정보가 서버에서 사라졌으면 다시 올려 둠
  getRetained(T('acct/'+ME.idl),3000).then(r=>{if(r&&!r.offline&&!r.v)pub(T('acct/'+ME.idl),{id:ME.id,h:ME.h,t:Date.now()});});
  addEventListener('pagehide',()=>pub(T('on/'+ME.idl),{on:0,t:Date.now()}));}
@@ -461,7 +499,7 @@ function boot(){if(!window.mqtt){$('auth').style.display='flex';$('aErr').textCo
  if(ME&&ME.idl&&ME.id){enter();}
  else{ME=null;connect(null);$('auth').style.display='flex';renderCards();setTimeout(()=>{try{$('aId').focus();}catch(e){}},100);}}
 boot();
-window.__types={friends,recv,sent,get ME(){return ME;},launch,exitGame,computeBadges};
+window.__types={syncAll,upload,SYNC,friends,recv,sent,get ME(){return ME;},launch,exitGame,computeBadges};
 })();
 </script>
 </body>
