@@ -38,7 +38,7 @@ button{font-family:inherit;cursor:pointer;border:none}
 #boosts{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
 #boosts span{background:#1b1f3a;border-radius:10px;padding:2px 8px;font-size:15px}
 #side{position:absolute;left:12px;top:210px;display:flex;flex-direction:column;gap:8px}
-#feed{position:absolute;left:12px;bottom:60px;font-size:15px;pointer-events:none;display:flex;flex-direction:column;gap:3px}#feed div{background:rgba(27,31,58,.65);padding:3px 10px;border-radius:8px;color:#d8ddff}
+#feed{position:absolute;left:142px;bottom:60px;font-size:15px;pointer-events:none;display:flex;flex-direction:column;gap:3px}#feed div{background:rgba(27,31,58,.65);padding:3px 10px;border-radius:8px;color:#d8ddff}
 #side .btn{width:118px;font-size:17px;padding:6px 6px;text-align:left}
 #side .btn.glow{animation:glow .5s infinite alternate}
 @keyframes glow{from{transform:scale(1)}to{transform:scale(1.08);filter:brightness(1.3)}}
@@ -83,6 +83,7 @@ input.t{font-family:inherit;font-size:20px;padding:8px 12px;border-radius:12px;b
 #tbox .sw{margin:4px 0 6px;gap:6px}#tbox .sw button{width:32px;height:32px}#tbox .sw .hat{width:auto;height:auto;padding:4px 8px;font-size:14px}
 .q{font-size:15px}
 .q.done{color:#7dff8a}
+@media (max-height:720px){#side{gap:5px;top:200px}#side .btn{padding:3px 6px;font-size:15px;box-shadow:0 3px 0 #1b1f3a}}
 @media (max-width:760px){#questMini{display:none}#lb{width:150px;font-size:13px}#stats{min-width:180px}#sizeTxt{font-size:26px}#side{top:190px}#side .btn{width:96px;font-size:15px}}
 </style>
 </head>
@@ -116,6 +117,7 @@ input.t{font-family:inherit;font-size:20px;padding:8px 12px;border-radius:12px;b
     <button class="btn gold" id="bShop">🛒 상점</button>
     <button class="btn" id="bPet" style="background:#ff8a3d">🥚 펫</button>
     <button class="btn" id="bWorld" style="background:#00a8c8">🌍 세계</button>
+    <button class="btn" id="bNet" style="background:#3bb5a0">🌐 함께</button>
     <button class="btn pink" id="bLook">👕 꾸미기</button>
     <button class="btn purple" id="bCode">🎁 코드</button>
     <button class="btn blue" id="bQuest">📜 퀘스트</button>
@@ -123,6 +125,7 @@ input.t{font-family:inherit;font-size:20px;padding:8px 12px;border-radius:12px;b
   </div>
   <div id="questMini"></div>
   <div id="lb"></div>
+  <button id="netBadge" class="btn hide" style="position:absolute;right:12px;top:auto;bottom:150px;font-size:16px;padding:6px 12px;background:#3bb5a0"></button>
   <div id="toast" class="out"></div>
   <div id="hint">WASD 이동 · Space 점프 · E 흡입 · 마우스 드래그 카메라 · 휠 확대/축소</div>
   <div id="feed"></div>
@@ -141,9 +144,11 @@ input.t{font-family:inherit;font-size:20px;padding:8px 12px;border-radius:12px;b
 'use strict';
 // ================= 기본 도구 =================
 const $=id=>document.getElementById(id);
-const rnd=(a,b)=>a+Math.random()*(b-a);
+let RNG=Math.random;
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const rnd=(a,b)=>a+RNG()*(b-a);
 const ri=(a,b)=>Math.floor(rnd(a,b+1));
-const pick=a=>a[Math.floor(Math.random()*a.length)];
+const pick=a=>a[Math.floor(RNG()*a.length)];
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 function fmt(n){n=Math.floor(n);if(n<10000)return n.toLocaleString();const u=[[1e16,'경'],[1e12,'조'],[1e8,'억'],[1e4,'만']];for(const[v,s]of u)if(n>=v){const x=n/v;return(x>=100?Math.floor(x):x.toFixed(1).replace(/\.0$/,''))+s}return ''+n}
 function hasJong(s){const c=s.charCodeAt(s.length-1);if(c<0xAC00||c>0xD7A3)return false;return (c-0xAC00)%28!==0}
@@ -350,7 +355,7 @@ const GLOWMAT=new THREE.MeshBasicMaterial({vertexColors:true});
 let meshes={};function typeGeo(k){const T=TYPES[k];if(T.geo!==undefined)return T;const b=T.b(new B());T.geo=b.build();T.ggeo=b.glowGeo;const bb=b.bb;T.h=bb.max.y;T.w=Math.max(Math.abs(bb.min.x),bb.max.x)*2;T.d=Math.max(Math.abs(bb.min.z),bb.max.z)*2;T.size=Math.max(T.h,Math.max(T.w,T.d)*.8);return T}
 function clearWorld(){for(const k in meshes){for(const im of meshes[k]){scene.remove(im);if(im.dispose)im.dispose()}}meshes={};objs.length=0;grid.clear();deadList.length=0}
 function buildWorld(w){
- clearWorld();WORLD=w;ZONES=ZONESW[w];buildScenery(w);
+ clearWorld();WORLD=w;ZONES=ZONESW[w];RNG=mulberry(w*7919+20261122);buildScenery(w);
  const PLAN=PLANS[w],GEMS=GEMSW[w];const counts={};
  for(const p of PLAN)counts[p[0]]=(counts[p[0]]||0)+p[1];
  counts.gem=GEMS.reduce((a,g)=>a+g[3],0);
@@ -358,7 +363,7 @@ function buildWorld(w){
  for(const k in counts){const T=typeGeo(k);const n=counts[k];const list=[];
   for(const[geo,mat]of[[T.geo,k==='gem'?GEMMAT:MATS],[T.ggeo,GLOWMAT]]){if(!geo)continue;const im=new THREE.InstancedMesh(geo,mat,n);im.castShadow=mat!==GLOWMAT;im.receiveShadow=mat!==GLOWMAT;im.frustumCulled=false;for(let i=0;i<n;i++)im.setColorAt(i,white);scene.add(im);list.push(im)}
   list.used=0;meshes[k]=list}
- function place(k,r0,r1,s0,s1){const T=TYPES[k];const ims=meshes[k];for(let tries=0;tries<40;tries++){const a=Math.random()*Math.PI*2,d=Math.sqrt(rnd(r0*r0,r1*r1));const x=Math.cos(a)*d,z=Math.sin(a)*d;const s=rnd(s0,s1);const rot=ri(0,3);const w=(rot%2?T.d:T.w)*s,dd=(rot%2?T.w:T.d)*s;if(Math.hypot(x,z)+Math.max(w,dd)/2>WORLD_R)continue;const r=Math.max(w,dd)/2;
+ function place(k,r0,r1,s0,s1){const T=TYPES[k];const ims=meshes[k];for(let tries=0;tries<40;tries++){const a=RNG()*Math.PI*2,d=Math.sqrt(rnd(r0*r0,r1*r1));const x=Math.cos(a)*d,z=Math.sin(a)*d;const s=rnd(s0,s1);const rot=ri(0,3);const w=(rot%2?T.d:T.w)*s,dd=(rot%2?T.w:T.d)*s;if(Math.hypot(x,z)+Math.max(w,dd)/2>WORLD_R)continue;const r=Math.max(w,dd)/2;
    if(d>222&&d<430&&T.cat!=='car'){const ang=((Math.atan2(z,x)%(Math.PI/8))+Math.PI/8)%(Math.PI/8);const off=Math.min(ang,Math.PI/8-ang)*d;if(off<5+r)continue}
    let inAr=false;for(const ar of ARENAS[WORLD])if(Math.hypot(x-ar.x,z-ar.z)<ar.R+r+4){inAr=true;break}if(inAr)continue;
    if(!freeSpot(x,z,r*.9))continue;
@@ -369,6 +374,7 @@ function buildWorld(w){
  const order=PLAN.slice().sort((a,b)=>TYPES[b[0]].size*b[5]-TYPES[a[0]].size*a[5]);
  for(const p of order){let s0=p[4],s1=p[5];if(w===2){const f=p[2]<58?3:p[2]<228?2.2:p[2]<425?1.6:1.25;const T=TYPES[p[0]];s1=Math.min(s1*f,Math.max(s1,160/T.size));s0=Math.min(s0*f,s1)}for(let i=0;i<p[1];i++)place(p[0],p[2],p[3],s0,s1)}
  for(const g of GEMS)for(let i=0;i<g[3];i++)place('gem',g[0]+2,g[1],g[2]*.8,g[2]*1.2);
+ objs.forEach((o,i)=>o.id=i);RNG=Math.random;
  for(const k in meshes)for(const im of meshes[k]){im.count=meshes[k].used;im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true}
 }
 const _mm=new THREE.Matrix4(),_pp=new THREE.Vector3(),_qq=new THREE.Quaternion(),_ss=new THREE.Vector3(),_yy=new THREE.Vector3(0,1,0);
@@ -509,9 +515,67 @@ function botLook(){return {skin:pick(SKINS),shirt:pick(SHIRTS),pants:pick(PANTS)
 function resetBot(b,big){b.M=big?massOf(rnd(2,Math.max(3,P.S*1.3))):rnd(10,40);b.maxM=Math.max(b.M*2,massOf(4));const a=Math.random()*7,d=rnd(10,200);b.x=Math.cos(a)*d;b.z=Math.sin(a)*d;b.y=0;b.vy=0;b.S=sizeOf(b.M);b.vis=b.S;b.shield=4;b.target=null;b.grow=rnd(25,45);for(const o of b.eating)o.eater=null;b.eating.length=0}
 function setBotOn(b,on,silent){b.off=!on;b.A.g.visible=on;b.tag.visible=on;if(on){b.name=freeNick();b.tagTxt='';recolor(b.A,botLook());resetBot(b,true);b.stay=rnd(60,240);if(!silent)feed(b.name+' 님이 입장했습니다')}else{for(const o of b.eating)o.eater=null;b.eating.length=0;b.away=rnd(15,60);if(!silent)feed(b.name+' 님이 나갔습니다')}}
 function spawnBots(){for(let i=0;i<8;i++){const b=makeAgent(botLook(),'',false);b.growT=rnd(0,30);bots.push(b);setBotOn(b,true,true);if(i>=6)setBotOn(b,false,true)}}
-function botServer(dt){for(const b of bots){if(b.off){b.away-=dt;if(b.away<=0)setBotOn(b,true)}else{b.stay-=dt;if(b.stay<=0&&bots.filter(x=>!x.off).length>3)setBotOn(b,false);else if(b.stay<=0)b.stay=rnd(30,90)}}}
+function botServer(dt){if(NET.remotes.size>0){for(const b of bots)if(!b.off){setBotOn(b,false,true);b.away=rnd(5,20)}return}for(const b of bots){if(b.off){b.away-=dt;if(b.away<=0)setBotOn(b,true)}else{b.stay-=dt;if(b.stay<=0&&bots.filter(x=>!x.off).length>3)setBotOn(b,false);else if(b.stay<=0)b.stay=rnd(30,90)}}}
 const live=()=>agents.filter(a=>!a.off);
 let feedEls=[];function feed(t){const el=document.createElement('div');el.textContent=t;$('feed').appendChild(el);feedEls.push({el,t:6});if(feedEls.length>4){feedEls[0].el.remove();feedEls.shift()}}
+
+// ================= 🌐 함께하기 (여러 명) =================
+const NET={mode:null,code:null,remotes:new Map(),myEats:[],myGifts:[],seen:new Set(),room:null,peer:null,conns:[],hostConn:null,isHost:false,states:new Map(),status:''};
+const NETID=Math.random().toString(36).slice(2,10);
+function netEat(o){if(!NET.mode)return;NET.myEats.push([WORLD,o.id,Date.now()]);if(NET.myEats.length>60)NET.myEats.shift()}
+function netGift(to,amt){if(!NET.mode||!to)return;NET.myGifts.push([to,Math.round(amt),Date.now()])}
+function netMyState(){const now=Date.now();NET.myEats=NET.myEats.filter(e=>now-e[2]<3000);NET.myGifts=NET.myGifts.filter(g=>now-g[2]<4000);
+ return {i:NETID,n:String(D.name).slice(0,16),l:[D.skin,D.shirt,D.pants,D.face,D.hat],x:+P.x.toFixed(1),z:+P.z.toFixed(1),y:+P.y.toFixed(1),f:+P.face.toFixed(2),m:Math.round(P.M),w:WORLD,c:P.chew>0?1:0,e:NET.myEats.slice(-40),g:NET.myGifts.slice(-5),pl:playing?1:0}}
+const okCol=c=>typeof c==='string'&&/^#[0-9a-f]{6}$/i.test(c)?c:'#cccccc';
+function netApply(list){const now=Date.now();const alive=new Set();
+ for(const st of list){if(!st||typeof st!=='object'||st.i===NETID||typeof st.i!=='string')continue;if(!st.pl)continue;const id=st.i.slice(0,16);alive.add(id);let a=NET.remotes.get(id);
+  const look=Array.isArray(st.l)?{skin:okCol(st.l[0]),shirt:okCol(st.l[1]),pants:okCol(st.l[2]),face:clamp(st.l[3]|0,0,2),hat:HATS[st.l[4]]?st.l[4]:'none'}:{skin:'#ffe0bd',shirt:'#2f8cff',pants:'#2f4a8c',face:0,hat:'none'};
+  const nm=String(st.n||'Player').slice(0,16);
+  if(!a){a=makeAgent(look,nm,false);a.remote=true;a.netId=id;a.x=+st.x||0;a.z=+st.z||0;a.tx=a.x;a.tz=a.z;NET.remotes.set(id,a);feed(nm+' 님이 입장했습니다');a.lookKey=''}
+  const lk=look.skin+look.shirt+look.pants+look.face+look.hat;if(lk!==a.lookKey){a.lookKey=lk;recolor(a.A,look)}
+  if(a.name!==nm){a.name=nm;a.tagTxt=''}
+  a.tx=clamp(+st.x||0,-WORLD_R,WORLD_R);a.tz=clamp(+st.z||0,-WORLD_R,WORLD_R);a.ty=clamp(+st.y||0,0,5000);a.tf=+st.f||0;a.M=clamp(+st.m||10,10,massOf(170));a.rw=st.w===2?2:1;a.chewR=!!st.c;a.lastSeen=now;
+  if(Array.isArray(st.e))for(const e of st.e){if(!Array.isArray(e))continue;const key=id+':'+e[0]+':'+e[1]+':'+e[2];if(NET.seen.has(key))continue;NET.seen.add(key);if(e[0]!==WORLD)continue;const o=objs[e[1]|0];if(o&&o.alive){if(o.eater)removeEat(o);o.alive=false;o.pull=0;o.prog=0;setMat(o);o.respawn=Math.min(60,4+o.size*.7);deadList.push(o)}}
+  if(Array.isArray(st.g))for(const g of st.g){if(!Array.isArray(g)||g[0]!==NETID)continue;const key='g:'+id+':'+g[2];if(NET.seen.has(key))continue;NET.seen.add(key);const amt=clamp(+g[1]||0,0,massOf(170));P.M=Math.min(maxM(),P.M+amt);feed(a.name+' 님 링 아웃 · '+D.name+' 님 승리');toast('링 아웃 승리! '+a.name+' 님의 크기 10% 획득',2600);sfx.buy();count('ringout');questCheck()}}
+ for(const [id,a] of NET.remotes){if(!alive.has(id)||now-(a.lastSeen||0)>8000)netDrop(id)}
+ if(NET.seen.size>4000)NET.seen.clear()}
+function netDrop(id){const a=NET.remotes.get(id);if(!a)return;feed(a.name+' 님이 나갔습니다');scene.remove(a.A.g);scene.remove(a.tag);const i=agents.indexOf(a);if(i>=0)agents.splice(i,1);NET.remotes.delete(id)}
+function netRemoteUpdate(dt){for(const a of NET.remotes.values()){const same=a.rw===WORLD;a.off=!same;a.A.g.visible=same;a.tag.visible=same;if(!same)continue;const ox=a.x,oz=a.z;const k=Math.min(1,dt*10);a.x+=(a.tx-a.x)*k;a.z+=(a.tz-a.z)*k;a.y+=((a.ty||0)-a.y)*k;let df=(a.tf||0)-a.face;df=Math.atan2(Math.sin(df),Math.cos(df));a.face+=df*k;a.vx=(a.x-ox)/Math.max(dt,1e-3);a.vz=(a.z-oz)/Math.max(dt,1e-3);const sp=Math.hypot(a.vx,a.vz);if(sp>.5)a.phase+=sp*dt/(a.S*.55);else a.phase*=.85;a.grounded=a.y<.05;a.chew=a.chewR?a.chew+dt:0}}
+let netT=0;
+function netTick(dt){if(!NET.mode)return;netT+=dt;if(netT<.1)return;netT=0;const st=netMyState();
+ if(NET.mode==='claude'&&NET.room){NET.room.presence({s:st}).catch(()=>{})}
+ else if(NET.mode==='p2p'){if(NET.isHost){NET.states.set(NETID,st);const all=[...NET.states.values()];for(const c of NET.conns)if(c.open)try{c.send({all})}catch(e){}netApply(all)}else if(NET.hostConn&&NET.hostConn.open){try{NET.hostConn.send({me:st})}catch(e){}}}}
+function netStatus(t){NET.status=t;const el=$('netBadge');if(el){el.textContent=t;el.classList.toggle('hide',!t)}if(modalOpen&&$('netPanel'))openModal(netHtml())}
+async function netJoin(code,create){netLeave(true);code=String(code).replace(/[^0-9]/g,'').slice(0,6);if(code.length<4){netStatus('');return '방 코드는 숫자 4~6자리예요'}
+ NET.code=code;netStatus('🌐 연결 중…');
+ let room=null;try{if(window.claude&&typeof window.claude.use==='function')room=await window.claude.use('room')}catch(e){room=null}
+ if(room){try{const r=await room.join('nyam-'+code);NET.room=r;NET.mode='claude';r.onPeers(ch=>{const list=[];for(const p of ch.peers){if(p.sameTab||p.kind!=='viewer')continue;const s=p.presence&&p.presence.s;if(s)list.push(s)}netApply(list)});netStatus('🌐 방 '+code);return null}catch(e){}}
+ return await p2pJoin(code,create)}
+function loadPeer(){return new Promise((res,rej)=>{if(window.Peer)return res();const sc=document.createElement('script');sc.src='https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';sc.onload=()=>res();sc.onerror=()=>rej();document.head.appendChild(sc)})}
+async function p2pJoin(code,create){try{await loadPeer()}catch(e){netStatus('');NET.code=null;return '연결 도구를 불러오지 못했어요. 인터넷 연결을 확인해 주세요'}
+ const hostId='nyamblockworld-'+code;
+ const asClient=()=>new Promise(res=>{const pe=new window.Peer();NET.peer=pe;let done=false;pe.on('open',()=>{const c=pe.connect(hostId,{reliable:false});NET.hostConn=c;const to=setTimeout(()=>{if(!done){done=true;netLeave(true);res('방을 찾을 수 없어요. 코드를 확인해 주세요')}},9000);
+   c.on('open',()=>{if(done)return;done=true;clearTimeout(to);NET.mode='p2p';NET.isHost=false;netStatus('🌐 방 '+code);res(null)});
+   c.on('data',d=>{if(d&&Array.isArray(d.all))netApply(d.all);if(d&&d.full){done=true;netLeave(true);res('방이 가득 찼어요 (최대 8명)')}});
+   c.on('close',()=>{if(NET.mode){netLeave(true);toast('방이 닫혔어요',2000)}})});
+  pe.on('error',err=>{if(!done){done=true;netLeave(true);res(err&&err.type==='peer-unavailable'?'방을 찾을 수 없어요. 코드를 확인해 주세요':'연결에 실패했어요. 잠시 후 다시 해 주세요')}})});
+ if(!create)return await asClient();
+ return await new Promise(res=>{const pe=new window.Peer(hostId);NET.peer=pe;let done=false;
+  pe.on('open',()=>{done=true;NET.mode='p2p';NET.isHost=true;netStatus('🌐 방 '+code);res(null)});
+  pe.on('connection',c=>{c.on('open',()=>{if(NET.conns.filter(x=>x.open).length>=7){try{c.send({full:1})}catch(e){}setTimeout(()=>c.close(),300);return}NET.conns.push(c)});c.on('data',d=>{if(d&&d.me&&typeof d.me==='object'){d.me.pl=d.me.pl?1:0;c.stId=String(d.me.i||'').slice(0,16);NET.states.set(c.stId,d.me)}});c.on('close',()=>{NET.conns=NET.conns.filter(x=>x!==c);if(c.stId)NET.states.delete(c.stId)})});
+  pe.on('error',err=>{if(!done){done=true;if(err&&err.type==='unavailable-id'){try{pe.destroy()}catch(e){}asClient().then(res)}else{netLeave(true);res('연결에 실패했어요. 잠시 후 다시 해 주세요')}}})})}
+function netLeave(silent){if(NET.room){try{NET.room.leave()}catch(e){}}if(NET.peer){try{NET.peer.destroy()}catch(e){}}NET.room=null;NET.peer=null;NET.conns=[];NET.hostConn=null;NET.isHost=false;NET.states.clear();NET.mode=null;for(const id of [...NET.remotes.keys()])netDrop(id);NET.code=null;if(!silent)toast('방에서 나왔어요',1500);netStatus('')}
+function netHtml(){let h=X+'<h2 class="out" id="netPanel">🌐 함께하기</h2>';
+ if(!NET.mode){h+='<p style="font-size:16px;color:#d8ddff;margin-bottom:8px">같은 방 코드를 넣은 사람끼리 같은 세상에서 함께 놀 수 있어요. (최대 8명 · 채팅 없음) 방 코드는 함께 놀 사람에게만 알려 주세요.</p>'+
+  '<div class="row"><div class="ic">🏠</div><div class="tx"><b>방 만들기</b>새 방 코드가 만들어져요</div><button class="btn" data-a="netNew">만들기</button></div>'+
+  '<div class="row"><div class="ic">🔑</div><div class="tx"><b>방 들어가기</b><input class="t" id="netCode" inputmode="numeric" maxlength="6" placeholder="방 코드 숫자" style="width:170px"></div><button class="btn blue" data-a="netGo">들어가기</button></div>'+
+  '<div id="netMsg" style="font-size:16px;color:#ffd0d0;min-height:22px">'+(NET.status&&NET.status.indexOf('연결')>=0?'연결 중…':'')+'</div>'}
+ else{const L=[...NET.remotes.values()];h+='<div style="text-align:center;margin:6px 0 10px"><div style="font-size:16px;color:#d8ddff">방 코드</div><div class="out" style="font-size:52px;letter-spacing:6px;color:#ffe066">'+NET.code+'</div><div style="font-size:14px;color:#b9c4ff">함께 놀 사람에게 이 코드를 알려 주세요</div></div>';
+  h+='<div class="row"><div class="ic">⭐</div><div class="tx"><b>'+escapeH(D.name)+' (나)</b>크기 '+P.S.toFixed(1)+' · 세계 '+WORLD+'</div></div>';
+  for(const a of L)h+='<div class="row"><div class="ic">🙂</div><div class="tx"><b>'+escapeH(a.name)+'</b>크기 '+sizeOf(a.M).toFixed(1)+' · 세계 '+(a.rw||1)+(a.rw!==WORLD?' (다른 세계에 있어요)':'')+'</div></div>';
+  if(!L.length)h+='<div style="font-size:15px;color:#b9c4ff">아직 아무도 없어요. 코드를 알려 주고 기다려 보세요.</div>';
+  h+='<button class="btn red" data-a="netLeave" style="margin-top:8px">방에서 나가기</button>'}
+ return h}
 
 // ================= 펫 =================
 const PETMAT=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.5});
@@ -584,7 +648,7 @@ function jump(a){if(a.grounded){a.vy=Math.sqrt(2*a.g()*a.S*.9);a.grounded=false}
 function bigMouth(a){if(a.bigCool>0)return;if(a.isP&&!playing)return;const R=a.S*2.6*(a.isP?UP.reach.val(D.up.reach):1);const near=query(a.x,a.z,R+20,[]);let n=0;for(const o of near){if(!edible(a,o)||o.pull||o.eater&&o.eater!==a)continue;if(aabbDist(a.x,a.z,o)>R)continue;o.pull=0.001;o.puller=a;o.px=o.x;o.pz=o.z;if(o.eater)removeEat(o);if(++n>40)break}
  a.bigCool=a.isP&&boostsOn.unlim>0?.4:3.5;if(a.isP){sfx.big();if(!n)toast('주변에 먹을 수 있는 게 없어요',900);burst(a.x+Math.sin(a.face)*a.S*.4,a.S*.9,a.z+Math.cos(a.face)*a.S*.4,'#ff5fa2',8,a.S*.06)}}
 function removeEat(o){if(o.eater){const i=o.eater.eating.indexOf(o);if(i>=0)o.eater.eating.splice(i,1)}o.eater=null}
-function consume(a,o){o.alive=false;o.prog=0;o.pull=0;removeEat(o);setMat(o);o.respawn=Math.min(60,4+o.size*.7);o.pet=null;deadList.push(o);
+function consume(a,o){if(a.isP)netEat(o);o.alive=false;o.prog=0;o.pull=0;removeEat(o);setMat(o);o.respawn=Math.min(60,4+o.size*.7);o.pet=null;deadList.push(o);
  const gain=o.value*(a.isP?UP.grow.val(D.up.grow)*rebMult()*petB('grow')*(boostsOn.grow>0?2:1):1.2);
  const before=a.M;a.M=Math.min(a.maxMv(),a.M+Math.min(gain,a.M*.05+.6));
  const cx=o.x,cz=o.z;
@@ -617,14 +681,14 @@ function agentEat(a,dt){
   o.prog+=dt/eatTime(a,o);if(o.prog>=1){a.eating.splice(i,1);o.eater=null;consume(a,o)}else{const w=Math.sin(o.prog*40)*.04;setMat(o,0,0,0,(1-o.prog*.65)*(1+w));if(a.isP&&Math.random()<dt*8)sfx.chomp()}}
  a.chew=a.eating.length>0?a.chew+dt:0}
 function pullUpdate(dt){for(const o of objs){if(!o.pull)continue;const a=o.puller;o.pull+=dt/.35;const t=Math.min(1,o.pull);const pt=o.pet&&pets.includes(o.pet)?o.pet:null;const mx=pt?pt.x:a.x+Math.sin(a.face)*a.S*.3,mz=pt?pt.z:a.z+Math.cos(a.face)*a.S*.3;const ox=(mx-o.x)*t*t,oz=(mz-o.z)*t*t,oy=a.S*1.5*t*t*(1-t)*2+a.S*.6*t*t;setMat(o,ox,oy,oz,1-t*.7,t*6);if(t>=1){consume(a,o)}}}
-function bumpCheck(){const L=live();for(let i=0;i<L.length;i++)for(let j=i+1;j<L.length;j++){let a=L[i],b=L[j];if(b.S>a.S){const t=a;a=b;b=t}if(a.arena&&b.arena)continue;if(a.S<b.S*1.3)continue;const d=Math.hypot(a.x-b.x,a.z-b.z);if(d>(a.S+b.S)*.3)continue;if(b.shield>0)continue;
+function bumpCheck(){const L=live();for(let i=0;i<L.length;i++)for(let j=i+1;j<L.length;j++){let a=L[i],b=L[j];if(b.S>a.S){const t=a;a=b;b=t}if(a.arena&&b.arena)continue;if(a.S<b.S*1.3)continue;if((a.remote||b.remote)&&!b.isP)continue;const d=Math.hypot(a.x-b.x,a.z-b.z);if(d>(a.S+b.S)*.3)continue;if(b.shield>0)continue;
  // 통! 작은 쪽이 튕겨 나가고 냠냠 별을 떨어뜨려요
  const lose=b.M*(b.isP&&!D.lose?0:.15);if(lose>0){b.M=Math.max(10,b.M-lose);dropOrbs(b.x,b.z,lose,b.S)}
  const ang=Math.atan2(b.x-a.x,b.z-a.z);b.x+=Math.sin(ang)*a.S*1.2;b.z+=Math.cos(ang)*a.S*1.2;b.vy=Math.sqrt(2*b.g()*b.S*1.5);b.grounded=false;b.shield=3;
  if(b.isP){sfx.boing();toast(a.name+' 에게 밀려났어요'+(lose>0?' — 오브 드롭':''),2000)}
  else if(a.isP){sfx.boing();count('bump');toast(b.name+' 밀쳐내기 성공 — 오브 드롭',1800);questCheck()}
  b.target=null}}
-function orbUpdate(dt){for(let i=orbs.length-1;i>=0;i--){const o=orbs[i];o.life-=dt;o.m.rotation.y+=dt*2;o.m.position.y=o.size/2+Math.sin(o.life*3)*o.size*.15;let eaten=false;if(o.life<=0){eaten=true}else for(const a of live()){if(a.S*1.1<o.size)continue;if(Math.hypot(a.x-o.m.position.x,a.z-o.m.position.z)<reachOf(a)+o.size*.5){a.M=Math.min(a.maxMv(),a.M+Math.min(o.v*(a.isP?rebMult():1),a.M*.05+.6));if(a.isP){sfx.coin();D.coins+=Math.ceil(o.v*rebMult());floatText('+오브',o.m.position.x,a.S,o.m.position.z,'#ffe066')}eaten=true;break}}if(eaten){scene.remove(o.m);o.m.material.dispose();orbs.splice(i,1)}}}
+function orbUpdate(dt){for(let i=orbs.length-1;i>=0;i--){const o=orbs[i];o.life-=dt;o.m.rotation.y+=dt*2;o.m.position.y=o.size/2+Math.sin(o.life*3)*o.size*.15;let eaten=false;if(o.life<=0){eaten=true}else for(const a of live()){if(a.remote||a.S*1.1<o.size)continue;if(Math.hypot(a.x-o.m.position.x,a.z-o.m.position.z)<reachOf(a)+o.size*.5){a.M=Math.min(a.maxMv(),a.M+Math.min(o.v*(a.isP?rebMult():1),a.M*.05+.6));if(a.isP){sfx.coin();D.coins+=Math.ceil(o.v*rebMult());floatText('+오브',o.m.position.x,a.S,o.m.position.z,'#ffe066')}eaten=true;break}}if(eaten){scene.remove(o.m);o.m.material.dispose();orbs.splice(i,1)}}}
 function boostUpdate(dt,time){for(const it of boostItems){if(!it.g.visible){it.t-=dt;if(it.t<=0)placeBoost(it);continue}it.g.rotation.y+=dt*1.5;it.g.position.y=it.size*(1.1+Math.sin(time*2+it.r0)*.2);if(Math.hypot(P.x-it.g.position.x,P.z-it.g.position.z)<P.S*.5+it.size){boostsOn[it.k]=20;it.g.visible=false;it.t=35;sfx.power();toast(BOOSTS[it.k].ic+' '+BOOSTS[it.k].n+' 20초',1600)}}
  for(const k in boostsOn){boostsOn[k]-=dt;if(boostsOn[k]<=0)delete boostsOn[k]}
  if(boostsOn.magnet>0){const R=P.S*4;const near=query(P.x,P.z,R,[]);let n=0;for(const o of near){if(!edible(P,o)||o.pull||o.eater||o.size>P.S*.5)continue;if(aabbDist(P.x,P.z,o)<R&&Math.random()<dt*3){o.pull=.001;o.puller=P;if(++n>6)break}}}}
@@ -640,7 +704,8 @@ function popUpdate(dt){for(const o of objs){if(o.pop<1&&o.alive){o.pop=Math.min(
 const duelCd=new Map();
 function duelUpdate(dt,time){if(WORLD!==2)return;const L=live();
  for(const a of L){const ar=arenaAt(a);if(ar){if(a.arena!==ar){a.arena=ar;a.hitBy=null;if(a.isP&&playing)toast('⚔ 대결 링 — 링 밖으로 밀려나면 크기 10%를 상대에게 줘요',2800)}}
-  else if(a.arena){const w=a.hitBy;if(w&&time-a.hitT<3&&!w.off&&w.arena===a.arena){const lose=a.M*.1;a.M=Math.max(10,a.M-lose);w.M=Math.min(w.maxMv(),w.M+lose);
+  else if(a.arena){const w=a.hitBy;if(a.remote){a.arena=null;a.hitBy=null;continue}if(w&&w.remote&&a.isP&&time-a.hitT<3&&!w.off&&w.arena===a.arena){const lose=a.M*.1;a.M=Math.max(10,a.M-lose);netGift(w.netId,lose);feed(a.name+' 님 링 아웃 · '+w.name+' 님 승리');toast('링 아웃! 크기 10%를 '+w.name+' 님에게 줬어요',2600);sfx.full();a.arena=null;a.hitBy=null;continue}
+   if(w&&time-a.hitT<3&&!w.off&&!w.remote&&w.arena===a.arena){const lose=a.M*.1;a.M=Math.max(10,a.M-lose);w.M=Math.min(w.maxMv(),w.M+lose);
     feed(a.name+' 님 링 아웃 · '+w.name+' 님 승리');if(a.isP){toast('링 아웃! 크기 10%를 '+w.name+' 님에게 줬어요',2600);sfx.full()}else if(w.isP){toast('링 아웃 승리! '+a.name+' 님의 크기 10% 획득',2600);sfx.buy();count('ringout');questCheck()}
     burst(a.x,a.S*.5,a.z,'#ff4fd8',8,Math.max(.3,a.S*.06))}
    a.arena=null;a.hitBy=null}}
@@ -648,8 +713,8 @@ function duelUpdate(dt,time){if(WORLD!==2)return;const L=live();
   const key=a.name+'|'+b.name;if((duelCd.get(key)||0)>time)continue;duelCd.set(key,time+.35);nx/=d;nz/=d;
   const spA=4.5+a.S*1.7,spB=4.5+b.S*1.7;const pa=1+.7*clamp(((a.vx||0)*nx+(a.vz||0)*nz)/spA,0,1),pb=1+.7*clamp(-((b.vx||0)*nx+(b.vz||0)*nz)/spB,0,1);
   const base=(a.S+b.S)*2.4,sum=a.S+b.S;
-  b.kx=(b.kx||0)+nx*base*a.S/sum*pa;b.kz=(b.kz||0)+nz*base*a.S/sum*pa;a.kx=(a.kx||0)-nx*base*b.S/sum*pb;a.kz=(a.kz||0)-nz*base*b.S/sum*pb;
-  const push=((a.S+b.S)*.33-d)/2;a.x-=nx*push;a.z-=nz*push;b.x+=nx*push;b.z+=nz*push;
+  if(!b.remote){b.kx=(b.kx||0)+nx*base*a.S/sum*pa;b.kz=(b.kz||0)+nz*base*a.S/sum*pa}if(!a.remote){a.kx=(a.kx||0)-nx*base*b.S/sum*pb;a.kz=(a.kz||0)-nz*base*b.S/sum*pb}
+  const push=((a.S+b.S)*.33-d)/2;if(!a.remote){a.x-=nx*push*(b.remote?2:1);a.z-=nz*push*(b.remote?2:1)}if(!b.remote){b.x+=nx*push*(a.remote?2:1);b.z+=nz*push*(a.remote?2:1)}
   a.hitBy=b;a.hitT=time;b.hitBy=a;b.hitT=time;
   if(a.isP||b.isP)sfx.boing();burst((a.x+b.x)/2,Math.min(a.S,b.S)*.6,(a.z+b.z)/2,'#38f2ff',6,Math.max(.2,Math.min(a.S,b.S)*.05))}}
 function botThink(b,dt){
@@ -696,7 +761,7 @@ function hud(){const mM=maxM();const S=P.S;$('pname').textContent=(D.reb?'★'+D
  const eb=$('eatBtn');eb.classList.toggle('cool',P.bigCool>0);eb.innerHTML=P.bigCool>0?P.bigCool.toFixed(1)+'<small>흡입</small>':'흡입<small>'+(isTouch?'':'E')+'</small>';
  const z=zoneAt(P.x,P.z);if(z!==lastZone){if(lastZone>=0)toast(ZONES[z].n,1500);lastZone=z}}
 function canBuyAny(){for(const k in UP){const l=D.up[k];if(l<UP[k].max&&D.coins>=UP[k].cost(l))return true}return false}
-function lbUpdate(){const L=live().sort((a,b)=>b.S-a.S);let h='<h3>🏆 크기 순위 · '+L.length+'명</h3>';L.forEach((a,i)=>{h+='<div class="'+(a.isP?'me':'')+'"><span>'+(i+1)+'. '+escapeH(a.name)+'</span><span>'+a.S.toFixed(1)+'</span></div>'});$('lb').innerHTML=h}
+function lbUpdate(){const L=live().sort((a,b)=>b.S-a.S);let h='<h3>🏆 크기 순위 · '+L.length+'명</h3>';L.forEach((a,i)=>{h+='<div class="'+(a.isP?'me':'')+'" style="'+(a.remote?'color:#9fffe0':'')+'"><span>'+(i+1)+'. '+escapeH(a.name)+'</span><span>'+a.S.toFixed(1)+'</span></div>'});$('lb').innerHTML=h}
 
 // ================= 창 (상점·펫·세계·꾸미기·코드·퀘스트·설정) =================
 function openModal(html){$('panel').innerHTML=html;$('modal').classList.remove('hide');modalOpen=true}
@@ -756,6 +821,7 @@ function setHtml(){return X+'<h2 class="out">⚙️ 설정</h2>'+
  '<div class="row"><div class="ic">📍</div><div class="tx"><b>스폰 지점으로 이동</b></div><button class="btn blue" data-a="home">이동</button></div>'+
  '<div class="row"><div class="ic">🔄</div><div class="tx"><b>처음부터 하기</b>크기·코인·업그레이드·퀘스트·모자·펫·세계·코드·환생까지 모두 초기화돼요 (닉네임과 색상은 유지)</div><button class="btn red" data-a="restart">처음부터</button></div>'}
 $('bShop').onclick=()=>openModal(shopHtml());
+$('bNet').onclick=()=>openModal(netHtml());$('netBadge').onclick=()=>openModal(netHtml());
 $('bPet').onclick=()=>openModal(petHtml());
 $('bWorld').onclick=()=>openModal(worldHtml());
 $('bLook').onclick=()=>openModal(lookHtml());
@@ -773,6 +839,9 @@ function startOver(){const keep={reb:0,name:D.name,skin:D.skin,shirt:D.shirt,pan
  toast('처음부터 다시 시작합니다',2600)}
 $('panel').addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t)return;initAudio();const a=t.dataset.a;
  if(a==='close')return closeModal();
+ if(a==='netNew'){const code=String(ri(10000,99999));$('netMsg').textContent='방을 만드는 중…';netJoin(code,true).then(err=>{if(err){if($('netMsg'))$('netMsg').textContent=err}else{sfx.buy();if(modalOpen)openModal(netHtml())}});return}
+ if(a==='netGo'){const v=$('netCode').value;$('netMsg').textContent='들어가는 중…';netJoin(v,false).then(err=>{if(err){if($('netMsg'))$('netMsg').textContent=err}else{sfx.buy();if(modalOpen)openModal(netHtml())}});return}
+ if(a==='netLeave'){netLeave();openModal(netHtml());return}
  if(a==='buy'){const k=t.dataset.k,U=UP[k],l=D.up[k],c=U.cost(l);if(l<U.max&&D.coins>=c){D.coins-=c;D.up[k]++;sfx.buy();if(k==='belly'){count('buyBelly');questCheck()}save()}else sfx.full();openModal(shopHtml())}
  if(a==='reb'){if(P.S<40)return;D.reb++;D.coins=0;D.up={belly:0,speed:0,grow:0,eat:0,reach:0};P.M=10;P.x=0;P.z=0;P.shield=5;if(!D.hats.includes('rainbow'))D.hats.push('rainbow');count('rebirth');questCheck();for(const b of bots)if(!b.off)resetBot(b,false);sfx.buy();toast('환생 완료 · 성장·코인 ×'+rebMult().toFixed(1),3000);save();closeModal()}
  if(a==='egg'){const E=EGGS[t.dataset.k];if(E.w2&&!D.w2)return;if(D.pets.length>=PET_MAX){$('petMsg').textContent='펫이 가득 찼어요. 펫을 보내고 다시 열어 주세요';return}if(D.coins<E.cost){$('petMsg').textContent='코인이 '+fmt(E.cost-D.coins)+' 부족해요';sfx.full();return}hatch(t.dataset.k);return}
@@ -833,7 +902,7 @@ function loop(){requestAnimationFrame(loop);let dt=Math.min(.05,clock.getDelta()
  for(const b of bots)if(!b.off)botThink(b,dt);
  pullUpdate(dt);duelUpdate(dt,time);bumpCheck();orbUpdate(dt);boostUpdate(dt,time);popUpdate(dt);
  respT+=dt;if(respT>.25){respawnUpdate(respT);respT=0}
- for(const a of live())animAgent(a,dt,time);petUpdate(dt,time);botServer(dt);
+ netRemoteUpdate(dt);for(const a of live())animAgent(a,dt,time);petUpdate(dt,time);botServer(dt);netTick(dt);
  if(P.S>D.best)D.best=P.S;
  if(playing&&fpsCheck<5){fpsCheck+=dt;fpsN++;if(fpsCheck>=5){if(fpsN/fpsCheck<24&&!D.low){D.low=true;applyGfx();save();toast('화면이 느려서 그래픽을 낮음으로 바꿨어요',2600)}}}
  D.M=P.M;
@@ -857,7 +926,7 @@ function loop(){requestAnimationFrame(loop);let dt=Math.min(.05,clock.getDelta()
  renderer.render(scene,camera)}
 addEventListener('beforeunload',save);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
-window.__game={P,D,agents,objs,maxM,goWorld,bots,pets,refreshPets,get W(){return WORLD}};
+window.__game={P,D,agents,objs,maxM,goWorld,bots,pets,refreshPets,netApply,NET,get W(){return WORLD}};
 loop();
 })();
 </script>
