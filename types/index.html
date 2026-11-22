@@ -242,7 +242,7 @@ function thumb(id){
 // ================= 보호자 설정 (무서움 정도) =================
 const LEVELS=['약함','보통','약간 강함','강함'];
 const PARENT_HASH='4dtkcd';
-let PAR=LS.get('types_parent',{max:'강함',t:0})||{max:'강함',t:0};if(!LEVELS.includes(PAR.max))PAR={max:'강함',t:0};
+let PAR=LS.get('types_parent',{max:'약함',t:0})||{max:'약함',t:0};if(!LEVELS.includes(PAR.max))PAR={max:'약함',t:0};
 const allowed=g=>LEVELS.indexOf(g.scary)<=LEVELS.indexOf(PAR.max);
 function codeHash(s){let h=2166136261;for(const ch of String(s).normalize('NFC').trim().toLowerCase()){h^=ch.codePointAt(0);h=Math.imul(h,16777619)>>>0;}return h.toString(36);}
 function applyParent(p,fromNet){if(!p||!LEVELS.includes(p.max))return;if(fromNet&&(p.t||0)<=(PAR.t||0))return;PAR={max:p.max,t:p.t||Date.now()};LS.set('types_parent',PAR);
@@ -264,7 +264,7 @@ function parentSettings(){let pick=PAR.max;
  draw();}
 $('parentBtn').onclick=e=>{e.stopPropagation();parentLogin();};
 function renderCards(){
- const pl=$('parentLine');if(pl)pl.textContent=PAR.max==='강함'?'':`🔒 보호자 설정: 무서움 '${PAR.max}'까지 플레이할 수 있어요`;
+ const pl=$('parentLine');if(pl)pl.textContent=PAR.max==='강함'?'':`🔒 보호자 설정: 무서움 '${PAR.max}'까지 플레이할 수 있어요 (부모님이 바꿀 수 있어요)`;
  $('cards').innerHTML=GAMES.map(g=>`<div class="card ${allowed(g)?'':'locked'}" data-g="${g.id}">${allowed(g)?'':'<span class="lockTag">🔒 보호자 잠금</span>'}${thumb(g.id)}<div class="in"><h3>${g.name}</h3><div class="meta"><span class="chip ${SCARY[g.scary]}">무서움: ${g.scary}</span><span class="chip">${g.players}</span></div></div></div>`).join('');
  document.querySelectorAll('.card').forEach(c=>c.onclick=()=>showDetail(c.dataset.g));
 }
