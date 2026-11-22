@@ -14,6 +14,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#9fdcff;font-family:
 #stageInfo{top:10px;left:10px;background:rgba(255,255,255,.88);border-radius:16px;padding:8px 14px;color:#3a2e5c;box-shadow:0 3px 0 rgba(0,0,0,.15)}
 #stageInfo .s1{font-size:15px;opacity:.75}
 #stageInfo .s2{font-size:21px}
+#mpBox{top:62px;right:10px;background:rgba(255,255,255,.88);border-radius:14px;padding:6px 12px;color:#3a2e5c;font-size:15px;box-shadow:0 3px 0 rgba(0,0,0,.15);display:none;max-width:200px}
+#mpBox .row{font-size:13px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #stats{top:10px;right:10px;display:flex;gap:6px;pointer-events:auto}
 .chip{background:rgba(255,255,255,.88);border-radius:14px;padding:7px 12px;font-size:18px;color:#3a2e5c;box-shadow:0 3px 0 rgba(0,0,0,.15)}
 .ibtn{border:none;font-family:inherit;font-size:20px;cursor:pointer;background:#ffd166;color:#3a2e5c;border-radius:14px;padding:6px 12px;box-shadow:0 3px 0 #c99a2e}
@@ -78,6 +80,7 @@ input.nick:focus{border-color:#ff5d8f}
 <div id="toast" class="hud"></div>
 <div id="pops"></div>
 <div id="chatPanel"></div>
+<div id="mpBox" class="hud"></div>
 <div id="lag"><div class="spin"></div><div>📶 접속이 끊겼습니다...</div><div style="font-size:18px;opacity:.7">재연결 중</div></div>
 
 <div id="touch">
@@ -121,6 +124,7 @@ input.nick:focus{border-color:#ff5d8f}
 <div id="confetti"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../types/room-shim.js" data-game="troll"></script>
 <script>
 'use strict';
 // ================= 기본 설정 =================
@@ -1371,6 +1375,7 @@ function makeLabel(text, bg, fg, w){
 }
 function refreshNameTag(){ if (nameTag){ scene.remove(nameTag); nameTag.material.map.dispose(); nameTag.material.dispose(); } nameTag=makeLabel(save.nick||'뉴비','rgba(40,30,80,0.6)','#ffffff',384); scene.add(nameTag); }
 function say(text){
+  { const qi=QUICK.indexOf(text); if (qi>=0){ MP.chat=[qi,(MP.chat[1]||0)+1]; MP.dirty=true; } }
   if (bubble){ scene.remove(bubble); bubble.material.map.dispose(); bubble.material.dispose(); }
   bubble=makeLabel(text,'rgba(255,255,255,0.95)','#3a2e5c',512); scene.add(bubble); bubbleT=4; snd('pop');
   $('chatPanel').classList.remove('show');
@@ -1487,9 +1492,79 @@ function loop(now){
   const dt=Math.min(0.05,(now-last)/1000); last=now;
   if (state==='play'||state==='dead') update(dt);
   else if (state==='menu' && !started){ menuSpin+=dt; yaw=Math.sin(menuSpin*0.3)*0.6; }
-  updateCamera(dt); updateLabels(dt); updateHUD();
+  updateCamera(dt); updateLabels(dt); MP.tick(dt); updateHUD();
   renderer.render(scene,camera);
 }
+
+// ================= 같이 하기 (멀티플레이) =================
+const MP = { room:null, others:new Map(), chat:[0,0], dirty:false, sendT:0,
+  tick(dt){
+    if (!this.room) return;
+    this.sendT-=dt;
+    if (started && (this.sendT<=0 || this.dirty)){
+      this.sendT=0.14; this.dirty=false;
+      try { this.room.presence({n:(save.nick||'뉴비').slice(0,12), s:save.skin, x:+P.p.x.toFixed(2), y:+P.p.y.toFixed(2), z:+P.p.z.toFixed(2),
+        r:+AV.g.rotation.y.toFixed(2), h:+P.hh.toFixed(2), g:P.gdir, sc:+P.scale.toFixed(2), m:Math.hypot(P.v.x,P.v.z)>0.5?1:0, a:P.grounded?0:1,
+        st:Math.max(save.cp, Math.floor(P.p.z/L)), c:this.chat, d:state==='dead'?1:0}); } catch(e){}
+    }
+    const myStage=Math.floor(P.p.z/L);
+    for (const o of this.others.values()){
+      const d=o.d; if (!d) continue;
+      const k=Math.min(1,dt*10);
+      o.p.x+=(d.x-o.p.x)*k; o.p.y+=(d.y-o.p.y)*k; o.p.z+=(d.z-o.p.z)*k;
+      const near=Math.abs(Math.floor(o.p.z/L)-myStage)<=1 && (started||state!=='menu');
+      const av=o.av; av.g.visible=near&&!d.d; o.tag.visible=near;
+      av.g.position.set(o.p.x, o.p.y-d.h*d.g, o.p.z); av.g.scale.setScalar(d.sc||1);
+      let dr=d.r-av.g.rotation.y; while(dr>Math.PI)dr-=Math.PI*2; while(dr<-Math.PI)dr+=Math.PI*2; av.g.rotation.y+=dr*Math.min(1,dt*12);
+      av.g.rotation.z+=((d.g<0?Math.PI:0)-av.g.rotation.z)*Math.min(1,dt*10);
+      av.phase+=(d.m?9:0)*dt; const sw=d.m?Math.sin(av.phase)*0.75:0; const e=Math.min(1,dt*14);
+      let tla=sw,tra=-sw,tll=-sw,trl=sw; if (d.a){ tla=-0.5; tra=-0.5; tll=0.35; trl=-0.25; }
+      av.la.rotation.x+=(tla-av.la.rotation.x)*e; av.ra.rotation.x+=(tra-av.ra.rotation.x)*e; av.ll.rotation.x+=(tll-av.ll.rotation.x)*e; av.rl.rotation.x+=(trl-av.rl.rotation.x)*e;
+      const topY=o.p.y+(d.h+0.45*(d.sc||1))*d.g;
+      o.tag.position.set(o.p.x, topY, o.p.z);
+      if (o.bub){ o.bubT-=dt; o.bub.visible=near; o.bub.position.set(o.p.x, topY+0.6*d.g, o.p.z); if (o.bubT<=0){ this.drop(o,'bub'); } }
+    }
+  },
+  drop(o,key){ const sp=o[key]; if (!sp) return; scene.remove(sp); sp.material.map.dispose(); sp.material.dispose(); o[key]=null; },
+  onPeers(ev){
+    const list=Array.isArray(ev)?ev:((ev&&ev.peers)||[]);
+    const seen=new Set();
+    for (const pr of list){
+      if (pr.isMe) continue;
+      const d=pr.presence; if (!d || typeof d.x!=='number') continue; seen.add(pr.peer);
+      let o=this.others.get(pr.peer);
+      if (!o || o.skin!==d.s){
+        if (o){ scene.remove(o.av.g); this.drop(o,'tag'); this.drop(o,'bub'); }
+        const av=makeAvatar({skin:d.s}); scene.add(av.g);
+        o={av, skin:d.s, p:new THREE.Vector3(d.x,d.y,d.z), name:null, tag:null, bub:null, bubT:0, chatN:(d.c&&d.c[1])||0};
+        this.others.set(pr.peer,o);
+      }
+      if (o.name!==d.n){ this.drop(o,'tag'); o.name=d.n; o.tag=makeLabel(String(d.n||'친구'),'rgba(255,140,60,0.75)','#ffffff',384); scene.add(o.tag); }
+      if (d.c && d.c[1]!==o.chatN){ o.chatN=d.c[1]; const t=QUICK[d.c[0]]; if (t){ this.drop(o,'bub'); o.bub=makeLabel(t,'rgba(255,255,255,0.95)','#3a2e5c',512); scene.add(o.bub); o.bubT=4; } }
+      o.d=d;
+    }
+    for (const [id,o] of this.others){ if (!seen.has(id)){ scene.remove(o.av.g); this.drop(o,'tag'); this.drop(o,'bub'); this.others.delete(id); } }
+    this.hud();
+  },
+  hud(){
+    const box=$('mpBox'); const n=this.others.size;
+    if (!n){ box.style.display='none'; return; }
+    box.style.display='block';
+    const rows=[...this.others.values()].filter(o=>o.d).sort((a,b)=>b.d.st-a.d.st).slice(0,4)
+      .map(o=>'<div class="row">'+String(o.d.n||'친구').replace(/[<>&]/g,'')+' · '+(o.d.st+1)+'단계</div>').join('');
+    box.innerHTML='👥 같이 하는 친구 '+n+'명'+rows;
+  },
+  async start(){
+    try {
+      if (!window.claude || !window.claude.use) return;
+      const room=await window.claude.use('room'); if (!room) return;
+      this.room=room;
+      room.onPeers(list=>this.onPeers(list));
+      try { this.onPeers(room.peers()||[]); } catch(e){}
+    } catch(e){ console.log('[MP] off', e); }
+  }
+};
+MP.start();
 // 시작
 (document.fonts && document.fonts.load ? document.fonts.load('40px Jua') : Promise.resolve()).catch(()=>{}).then(()=>{
   ensureStages(save.cp); P.p.set(0,P.hh+0.02,save.cp*L+3); snapCam=true; refreshMenu(); requestAnimationFrame(loop);
