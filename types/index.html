@@ -466,12 +466,14 @@ function refreshBadges(){if(view!=='badges')return;const data=computeBadges();le
 const TY_VAL=[0,10,15,20],TY_LV=['','쉬움','보통','어려움'];
 const LVS={island:[1,1,2,2,3,3],troll:[1,2,2,3],shrink:[1,2,1,2,3,3],nyam:[1,2,2,3],detective:[1,2,3]};
 function typerSvg(sz){return `<svg viewBox="0 0 32 32" width="${sz}" height="${sz}" class="tsvg" aria-label="타입터">
-<g filter="url(#tyRough)"><use href="#tyShape" fill="#b4b4ff" clip-path="url(#tyL)"/><use href="#tyShape" fill="#fff1a1" clip-path="url(#tyR)"/>
-<rect x="15.6" y="5" width="1.1" height="26" fill="#cdb99a" opacity=".85" clip-path="url(#tyIn)"/></g>
-<use href="#tyShape" fill="none" stroke="rgba(0,0,0,.2)" stroke-width=".7"/></svg>`;}
+<use href="#tyShape" fill="#1b1f3a" transform="translate(0 1.8)"/>
+<use href="#tyShape" fill="url(#tyGL)" clip-path="url(#tyL)"/><use href="#tyShape" fill="url(#tyGR)" clip-path="url(#tyR)"/>
+<path d="M7.6 6.6h16.8a2.2 2.2 0 0 1 2.2 2.2v.3H5.4v-.3a2.2 2.2 0 0 1 2.2-2.2z" fill="#fff" opacity=".55"/>
+<rect x="13.6" y="14" width="1.6" height="10" rx=".8" fill="#fff" opacity=".35"/>
+<use href="#tyShape" fill="none" stroke="#1b1f3a" stroke-width="1.7" stroke-linejoin="round"/></svg>`;}
 function tico(){return `<span class="tico">${typerSvg('100%')}</span>`;}
 (function(){const d=document.createElement('div');d.style.cssText='position:absolute;width:0;height:0;overflow:hidden';
- d.innerHTML='<svg width="0" height="0"><defs><filter id="tyRough" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="1.1"/></filter><clipPath id="tyL"><rect x="0" y="0" width="16.2" height="32"/></clipPath><clipPath id="tyR"><rect x="16.2" y="0" width="16" height="32"/></clipPath><path id="tyShape" d="M2.6 11.2C2.4 7.6 8.6 6.3 16 6.1C23.6 5.6 29.2 6.1 29.6 9.2C30 12.1 26 12.7 19.9 13.6L20.2 26.8C20.3 29.9 17.6 30.6 16.2 30.6C14.2 30.6 13 29.3 12.9 27L12.6 14.7C7.6 15 2.8 14.6 2.6 11.2Z"/><clipPath id="tyIn"><path d="M2.6 11.2C2.4 7.6 8.6 6.3 16 6.1C23.6 5.6 29.2 6.1 29.6 9.2C30 12.1 26 12.7 19.9 13.6L20.2 26.8C20.3 29.9 17.6 30.6 16.2 30.6C14.2 30.6 13 29.3 12.9 27L12.6 14.7C7.6 15 2.8 14.6 2.6 11.2Z"/></clipPath></defs></svg>';
+ d.innerHTML='<svg width="0" height="0"><defs><linearGradient id="tyGL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9aa5ff"/><stop offset="1" stop-color="#4f5ef0"/></linearGradient><linearGradient id="tyGR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffec8a"/><stop offset="1" stop-color="#ffbf1f"/></linearGradient><clipPath id="tyL"><rect x="0" y="0" width="16" height="32"/></clipPath><clipPath id="tyR"><rect x="16" y="0" width="16" height="32"/></clipPath><path id="tyShape" d="M7.5 5h17a3.5 3.5 0 0 1 3.5 3.5v1a3.5 3.5 0 0 1-3.5 3.5H20v11.5a3.5 3.5 0 0 1-3.5 3.5h-1A3.5 3.5 0 0 1 12 24.5V13H7.5A3.5 3.5 0 0 1 4 9.5v-1A3.5 3.5 0 0 1 7.5 5z"/></defs></svg>';
  document.body.appendChild(d);})();
 $('tIco').innerHTML=typerSvg(24);
 function allBadges(){const list=[];for(const b of computeBadges())b.items.forEach(it=>list.push({...it,g:b.g}));return list;}
