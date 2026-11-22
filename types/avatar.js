@@ -7,8 +7,8 @@ let UID=0;
 
 // ---------- 체형 2개 (무료) ----------
 const BODIES={
- round:{name:'동글동글 체형',hr:27,hx:50,hy:31,tx1:31,tx2:69,ty1:57,ty2:93,arm:11,sh:63,hand:[[18,91],[82,91]],legs:[[35,49.5],[50.5,65]],ly1:89,ly2:126},
- slim: {name:'날씬날씬 체형',hr:23,hx:50,hy:28,tx1:36,tx2:64,ty1:52,ty2:92,arm:9,sh:58,hand:[[23,93],[77,93]],legs:[[38.5,49.5],[50.5,61.5]],ly1:88,ly2:133}
+ round:{name:'동글동글 체형',hr:26,hx:50,hy:24,tx1:39,tx2:61,ty1:46,bx1:33,bx2:67,ty2:88,tp:100,arm:13,sh:54,hand:[[19,83],[81,79]],legs:[[31.5,49.6],[50.4,68.5]],ly1:97,ly2:128},
+ slim: {name:'날씬날씬 체형',hr:21,hx:50,hy:21,tx1:40.5,tx2:59.5,ty1:39,bx1:37,bx2:63,ty2:75,tp:93,arm:11,sh:47,hand:[[22,89],[78,87]],legs:[[34,49.6],[50.4,66]],ly1:91,ly2:128}
 };
 
 // ---------- 특별 색 (그라데이션) ----------
@@ -143,70 +143,71 @@ const E=(x,y,rx,ry,c,extra='')=>`<ellipse cx="${f2(x)}" cy="${f2(y)}" rx="${f2(r
 function star(x,y,r,c,ol){let d='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;d+=(i?'L':'M')+f2(x+Math.cos(a)*rr)+' '+f2(y+Math.sin(a)*rr);}return ol?P(d+'Z',c):PN(d+'Z',c);}
 function heart(x,y,s,c,ol){const d=`M${f2(x)} ${f2(y+s*.9)}C${f2(x-s*1.3)} ${f2(y+s*.1)} ${f2(x-s*.9)} ${f2(y-s*.9)} ${f2(x)} ${f2(y-s*.3)}C${f2(x+s*.9)} ${f2(y-s*.9)} ${f2(x+s*1.3)} ${f2(y+s*.1)} ${f2(x)} ${f2(y+s*.9)}Z`;return ol?P(d,c):PN(d,c);}
 function twinkle(x,y,r,c='#fff'){return `<path d="M${f2(x)} ${f2(y-r)}Q${f2(x)} ${f2(y)} ${f2(x+r)} ${f2(y)}Q${f2(x)} ${f2(y)} ${f2(x)} ${f2(y+r)}Q${f2(x)} ${f2(y)} ${f2(x-r)} ${f2(y)}Q${f2(x)} ${f2(y)} ${f2(x)} ${f2(y-r)}Z" fill="${c}"/>`;}
-function torsoPath(M,ext=0,flare=0){const {tx1:a,tx2:b,ty1:t,ty2:u}=M,bot=u+ext;
- return `M${a+5} ${t}Q${a} ${t} ${a} ${t+6}L${a-1-flare} ${bot-3}Q${a-1-flare} ${bot} ${a+3-flare} ${bot}L${b-3+flare} ${bot}Q${b+1+flare} ${bot} ${b+1+flare} ${bot-3}L${b} ${t+6}Q${b} ${t} ${b-5} ${t}Z`;}
+function torsoPath(M,ext=0,fl=0){const a=M.tx1,b=M.tx2,t=M.ty1,u=M.ty2+ext,A=M.bx1-fl,B=M.bx2+fl,cx=M.hx,tp=M.tp+ext;
+ return `M${a+5} ${t}Q${a} ${t} ${a-.5} ${t+6}L${A} ${u-4}Q${A-.5} ${u+1} ${A+4} ${u+2}Q${cx-6} ${tp-3} ${cx} ${tp}Q${cx+6} ${tp-3} ${B-4} ${u+2}Q${B+.5} ${u+1} ${B} ${u-4}L${b+.5} ${t+6}Q${b} ${t} ${b-5} ${t}Z`;}
 
 // ---------- 머리카락 ----------
 function bangs(M,c,kind){const {hx:x,hy:y,hr:r}=M;
  if(kind==='side')return P(`M${x-r-1} ${y+4}A${r+1} ${r+2} 0 0 1 ${x+r+1} ${y+4}L${x+r-1} ${y-r*.05}Q${x+r*.2} ${y-r*.2} ${x-r*.55} ${y+r*.15}Q${x-r*.75} ${y-r*.1} ${x-r+1} ${y+r*.1}L${x-r-1} ${y+4}Z`,c);
  if(kind==='spiky'){let d=`M${x-r-1} ${y+3}`;const pts=[[-1.1,-.2],[-1.2,-.9],[-.7,-.75],[-.6,-1.45],[-.15,-1.05],[.2,-1.6],[.45,-1.05],[.95,-1.35],[.85,-.7],[1.25,-.7],[1.05,-.1]];pts.forEach(([a,b])=>d+=`L${f2(x+a*r)} ${f2(y+b*r)}`);d+=`L${x+r+1} ${y+3}L${x+r-2} ${y-r*.2}Q${x} ${y-r*.5} ${x-r+2} ${y-r*.2}Z`;return P(d,c);}
  if(kind==='curly'){let s='';for(let i=0;i<7;i++){const a=Math.PI+i*Math.PI/6;s+=C(x+Math.cos(a)*r*.92,y-r*.12+Math.sin(a)*r*.92,r*.36,c);}return s;}
- return P(`M${x-r-1} ${y+4}A${r+1} ${r+2} 0 0 1 ${x+r+1} ${y+4}L${x+r-2} ${y-r*.15}Q${x+r*.62} ${y+r*.05} ${x+r*.35} ${y-r*.22}Q${x+r*.12} ${y+r*.06} ${x-r*.1} ${y-r*.24}Q${x-r*.35} ${y+r*.06} ${x-r*.55} ${y-r*.2}Q${x-r*.8} ${y+r*.05} ${x-r+2} ${y-r*.15}L${x-r-1} ${y+4}Z`,c);}
+ return P(`M${x-r-1.5} ${y+r*.55}C${x-r-2} ${y-r-11} ${x+r+2} ${y-r-11} ${x+r+1.5} ${y+r*.55}Q${x+r*.75} ${y+r*.5} ${x+r*.72} ${y-r*.05}Q${x+r*.4} ${y+r*.14} ${x+r*.08} ${y-r*.22}Q${x-r*.3} ${y+r*.16} ${x-r*.72} ${y-r*.05}Q${x-r*.75} ${y+r*.5} ${x-r-1.5} ${y+r*.55}Z`,c);}
+function puff(M,c,len=0){const {hx:x,hy:y,hr:r}=M;const L=len;
+ return P(`M${x-r-1} ${y-2}C${x-r-2} ${y-r-12} ${x+r+2} ${y-r-12} ${x+r+1} ${y-2}C${x+r+3} ${y+r*.2} ${x+r+9} ${y+r*.3+L*.6} ${x+r+7} ${y+r*.7+L}C${x+r+5} ${y+r+L} ${x+r-2} ${y+r*.95+L} ${x+r-4} ${y+r*.75+L}L${x-r+4} ${y+r*.75+L}C${x-r+2} ${y+r*.95+L} ${x-r-5} ${y+r+L} ${x-r-7} ${y+r*.7+L}C${x-r-9} ${y+r*.3+L*.6} ${x-r-3} ${y+r*.2} ${x-r-1} ${y-2}Z`,c);}
 function hairBack(M,it){const {hx:x,hy:y,hr:r}=M,c=it.c;switch(it.s){
- case 'long':return P(`M${x-r-3} ${y}Q${x-r-4} ${y+r+16} ${x-r+1} ${y+r+20}L${x+r-1} ${y+r+20}Q${x+r+4} ${y+r+16} ${x+r+3} ${y}A${r+3} ${r+3} 0 0 0 ${x-r-3} ${y}Z`,c);
+ case 'long':return puff(M,c,r*.9);
  case 'wavy':{let d=`M${x-r-3} ${y}`;for(let i=0;i<4;i++)d+=`Q${x-r-7+(i%2)*6} ${y+6+i*6} ${x-r-3} ${y+9+i*6}`;d+=`L${x+r+3} ${y+33}`;for(let i=3;i>=0;i--)d+=`Q${x+r+7-(i%2)*6} ${y+6+i*6} ${x+r+3} ${y+3+i*6}`;d+=`A${r+3} ${r+3} 0 0 0 ${x-r-3} ${y}Z`;return P(d,c);}
  case 'princess':{let s=P(`M${x-r-4} ${y}Q${x-r-7} ${y+r+30} ${x-r+2} ${y+r+34}L${x+r-2} ${y+r+34}Q${x+r+7} ${y+r+30} ${x+r+4} ${y}A${r+4} ${r+4} 0 0 0 ${x-r-4} ${y}Z`,c);
   for(const k of [-1,1])for(let i=0;i<3;i++)s+=C(x+k*(r+1-i*.5),y+r+12+i*8,4.2,c);return s;}
- case 'pony':return P(`M${x+r*.6} ${y-r*.75}Q${x+r+16} ${y-r*.4} ${x+r+12} ${y+r+6}Q${x+r+8} ${y+r+12} ${x+r+3} ${y+r+4}Q${x+r+7} ${y} ${x+r*.4} ${y-r*.5}Z`,c)+C(x,y-1,r+2,c);
- case 'twin':{let s='';for(const k of [-1,1])s+=P(`M${x+k*r*.8} ${y-r*.5}Q${x+k*(r+13)} ${y-r*.2} ${x+k*(r+9)} ${y+r+10}Q${x+k*(r+6)} ${y+r+16} ${x+k*(r+2)} ${y+r+6}Q${x+k*(r+4)} ${y+2} ${x+k*r*.6} ${y-r*.2}Z`,c)+C(x+k*(r*.8),y-r*.55,3,'#ff8fab');return s+C(x,y-1,r+2,c);}
- case 'braid':{let s=C(x,y-1,r+2,c);for(const k of [-1,1]){for(let i=0;i<5;i++)s+=E(x+k*(r-1),y+r*.4+i*5.5,4.2,3.6,c);s+=C(x+k*(r-1),y+r*.4+28,2.4,'#ff8fab');}return s;}
+ case 'pony':return P(`M${x+r*.6} ${y-r*.75}Q${x+r+16} ${y-r*.4} ${x+r+12} ${y+r+6}Q${x+r+8} ${y+r+12} ${x+r+3} ${y+r+4}Q${x+r+7} ${y} ${x+r*.4} ${y-r*.5}Z`,c)+puff(M,c);
+ case 'twin':{let s='';for(const k of [-1,1])s+=P(`M${x+k*r*.8} ${y-r*.5}Q${x+k*(r+13)} ${y-r*.2} ${x+k*(r+9)} ${y+r+10}Q${x+k*(r+6)} ${y+r+16} ${x+k*(r+2)} ${y+r+6}Q${x+k*(r+4)} ${y+2} ${x+k*r*.6} ${y-r*.2}Z`,c)+C(x+k*(r*.8),y-r*.55,3,'#ff8fab');return s+puff(M,c);}
+ case 'braid':{let s=puff(M,c);for(const k of [-1,1]){for(let i=0;i<5;i++)s+=E(x+k*(r-1),y+r*.4+i*5.5,4.2,3.6,c);s+=C(x+k*(r-1),y+r*.4+28,2.4,'#ff8fab');}return s;}
  case 'curly':{let s='';for(let i=0;i<12;i++){const a=i*Math.PI*2/12;s+=C(x+Math.cos(a)*(r+2),y+2+Math.sin(a)*(r+2),r*.42,c);}return s+CN(x,y+2,r+2,c);}
- case 'bun':return C(x,y-r-3,r*.5,c)+C(x,y-1,r+1.5,c);
- case 'odango':return C(x-r*.75,y-r*.85,r*.42,c)+C(x+r*.75,y-r*.85,r*.42,c)+C(x,y-1,r+1.5,c);
- default:return C(x,y-1,r+2,c);}}
+ case 'bun':return C(x,y-r-4,r*.5,c)+puff(M,c);
+ case 'odango':return C(x-r*.8,y-r*.9,r*.45,c)+C(x+r*.8,y-r*.9,r*.45,c)+puff(M,c);
+ default:return puff(M,c);}}
 function hairFront(M,it){const k=it.s==='spiky'?'spiky':it.s==='curly'?'curly':it.s==='side'?'side':'bang';let s=bangs(M,it.c,k);
  const {hx:x,hy:y,hr:r}=M;
- if(it.s==='long'||it.s==='wavy'||it.s==='princess')for(const q of [-1,1])s+=P(`M${x+q*(r+1)} ${y}Q${x+q*(r+3)} ${y+r*.8} ${x+q*(r-1)} ${y+r+4}Q${x+q*(r-4)} ${y+r*.5} ${x+q*(r-2)} ${y-r*.1}Z`,it.c);
+ if(it.s==='wavy'||it.s==='princess')for(const q of [-1,1])s+=P(`M${x+q*(r+1)} ${y}Q${x+q*(r+3)} ${y+r*.8} ${x+q*(r-1)} ${y+r+4}Q${x+q*(r-4)} ${y+r*.5} ${x+q*(r-2)} ${y-r*.1}Z`,it.c);
  return s;}
 
 // ---------- 몸 ----------
 function arms(M,top){const sl=top?(['tank','dress','princess'].includes(top.s)?(top.s==='princess'?1:0):['tee','stripe','dots','stars','hearts','sailor','space'].includes(top.s)?1:2):1;
- let s='';const [x1,x2]=[M.tx1+3,M.tx2-3],y=M.sh-2;
+ let s='';const [x1,x2]=[M.tx1+2,M.tx2-2],y=M.ty1+M.arm*.55+1.5;
  M.hand.forEach(([hx,hy],i)=>{const sx=i?x2:x1;s+=cap(sx,y,hx,hy,M.arm,SKIN);
-  if(top&&sl){const t=sl===1?.38:.86;const ex=sx+(hx-sx)*t,ey=y+(hy-y)*t;s+=cap(sx,y,ex,ey,M.arm+1.6,top.s==='jacket'||top.s==='tux'?top.c:top.c);
+  if(top&&sl){const t=sl===1?.32:.86;const ex=sx+(hx-sx)*t,ey=y+(hy-y)*t;s+=cap(sx,y,ex,ey,M.arm+1.6,top.s==='jacket'||top.s==='tux'?top.c:top.c);
    if(top.s==='princess')s+=C(sx+(hx-sx)*.18,y+(hy-y)*.18,M.arm*.85,top.c2||'#fff');}
-  s+=C(hx,hy,M.arm*.62,SKIN);});return s;}
-function legs(M){let s='';M.legs.forEach(([a,b])=>{s+=P(`M${a} ${M.ly1-6}L${a} ${M.ly2-2}Q${a} ${M.ly2+1} ${a+3} ${M.ly2+1}L${b-3} ${M.ly2+1}Q${b} ${M.ly2+1} ${b} ${M.ly2-2}L${b} ${M.ly1-6}Z`,SKIN);});return s;}
-function torsoTop(M,it,uid){const c=it.c,c2=it.c2,{tx1:a,tx2:b,ty1:t,ty2:u}=M,cx=(a+b)/2,w=b-a;let s='';
- const clip=(inner,ext=0,fl=0)=>`<clipPath id="tc${uid}"><path d="${torsoPath(M,ext,fl)}"/></clipPath><g clip-path="url(#tc${uid})">${inner}</g>`;
- const collar=()=>P(`M${cx-6} ${t-.5}Q${cx} ${t+5} ${cx+6} ${t-.5}`,'none');
+  s+=C(hx,hy,M.arm*.7,SKIN);});return s;}
+function legs(M){let s='';M.legs.forEach(([a,b])=>{const r=(b-a)/2;s+=P(`M${a} ${M.ty2-6}L${a} ${M.ly2-r}A${r} ${r} 0 0 0 ${b} ${M.ly2-r}L${b} ${M.ty2-6}Z`,SKIN);});return s;}
+function torsoTop(M,it,uid){const c=it.c,c2=it.c2,t=M.ty1,u=M.ty2,cx=M.hx,a=M.bx1,b=M.bx2,w=b-a,ta=M.tx1,tb=M.tx2;
+ let ext=0,fl=0;if(it.s==='dress'){ext=10;fl=6;}if(it.s==='princess'){ext=16;fl=11;}if(it.s==='rain'){ext=3;fl=2;}
+ const tp=torsoPath(M,ext,fl);let d='';
+ const sp=(n,fn)=>[...Array(n)].map((_,i)=>fn(a+3+(i%4)*(w-4)/3+(Math.floor(i/4)%2)*3,t+6+Math.floor(i/4)*11)).join('');
  switch(it.s){
- case 'tank':s+=P(`M${a+6} ${t+3}L${a+3} ${t+8}L${a-1} ${u-3}Q${a-1} ${u} ${a+3} ${u}L${b-3} ${u}Q${b+1} ${u} ${b+1} ${u-3}L${b-3} ${t+8}L${b-6} ${t+3}Q${cx} ${t+9} ${a+6} ${t+3}Z`,c);break;
- case 'dress':s+=P(torsoPath(M,16,7),c)+P(`M${a-1} ${u-2}L${b+1} ${u-2}`,'none')+P(`M${a-7} ${u+13}Q${cx} ${u+17} ${b+7} ${u+13}`,'none','stroke-dasharray="2 2"')+collar();
-  s+=C(cx,u-2,2.5,c2);break;
- case 'princess':s+=P(torsoPath(M,22,12),c);s+=clip(`<rect x="${a-14}" y="${u-4}" width="${w+28}" height="5" fill="${c2}"/>`+[0,1,2,3,4].map(i=>CN(a-8+i*(w+16)/4,u+20,4,c2)).join(''),22,12);
-  s+=P(torsoPath(M,22,12),'none')+heart(cx,t+8,3,'#ff6b6b');break;
- case 'stripe':s+=P(torsoPath(M),c)+clip([0,1,2,3,4,5].map(i=>`<rect x="${a-2}" y="${t+3+i*6.5}" width="${w+4}" height="3.2" fill="${c2}"/>`).join(''))+P(torsoPath(M),'none')+collar();break;
- case 'dots':s+=P(torsoPath(M),c)+clip([...Array(12)].map((_,i)=>CN(a+3+(i%4)*w/3.6+(Math.floor(i/4)%2)*4,t+6+Math.floor(i/4)*11,2.2,c2)).join(''))+P(torsoPath(M),'none')+collar();break;
- case 'stars':s+=P(torsoPath(M),c)+clip([...Array(9)].map((_,i)=>star(a+4+(i%3)*w/2.6+(Math.floor(i/3)%2)*4,t+7+Math.floor(i/3)*12,3,c2)).join(''))+P(torsoPath(M),'none')+collar();break;
- case 'hearts':s+=P(torsoPath(M),c)+clip([...Array(9)].map((_,i)=>heart(a+4+(i%3)*w/2.6+(Math.floor(i/3)%2)*4,t+7+Math.floor(i/3)*12,2.6,c2)).join(''))+P(torsoPath(M),'none')+collar();break;
- case 'hoodie':s+=P(`M${cx-12} ${t+2}Q${cx} ${t-6} ${cx+12} ${t+2}Q${cx} ${t+9} ${cx-12} ${t+2}Z`,c)+P(torsoPath(M),c)+P(`M${cx-8} ${u-13}L${cx+8} ${u-13}L${cx+10} ${u-4}L${cx-10} ${u-4}Z`,c)+cap(cx-3,t+4,cx-3,t+13,.8,'#fff')+cap(cx+3,t+4,cx+3,t+13,.8,'#fff');
-  if(c.startsWith('url'))s+=star(a+6,t+10,2.2,'#fff')+star(b-7,t+20,1.6,'#fff')+star(cx+4,u-8,1.4,'#fff');break;
- case 'sweater':s+=P(torsoPath(M),c)+`<rect x="${a}" y="${u-4}" width="${w}" height="4" fill="${c}" stroke="${OL}" stroke-width="1"/>`+(it.id==='t_sws'?star(cx,t+15,7,c2,1):heart(cx,t+15,6,c2,1))+collar();break;
- case 'shirt':s+=P(torsoPath(M),c)+P(`M${cx} ${t+1}L${cx-8} ${t-1}L${cx-6} ${t+6}Z`,'#fff')+P(`M${cx} ${t+1}L${cx+8} ${t-1}L${cx+6} ${t+6}Z`,'#fff')+[0,1,2,3].map(i=>CN(cx,t+8+i*7,1.2,OL)).join('')+cap(cx,t+2,cx,u,.01,OL);break;
- case 'jacket':s+=P(torsoPath(M),c2)+P(`M${a+5} ${t}Q${a} ${t} ${a} ${t+6}L${a-1} ${u-3}Q${a-1} ${u} ${a+3} ${u}L${cx-4} ${u}L${cx-4} ${t+12}L${cx-8} ${t}Z`,c)+P(`M${b-5} ${t}Q${b} ${t} ${b} ${t+6}L${b+1} ${u-3}Q${b+1} ${u} ${b-3} ${u}L${cx+4} ${u}L${cx+4} ${t+12}L${cx+8} ${t}Z`,c);break;
- case 'sailor':s+=P(torsoPath(M),c)+P(`M${a+2} ${t+1}L${cx} ${t+14}L${b-2} ${t+1}L${b-4} ${t+10}L${cx} ${t+20}L${a+4} ${t+10}Z`,c2)+P(`M${cx-6} ${t+19}L${cx} ${t+16}L${cx+6} ${t+19}L${cx+5} ${t+24}L${cx} ${t+21}L${cx-5} ${t+24}Z`,'#ff6b6b');break;
- case 'rain':s+=P(torsoPath(M,4,2),c)+P(`M${cx-11} ${t+1}Q${cx} ${t-7} ${cx+11} ${t+1}Q${cx} ${t+7} ${cx-11} ${t+1}Z`,c)+[0,1,2].map(i=>C(cx,t+9+i*8,1.6,'#fff')).join('');break;
- case 'hanbok':{const cols=['#ff6b6b','#ffd43b','#69db7c','#4dabf7','#9775fa'];s+=P(torsoPath(M,-6),c);s+=P(`M${cx-6} ${t}L${cx+8} ${t+18}`,'none');s+=P(`M${cx-1} ${t+16}Q${cx-8} ${t+30} ${cx-4} ${t+33}L${cx-1} ${t+19}Q${cx+4} ${t+32} ${cx+1} ${t+34}Q${cx+5} ${t+24} ${cx-1} ${t+16}Z`,c2);
-  M._hanbok=cols;break;}
- case 'tux':s+=P(torsoPath(M),c)+P(`M${cx-6} ${t}L${cx} ${t+16}L${cx+6} ${t}Z`,c2)+P(`M${cx-6} ${t+3}L${cx} ${t+5}L${cx+6} ${t+3}L${cx+6} ${t+8}L${cx} ${t+6}L${cx-6} ${t+8}Z`,'#e03131')+[0,1].map(i=>CN(cx,t+20+i*6,1.3,'#fff')).join('');break;
- case 'space':s+=P(torsoPath(M),c)+`<rect x="${a+1}" y="${u-9}" width="${w-2}" height="5" fill="#adb5bd" stroke="${OL}" stroke-width="1"/>`+C(a+8,t+11,4.5,c2)+star(a+8,t+11,2.6,'#fff')+`<rect x="${b-13}" y="${t+8}" width="8" height="6" rx="1.5" fill="#ff6b6b" stroke="${OL}" stroke-width="1"/>`;break;
- default:s+=P(torsoPath(M),c)+collar();}
- if(it.s==='hanbok'){const cols=M._hanbok;}
- return s;}
-function sleevesHanbok(M,top){if(!top||top.s!=='hanbok')return '';const cols=['#ff6b6b','#ffd43b','#69db7c','#4dabf7','#9775fa'];let s='';const y=M.sh-2;
- M.hand.forEach(([hx,hy],i)=>{const sx=i?M.tx2-3:M.tx1+3;for(let k=0;k<5;k++){const t0=.12+k*.15,t1=t0+.15;s+=`<line x1="${f2(sx+(hx-sx)*t0)}" y1="${f2(y+(hy-y)*t0)}" x2="${f2(sx+(hx-sx)*t1)}" y2="${f2(y+(hy-y)*t1)}" stroke="${cols[k]}" stroke-width="${M.arm+1.2}"/>`;}});return s;}
-function bottom(M,it,uid){const c=it.c,c2=it.c2,[[la,lb],[ra,rb]]=M.legs,top=M.ty2-5,y1=M.ly1,y2=M.ly2,cx=(la+rb)/2;let s='';
+ case 'stripe':d=[0,1,2,3,4,5,6,7].map(i=>`<rect x="${a-4}" y="${t+3+i*7}" width="${w+8}" height="3.4" fill="${c2}"/>`).join('');break;
+ case 'dots':d=sp(16,(x,y)=>CN(x,y,2.2,c2));break;
+ case 'stars':d=sp(16,(x,y)=>star(x,y,3,c2));break;
+ case 'hearts':d=sp(16,(x,y)=>heart(x,y,2.6,c2));break;
+ case 'tank':d=PN(`M${ta-2} ${t-2}L${ta+3} ${t-2}Q${cx} ${t+12} ${tb-3} ${t-2}L${tb+2} ${t-2}L${tb+2} ${t+4}L${ta-2} ${t+4}Z`,SKIN);break;
+ case 'dress':d=P(`M${a-12} ${u-1}L${b+12} ${u-1}`,'none')+CN(cx,u-1,2.4,c2);break;
+ case 'princess':d=`<rect x="${a-20}" y="${u-2}" width="${w+40}" height="5" fill="${c2}"/>`+[0,1,2,3,4,5].map(i=>CN(a-12+i*(w+24)/5,u+ext+3,4,c2)).join('')+heart(cx,t+9,3,'#ff6b6b');break;
+ case 'hoodie':d=P(`M${cx-9} ${u-14}L${cx+9} ${u-14}L${cx+11} ${u-4}L${cx-11} ${u-4}Z`,c)+cap(cx-3,t+3,cx-3,t+13,.8,'#fff')+cap(cx+3,t+3,cx+3,t+13,.8,'#fff');
+  if(c.startsWith('url'))d+=star(a+7,t+12,2.2,'#fff')+star(b-8,t+22,1.6,'#fff')+star(cx+5,u-9,1.4,'#fff');break;
+ case 'sweater':d=`<rect x="${a-4}" y="${u-4}" width="${w+8}" height="20" fill="${c}" stroke="${OL}" stroke-width="1"/>`+(it.id==='t_sws'?star(cx,t+17,7,c2,1):heart(cx,t+17,6,c2,1));break;
+ case 'shirt':d=P(`M${cx} ${t+1}L${cx-8} ${t-1}L${cx-6} ${t+6}Z`,'#fff')+P(`M${cx} ${t+1}L${cx+8} ${t-1}L${cx+6} ${t+6}Z`,'#fff')+[0,1,2,3,4].map(i=>CN(cx,t+8+i*7,1.2,OL)).join('');break;
+ case 'jacket':d=`<rect x="${cx-4.5}" y="${t-2}" width="9" height="${u-t+20}" fill="${c2}"/><path d="M${cx-4.5} ${t}L${cx-4.5} ${u+20}M${cx+4.5} ${t}L${cx+4.5} ${u+20}" stroke="${OL}" stroke-width="1.2"/>`;break;
+ case 'sailor':d=P(`M${ta-4} ${t-1}L${cx} ${t+14}L${tb+4} ${t-1}L${tb+4} ${t+10}L${cx} ${t+21}L${ta-4} ${t+10}Z`,c2)+P(`M${cx-6} ${t+19}L${cx} ${t+16}L${cx+6} ${t+19}L${cx+5} ${t+25}L${cx} ${t+22}L${cx-5} ${t+25}Z`,'#ff6b6b');break;
+ case 'rain':d=[0,1,2].map(i=>C(cx,t+9+i*9,1.7,'#fff')).join('');break;
+ case 'hanbok':d=`<rect x="${a-4}" y="${u-8}" width="${w+8}" height="30" fill="${c2}" opacity=".0"/>`+P(`M${cx-6} ${t}L${cx+8} ${t+18}`,'none')+P(`M${cx-1} ${t+16}Q${cx-8} ${t+30} ${cx-4} ${t+33}L${cx-1} ${t+19}Q${cx+4} ${t+32} ${cx+1} ${t+34}Q${cx+5} ${t+24} ${cx-1} ${t+16}Z`,c2);break;
+ case 'tux':d=P(`M${cx-6} ${t-2}L${cx} ${t+17}L${cx+6} ${t-2}Z`,c2)+P(`M${cx-6} ${t+3}L${cx} ${t+5}L${cx+6} ${t+3}L${cx+6} ${t+8}L${cx} ${t+6}L${cx-6} ${t+8}Z`,'#e03131')+[0,1].map(i=>CN(cx,t+21+i*6,1.3,'#fff')).join('');break;
+ case 'space':d=`<rect x="${a-4}" y="${u-10}" width="${w+8}" height="5" fill="#adb5bd" stroke="${OL}" stroke-width="1"/>`+C(cx-7,t+12,4.5,c2)+star(cx-7,t+12,2.6,'#fff')+`<rect x="${cx+2}" y="${t+9}" width="8" height="6" rx="1.5" fill="#ff6b6b" stroke="${OL}" stroke-width="1"/>`;break;
+ }
+ const col=['tank','hoodie','shirt','sailor','tux','rain'].includes(it.s)?'':P(`M${cx-6} ${t-.5}Q${cx} ${t+5} ${cx+6} ${t-.5}`,'none');
+ let pre='';if(it.s==='hoodie'||it.s==='rain')pre=P(`M${cx-12} ${t+2}Q${cx} ${t-6} ${cx+12} ${t+2}Q${cx} ${t+9} ${cx-12} ${t+2}Z`,c);
+ return pre+PN(tp,c)+`<clipPath id="tc${uid}"><path d="${tp}"/></clipPath><g clip-path="url(#tc${uid})">${d}</g>`+P(tp,'none')+col;}
+function sleevesHanbok(M,top){if(!top||top.s!=='hanbok')return '';const cols=['#ff6b6b','#ffd43b','#69db7c','#4dabf7','#9775fa'];let s='';
+ M.hand.forEach(([hx,hy],i)=>{const sx=i?M.tx2-2:M.tx1+2;const y=M.ty1+M.arm*.55+1.5;for(let k=0;k<5;k++){const t0=.12+k*.15,t1=t0+.15;s+=`<line x1="${f2(sx+(hx-sx)*t0)}" y1="${f2(y+(hy-y)*t0)}" x2="${f2(sx+(hx-sx)*t1)}" y2="${f2(y+(hy-y)*t1)}" stroke="${cols[k]}" stroke-width="${M.arm+1.2}"/>`;}});return s;}
+function bottom(M,it,uid){const c=it.c,c2=it.c2,[[la,lb],[ra,rb]]=M.legs,top=M.ty2-6,y1=M.ly1,y2=M.ly2-3,cx=(la+rb)/2;let s='';
  const pants=(end)=>P(`M${la-1} ${top}L${rb+1} ${top}L${rb+1} ${end}L${ra-.5} ${end}L${ra-.5} ${y1+2}Q${cx} ${y1-2} ${lb+.5} ${y1+2}L${lb+.5} ${end}L${la-1} ${end}Z`,c);
  const skirt=(len,fl)=>P(`M${la} ${top}L${rb} ${top}L${rb+fl} ${y1+len}Q${cx} ${y1+len+3} ${la-fl} ${y1+len}Z`,c);
  switch(it.s){
@@ -328,12 +329,13 @@ function render(st,opts={}){const uid=++UID;st=st||defaultState();const eq=st.eq
  if(sh)s+=shoes(M,sh,bot);
  if(bot&&bot.s!=='overall')s+=bottom(M,bot,uid);
  s+=arms(M,top)+sleevesHanbok(M,top);
+ if(!top)s+=P(torsoPath(M),SKIN);
  if(top)s+=torsoTop(M,top,uid);
  if(bot&&bot.s==='overall')s+=bottom(M,bot,uid);
  if(top&&(top.s==='dress'||top.s==='princess')&&sh)s+=''; // 신발은 이미 그려짐
  if(A_.neck)s+=acc(M,A_.neck,uid);
  // 머리
- s+=C(M.hx,M.hy,M.hr,SKIN);
+ s+=E(M.hx,M.hy,M.hr,M.hr*.9,SKIN);
  s+=face(M);
  if(A_.face&&A_.face.s!=='glasses'&&A_.face.s!=='mono')s+=acc(M,A_.face,uid);
  if(hair)s+=hairFront(M,hair);
