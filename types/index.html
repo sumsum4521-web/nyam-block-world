@@ -250,11 +250,21 @@ const GAMES=[
  {id:'shrink',name:'작아지기 시뮬레이터',sub:'달리고 작아지기',url:'/shrink-simulator/',scary:'약함',players:'친구랑 같이',nick:true,
   desc:'러닝머신에서 달려서 점점 작아지고, 더 작은 동그라미 구멍을 통과해서 승리를 모아요. 환생, 펫 알, 초원·사막·숲 세계 3개가 있어요.'},
  {id:'troll',name:'트롤 점프맵',sub:'40스테이지 오비',url:'../troll/',scary:'약함',players:'친구랑 같이',nick:true,room:true,
-  desc:'도망가는 발판, 가짜 체크포인트, 거짓말하는 화살표! 스테이지마다 다른 트롤 함정을 뚫고 40스테이지 결승선까지 가요. 마지막엔 트로피 추격전이 있어요.'}
+  desc:'도망가는 발판, 가짜 체크포인트, 거짓말하는 화살표! 스테이지마다 다른 트롤 함정을 뚫고 40스테이지 결승선까지 가요. 마지막엔 트로피 추격전이 있어요.'},
+ {id:'draw',name:'그리고 지우세요',sub:'칠하기 대결',url:'../draw-erase/',scary:'약함',players:'컴퓨터 친구랑 1:1~3:3',nick:true,
+  desc:'그리기 팀은 도화지를 칠하고, 지우기 팀은 지워요! 40초 뒤 칠해진 곳이 반보다 많으면 그리기 팀 승리. 코인으로 왕·스피드·아이스 지우개, 최면술 붓, 귀여운 스킨을 살 수 있어요.'}
 ];
 const G=id=>GAMES.find(g=>g.id===id);
 function thumb(id){
  const S={
+  draw:`<rect width="320" height="200" fill="#bfe8ff"/><rect y="150" width="320" height="50" fill="#7bd36b"/>
+   <path d="M40 60 L280 60 L300 165 L20 165 Z" fill="#fff8e7"/><path d="M40 60 L160 60 L160 165 L20 165 Z" fill="#ff8fab"/>
+   <path d="M60 80 q30 -14 60 4 q20 12 34 -6" stroke="#ff5c8a" stroke-width="10" fill="none" stroke-linecap="round"/>
+   <rect x="96" y="82" width="22" height="20" rx="5" fill="#f5cd30"/><rect x="92" y="102" width="30" height="26" rx="5" fill="#4c6ef5"/><rect x="94" y="128" width="12" height="18" fill="#51cf66"/><rect x="108" y="128" width="12" height="18" fill="#51cf66"/>
+   <rect x="121" y="96" width="5" height="30" rx="2" fill="#a0693c" transform="rotate(25 123 110)"/><path d="M128 88 l8 -12 l6 4 z" fill="#ff5c8a"/>
+   <rect x="206" y="82" width="22" height="20" rx="5" fill="#f5cd30"/><rect x="202" y="102" width="30" height="26" rx="5" fill="#4c6ef5"/><rect x="204" y="128" width="12" height="18" fill="#51cf66"/><rect x="218" y="128" width="12" height="18" fill="#51cf66"/>
+   <rect x="234" y="104" width="26" height="14" rx="4" fill="#74c0fc"/><rect x="234" y="104" width="10" height="14" rx="4" fill="#fff"/>
+   <circle cx="211" cy="91" r="2.5" fill="#222"/><circle cx="223" cy="91" r="2.5" fill="#222"/><circle cx="101" cy="91" r="2.5" fill="#222"/><circle cx="113" cy="91" r="2.5" fill="#222"/>`,
   nyam:`<rect width="320" height="200" fill="#ffd6e8"/><rect y="140" width="320" height="60" fill="#7bd36b"/><circle cx="60" cy="50" r="22" fill="#fff6a8"/>
    <rect x="40" y="90" width="10" height="55" fill="#fff"/><circle cx="45" cy="85" r="22" fill="#ff5c9a"/><circle cx="45" cy="85" r="12" fill="#ffc2dc"/>
    <circle cx="265" cy="118" r="26" fill="#d9822b"/><circle cx="265" cy="118" r="9" fill="#ffd6e8"/><path d="M243 108 q22 -18 44 0" stroke="#ff8fc2" stroke-width="9" fill="none"/>
@@ -343,6 +353,7 @@ function applyNick(id,name){
   if(id==='shrink'){const d=LS.get('shrinkSim_v1',null)||{};let n=name.replace(/[^A-Za-z0-9_가-힣]/g,'').slice(0,16);if(n.length<2)n=(n+'__').slice(0,2);d.name=n;d.named=true;LS.set('shrinkSim_v1',d);}
   if(id==='troll'){const d=LS.get('trollJumpMap_v1',null)||{};d.nick=name.slice(0,10);LS.set('trollJumpMap_v1',d);}
   if(id==='island'){LS.setRaw('island_name',name.slice(0,10));}
+  if(id==='draw'){const d=LS.get('drawErase_v1',null)||{};d.name=name.slice(0,10);LS.set('drawErase_v1',d);}
  }catch(e){}
 }
 
@@ -490,6 +501,9 @@ function computeBadges(){const out=[];
  const de=LS.get('detectiveSquirrel_v1',{})||{},sv=Object.keys(de.solved||{}).length;
  out.push({g:'detective',color:'#a0693c',extra:sv?`해결한 사건 ${sv}개`:'',items:[
   {n:'첫 사건 해결',d:'사건 1개 해결',l:'1',got:sv>=1},{n:'믿음직한 탐정',d:'사건 4개 해결',l:'4',got:sv>=4},{n:'명탐정',d:'사건 8개 모두 해결',l:'8',shape:'trophy',got:sv>=8}]});
+ // 그리고 지우세요
+ const dr=LS.get('drawErase_v1',{})||{},dw=+dr.wins||0;
+ out.push({g:'draw',color:'#ff5c8a',extra:dw?`승리 ${dw}번`:'',items:[{n:'첫 승리',d:'대결에서 처음 이기기',l:'1',got:dw>=1},{n:'칠하기 고수',d:'대결에서 10번 이기기',l:'10',got:dw>=10},{n:'도화지의 전설',d:'대결에서 30번 이기기',l:'30',shape:'trophy',got:dw>=30}]});
  out.forEach(b=>b.items.forEach((it,i)=>{it.lv=(LVS[b.g]||[])[i]||1;it.id=b.g+':'+i;}));
  return out;}
 function refreshBadges(){if(view!=='badges')return;const data=computeBadges();let total=0,got=0;
@@ -502,7 +516,7 @@ function refreshBadges(){if(view!=='badges')return;const data=computeBadges();le
 // ================= 🪙 타입터 (타입스 게임머니) =================
 // 배지를 얻을 때마다 받아요: 쉬움 10 · 보통 15 · 어려움 20
 const TY_VAL=[0,10,15,20],TY_LV=['','쉬움','보통','어려움'];
-const LVS={island:[1,1,2,2,3,3],troll:[1,2,2,3],shrink:[1,2,1,2,3,3],nyam:[1,2,2,3],detective:[1,2,3]};
+const LVS={island:[1,1,2,2,3,3],troll:[1,2,2,3],shrink:[1,2,1,2,3,3],nyam:[1,2,2,3],detective:[1,2,3],draw:[1,2,3]};
 function typerSvg(sz){return `<svg viewBox="0 0 32 32" width="${sz}" height="${sz}" class="tsvg" aria-label="타입터">
 <use href="#tyShape" fill="#1b1f3a" transform="translate(0 1.8)"/>
 <use href="#tyShape" fill="url(#tyGL)" clip-path="url(#tyL)"/><use href="#tyShape" fill="url(#tyGR)" clip-path="url(#tyR)"/>
@@ -590,6 +604,7 @@ const SAVES={
  troll:{keys:['trollJumpMap_v1'],score:d=>{const S=j(d.trollJumpMap_v1)||{};return (S.cleared?1e6:0)+(S.max||0)*1000+(S.coins||0)/100;}},
  detective:{keys:['detectiveSquirrel_v1'],score:d=>{const S=j(d.detectiveSquirrel_v1)||{};return Object.keys(S.solved||{}).length*1e4+(S.tokens||0);}},
  island:{keys:['island_name','island_badges','island_best','island_pol'],score:d=>((j(d.island_badges)||[]).length)*1e5+(+d.island_best||0)},
+ draw:{keys:['drawErase_v1'],score:d=>{const S=j(d.drawErase_v1)||{};return (S.wins||0)*1e4+(S.coins||0);}},
  types:{get keys(){return ['types_av_'+(ME?ME.idl:'')];},score:d=>{const v=j(Object.values(d)[0])||{};return (+v.spent||0)*1000+((v.own||[]).length);}}
 };
 function j(s){try{return s?JSON.parse(s):null;}catch(e){return null;}}

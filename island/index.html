@@ -645,7 +645,7 @@ function bubbleSprite(text){const c=document.createElement('canvas'),x=c.getCont
 function showBubble(g,text){if(!g||!text)return;const u=g.userData;if(u.bubble)g.remove(u.bubble);const b=bubbleSprite(text);b.position.y=3.9;g.add(b);u.bubble=b;clearTimeout(u.bt);u.bt=setTimeout(()=>{if(u.bubble===b){g.remove(b);u.bubble=null;}},text.length>20?7000:4500);}
 function chatLog(name,text){const el=document.createElement('div');el.className='cl';const b=document.createElement('b');b.textContent=String(name||'친구').slice(0,18)+': ';el.append(b,document.createTextNode(text));const L=$('chatLog');L.appendChild(el);while(L.children.length>5)L.removeChild(L.firstChild);setTimeout(()=>el.remove(),9000);}
 let qcCd=0;
-function sendQ(q){if(qcCd>0)return;const t=qcText(q);if(!t)return;qcCd=1;qcSeq++;myQc=[q[0],qcSeq,q[2]|0,q[3]|0,q[4]?1:0];showBubble(myAvatar,t);chatLog(myName,t);$('qcPanel').classList.add('hidden');if(q[0]>3)botsHear(P.x,P.z,q[0]|0);else if(q[0]===0)botsHear(P.x,P.z,0);}
+function sendQ(q){if(qcCd>0)return;const t=qcText(q);if(!t)return;qcCd=1;qcSeq++;myQc=[q[0],qcSeq,q[2]|0,q[3]|0,q[4]?1:0];showBubble(myAvatar,t);chatLog(myName,t);$('qcPanel').classList.add('hidden');if(q[0]===0||q[0]===1||q[0]>3)botsHear(P.x,P.z,q[0]|0);}
 function sendChat(i){sendQ([i,0,0,0,qcPol]);}
 function qcBtn(P_,txt,fn,cls){const b=document.createElement('button');b.textContent=txt;if(cls)b.className=cls;b.onclick=fn;P_.appendChild(b);return b;}
 function qcHead(P_,txt){const h=document.createElement('div');h.className='qh';h.textContent=txt;P_.appendChild(h);}
@@ -674,10 +674,14 @@ function updateLobbyBots(dt){if(botVisMode!=='lobby'){clearBots();botVisMode='lo
  BOTS.forEach((B,i)=>{const v=botMesh(i);let x,z,f,mv;if(partyBots.has(i)){const a=P.face+Math.PI+(slot++-0.5)*0.9;const tx=P.x+Math.sin(a)*2.6,tz=P.z+Math.cos(a)*2.6;const d=Math.hypot(tx-v.x,tz-v.z);mv=d>0.3;if(mv){const s=Math.min(d,8*dt);v.x+=(tx-v.x)/d*s;v.z+=(tz-v.z)/d*s;}x=v.x;z=v.z;f=mv?Math.atan2(tx-v.x+1e-6,tz-v.z):P.face;}
   else{const q=botLobbyPos(i,t);if(v.x===0&&v.z===0){v.x=q.x;v.z=q.z;}v.x+=(q.x-v.x)*Math.min(1,dt*6);v.z+=(q.z-v.z)*Math.min(1,dt*6);x=v.x;z=v.z;f=q.f;mv=q.mv;}
   v.g.position.set(x,0,z);v.g.rotation.y=f;animAvatar(v.g,mv?1:0,dt,false);setHeld(v.g,null,0);setChest(v.g,B.dy);});}
-function botsHear(x,z,idx){const r=REPLY[idx];if(r==null)return;
- if(mode==='lobby'){let best=-1,bd=20;BOTS.forEach((b,i)=>{const v=botVis.get(i);if(!v)return;const d=Math.hypot(v.x-x,v.z-z);if(d<bd){bd=d;best=i;}});if(best>=0&&Math.random()<0.85)botSayLocal(best,r,900+Math.random()*700);}
- else if(mode==='game'&&W&&W.bots&&currentHost()===myPeerRef.id){let best=null,bd=25;for(const b of W.bots){const d=Math.hypot(b.x-x,b.z-z);if(d<bd){bd=d;best=b;}}if(best){const bb=best;setTimeout(()=>{if(W&&W.bots&&W.bots.includes(bb))botSay(bb,r);},900);if(idx===4||idx===5){const h=BH(bb);h.help=8;h.hx=x;h.hz=z;}}}}
-function sendInvite(t){if(mode!=='lobby')return;sendQ([1,0,0,0,qcPol]);qcCd=0;
+let hearMute=false;
+function botsHear(x,z,idx){if(hearMute)return;
+ if(mode==='lobby'){let k=0;BOTS.forEach((B,i)=>{const v=botVis.get(i);if(!v||Math.hypot(v.x-x,v.z-z)>45)return;const delay=800+k*750+Math.random()*300;k++;
+   if(idx===1){if(partyBots.has(i)){botSayLocal(i,18,delay);return;}const ok=Math.random()<0.8;setTimeout(()=>{if(mode!=='lobby'||partyBots.has(i))return;if(ok){partyBots.add(i);botSayLocal(i,2);toast(`😄 ${B.nm}님이 같이 하재요! 우리 팀에 들어왔어요`);}else{botSayLocal(i,3);}renderParty();},delay);return;}
+   const r=REPLY[idx];if(r==null)return;if(Math.random()<0.92)botSayLocal(i,r,delay);else k--;});}
+ else if(mode==='game'&&W&&W.bots&&currentHost()===myPeerRef.id){let k=0;for(const b of W.bots){if(b.dn>0||Math.hypot(b.x-x,b.z-z)>40)continue;const r=idx===1?2:REPLY[idx];if(r==null)continue;const bb=b,delay=800+k*750+Math.random()*300;k++;
+   setTimeout(()=>{if(W&&W.bots&&W.bots.includes(bb)&&!bb.dn)botSay(bb,r);},delay);if(idx===4||idx===5){const h=BH(bb);h.help=8;h.hx=x;h.hz=z;}}}}
+function sendInvite(t){if(mode!=='lobby')return;hearMute=true;sendQ([1,0,0,0,qcPol]);hearMute=false;qcCd=0;
  if(t.bot!=null){const i=t.bot;toast(`🤝 ${BOTS[i].nm}님에게 같이 하자고 했어요!`);const ok=Math.random()<0.8;setTimeout(()=>{if(mode!=='lobby')return;if(ok){partyBots.add(i);botSayLocal(i,2);toast(`😄 ${BOTS[i].nm}님이 수락했어요! 내 뒤를 따라와요`);}else{botSayLocal(i,3);toast(`🙏 ${BOTS[i].nm}님이 다음에 하재요`);}renderParty();},1200+Math.random()*1000);}
  else{ivSeq++;myInv=[t.peer,ivSeq];toast(`🤝 ${String(t.nm||'친구').slice(0,10)}님에게 같이 하자고 했어요! 대답을 기다려요`);}
  $('qcPanel').classList.add('hidden');}
@@ -719,15 +723,18 @@ function hostBots(dt){if(!W.bots||!W.bots.length)return;const pl=hostPlayers(),n
    if(t){busy=true;tx=t.x+0.8;tz=t.z+0.8;if(t.d<2){h.rvT=(h.rvT||0)+dt;b.a=1;if(h.rvT>=2){h.rvT=0;b.bd--;botSay(b,29);if(t.bot){t.bot.dn=0;t.bot.hp=50;botSay(t.bot,28);}else{W.rvs=(W.rvs||0)+1;W.rv=[t.peer,W.rvs];}}}}else h.rvT=0;}
   if(!busy&&h.help>0&&own){h.help-=dt;tx=h.hx;tz=h.hz;busy=true;}
   if(!busy&&night){let best=null,bd=1e9,bix=-1;W.fi.forEach((f,i)=>{if(f.f>0){const d=Math.hypot(f.x-b.x,f.z-b.z);if(d<bd){bd=d;best=f;bix=i;}}});
-   if(best){const a=b.i*1.7+0.5;tx=best.x+Math.cos(a)*2.8;tz=best.z+Math.sin(a)*2.8;if(best.f<40&&b.wood>0&&bd<4){b.wood--;hostAct('bot',['fu',bix,20]);b.a=1;}}
+   if(best){const a=b.i*1.7+0.5+Math.floor(W.t/6+b.i)*0.9;const rr=Math.max(2.2,Math.min(4,fireR(best.f)-1.5));tx=best.x+Math.cos(a)*rr;tz=best.z+Math.sin(a)*rr;if(best.f<40&&b.wood>0&&bd<4){b.wood--;hostAct('bot',['fu',bix,20]);b.a=1;}}
    else if(own){tx=own.x+1.5;tz=own.z+1.5;}
    if(h.sayT<=0){h.sayT=40+Math.random()*40;botSay(b,6);}busy=true;}
-  if(!busy){if(own&&own.d>16){tx=own.x;tz=own.z;h.t=0;h.job=null;}
-   else if(h.t<=0||!h.job){h.t=8+Math.random()*4;const cx=own?own.x:b.x,cz=own?own.z:b.z;
-    const fruits=b.food<2?staticRes.filter(o=>o.kind!=='tree'&&Math.hypot(o.x-cx,o.z-cz)<18&&o.mesh.userData.fruits.some(f=>f.visible)):[];
-    const trees=staticRes.filter(o=>o.kind==='tree'&&o.mesh.visible&&Math.hypot(o.x-cx,o.z-cz)<14);
-    if(fruits.length){const o=fruits[Math.floor(Math.random()*fruits.length)];h.job={k:'fruit',o};}
-    else if(trees.length&&Math.random()<0.75){const o=trees[Math.floor(Math.random()*trees.length)];h.job={k:'tree',o};}
+  if(!busy){if(own&&own.d>22){h.tx=own.x;h.tz=own.z;h.t=0;h.job=null;if(own.d>45){b.x=own.x+2;b.z=own.z+2;}}
+   else if(h.t<=0||!h.job){h.t=16;const cx=own?own.x:b.x,cz=own?own.z:b.z;const near=(o,r)=>Math.hypot(o.x-cx,o.z-cz)<r;const pick=arr=>{arr.sort((a,c)=>Math.hypot(a.x-b.x,a.z-b.z)-Math.hypot(c.x-b.x,c.z-b.z));return arr[Math.floor(Math.random()*Math.min(3,arr.length))];};
+    const fruits=b.food<2?staticRes.filter(o=>o.kind!=='tree'&&near(o,30)&&o.mesh.userData.fruits.some(f=>f.visible)):[];
+    const trees=staticRes.filter(o=>o.kind==='tree'&&o.mesh.visible&&near(o,30));
+    const rocks=dailyRes.filter(o=>o.mesh.visible&&(o.kind==='stone'||o.kind==='coal')&&near(o,25));
+    const r=Math.random();
+    if(fruits.length)h.job={k:'fruit',o:pick(fruits)};
+    else if(trees.length&&r<0.6)h.job={k:'tree',o:pick(trees)};
+    else if(rocks.length&&r<0.9)h.job={k:'rock',o:pick(rocks)};
     else h.job={k:'walk',x:cx+(Math.random()-0.5)*10,z:cz+(Math.random()-0.5)*10};
     h.jt=0;const a=Math.random()*7;h.tx=(h.job.o?h.job.o.x:h.job.x)+Math.cos(a)*1.5;h.tz=(h.job.o?h.job.o.z:h.job.z)+Math.sin(a)*1.5;}
    tx=h.tx;tz=h.tz;
@@ -736,7 +743,9 @@ function hostBots(dt){if(!W.bots||!W.bots.length)return;const pl=hostPlayers(),n
   const d=Math.hypot(tx-b.x,tz-b.z);if(d>0.6){const sp=(busy&&b.bd>0&&h.rvT!==undefined&&downedP.length)?6.5:5.2;const s=Math.min(d,sp*dt);const ox=b.x,oz=b.z;b.x+=(tx-b.x)/d*s;b.z+=(tz-b.z)/d*s;b.f=Math.atan2(b.x-ox,b.z-oz);}
   else if(!busy&&h.job&&h.job.o){b.a=1;h.jt+=dt;const o=h.job.o;b.f=Math.atan2(o.x-b.x,o.z-b.z);
    if(h.job.k==='tree'&&h.jt>=3.2){if(o.mesh.visible){markRemoved(resKey(o,W.d));b.wood+=3;}h.job=null;}
-   else if(h.job.k==='fruit'&&h.jt>=1){const k=o.mesh.userData.fruits.findIndex(f=>f.visible);if(k>=0){markRemoved(fruitKey(o,k,W.d));b.food++;}h.job=null;}}
+   else if(h.job.k==='fruit'&&h.jt>=1){const k=o.mesh.userData.fruits.findIndex(f=>f.visible);if(k>=0){markRemoved(fruitKey(o,k,W.d));b.food++;}h.job=null;}
+   else if(h.job.k==='rock'&&h.jt>=0.8){if(o.mesh.visible){markRemoved(resKey(o,W.d));b.stone=(b.stone|0)+1;}h.job=null;}}
+  else if(!busy&&h.job&&h.job.k==='walk')h.job=null;
   for(const e of W.e){if(e.ty<=8&&Math.hypot(e.x-b.x,e.z-b.z)<2.6&&h.atk<=0){h.atk=1;b.a=1;b.f=Math.atan2(e.x-b.x,e.z-b.z);hostAct('bot',['h',e.id,4]);break;}}
   clampIsland(b,ISLAND_R-1);}}
 function renderGameBots(dt){if(botVisMode!=='game'){clearBots();botVisMode='game';}const list=(WV&&WV.bots)||[];const seen=new Set();
@@ -925,7 +934,7 @@ function updateOthers(filter,dt){const seen=new Set();for(const p of allPeers())
  if(!o){const g=makeAvatar(+pr.c||0x55aaff);const tag=textSprite(String(pr.nm||'친구').slice(0,10),3);tag.position.y=3.1;g.add(tag);scene.add(g);o={g,nm:pr.nm,c:pr.c,x:pr.p[0]/10,y:pr.p[1]/10,z:pr.p[2]/10};others.set(p.peer,o);}
  const k=Math.min(1,dt*10);o.x+=(pr.p[0]/10-o.x)*k;o.y+=(pr.p[1]/10-o.y)*k;o.z+=(pr.p[2]/10-o.z)*k;o.g.position.set(o.x,o.y,o.z);o.g.rotation.y=pr.p[3]/100;animAvatar(o.g,pr.p[4]?1:0,dt,pr.p[4]===2);setHeld(o.g,pr.dn?null:(typeof pr.eq==='string'?pr.eq:null),pr.wr|0);setChest(o.g,pr.dy|0);setLying(o.g,!!pr.dn);setHpBar(o.g,pr.hp==null?100:pr.hp,pr.dn|0,pr.m==='game');
  if(pr.dn&&!seenDown[p.peer]&&pr.m==='game'){chatLog(pr.nm,'🆘 쓰러졌어요! 붕대로 살려 주세요');}seenDown[p.peer]=!!pr.dn;
- if(Array.isArray(pr.qc)&&pr.qc[1]!==o.qs){const first=o.qs===undefined;o.qs=pr.qc[1];const t=qcText(pr.qc);if(!first&&t){showBubble(o.g,t);chatLog(pr.nm,t);if(pr.qc[0]>=0&&pr.qc[0]!==1&&pr.qc[0]!==2&&pr.qc[0]!==3)botsHear(o.x,o.z,pr.qc[0]|0);}}}
+ if(Array.isArray(pr.qc)&&pr.qc[1]!==o.qs){const first=o.qs===undefined;o.qs=pr.qc[1];const t=qcText(pr.qc);if(!first&&t){showBubble(o.g,t);chatLog(pr.nm,t);if(pr.qc[0]>=0&&pr.qc[0]!==2&&pr.qc[0]!==3&&(pr.qc[0]!==1||mode==='game'))botsHear(o.x,o.z,pr.qc[0]|0);}}}
  for(const[k,o]of others)if(!seen.has(k)){scene.remove(o.g);others.delete(k);}}
 
 // ================= LOBBY =================
