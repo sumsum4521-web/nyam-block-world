@@ -78,11 +78,18 @@ textarea{width:100%;min-height:90px;border:3px solid #1b1b1b;border-radius:12px;
 .t{background:#1b1b1b;color:#fff;font-family:Jua;padding:8px 16px;border-radius:12px;font-size:16px;animation:tf 2.6s forwards}
 @keyframes tf{0%{opacity:0;transform:translateY(-8px)}10%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
 #fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:25;transition:opacity .18s}
+#rotate{position:fixed;inset:0;z-index:100;background:#2b2140;color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-family:Jua;font-size:26px;text-align:center;padding:20px}
+#rotate small{font-family:'Gowun Dodum';font-size:15px;opacity:.85}
+#rotate .phone{width:60px;height:100px;border:5px solid #fff;border-radius:12px;animation:rot 2s ease-in-out infinite}
+@keyframes rot{0%,25%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
+body.portrait #rotate{display:flex}
+@media (max-height:520px) and (orientation:landscape){#hTitle{font-size:14px;padding:5px 10px;top:8px;left:8px;max-width:40vw}#hTitle small{font-size:12px}#zone{top:8px;font-size:13px;padding:4px 12px}#tokBox{top:8px;right:8px}.tok{font-size:15px;padding:2px 10px}#side{top:46px;right:8px;width:112px}#hubBtns{top:46px;right:8px}#hubBtns .btn{font-size:13px;padding:5px 8px}#act{right:12px;bottom:12px;font-size:15px;padding:9px 12px;min-width:110px}#jump{right:136px;bottom:14px;width:54px;height:54px}.over>.card{max-height:94vh;padding:12px}.over h2,#mBody h2{font-size:21px}#mBody{font-size:15px}.grid{grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}.case,.shopItem{padding:9px}}
 #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font-family:Jua;font-size:26px;background:#87c6ff;z-index:99}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
+<div id="rotate"><div class="phone"></div><div>화면을 <b>가로</b>로 돌려 주세요</div><small>가로로 돌리면 탐정 다람쥐를 할 수 있어요</small></div>
 <div id="loading">탐정 사무소 문 여는 중...</div>
 
 <div id="cases" class="over hide"><div class="card">
@@ -251,7 +258,7 @@ function shelf(x,z,w=2,ry=0,h=2.2,col=0x6e4424){ const g=grp(x,z,ry); box(w,h,0.
 function sofa(x,z,w=2.2,col=0x7a5cc4,ry=0){ const g=grp(x,z,ry); box(w,0.45,0.9,col,0,0.3,0,{p:g}); box(w,0.7,0.25,col,0,0.75,-0.35,{p:g}); box(0.25,0.6,0.9,col,-w/2+0.12,0.5,0,{p:g}); box(0.25,0.6,0.9,col,w/2-0.12,0.5,0,{p:g}); colRot(x,z,w,0.95,ry); return g; }
 function counter(x,z,w,d,col=0xcfa77a,top=0xf5efe6,h=0.95){ box(w,h-0.08,d,col,x,(h-0.08)/2,z,{c:1}); box(w+0.06,0.08,d+0.06,top,x,h-0.04,z); }
 function crate(x,z,s=0.9,col=0xb08050,y=0){ box(s,s,s,col,x,y+s/2,z,{c:y===0}); box(s+0.02,0.08,s+0.02,0x7a5230,x,y+s*0.8,z); }
-function pine(x,z,s=1,snow=false){ cyl(0.15*s,0.2*s,1*s,0x6b4423,x,0.5*s,z); addCol(x,z,0.5*s,0.5*s); [[1.2,1.3,1.2],[0.95,1.1,1.9],[0.65,0.9,2.55]].forEach(([r,h,y])=>{ cyl(0,r*s,h*s,0x2f7d3b,x,y*s,z,{seg:10}); if(snow) cyl(0,r*s*0.55,h*s*0.45,0xffffff,x,y*s+h*s*0.28,z,{seg:10}); }); }
+function pine(x,z,s=1,snow=false,p=null){ const o=p?{p}:{}; cyl(0.15*s,0.2*s,1*s,0x6b4423,x,0.5*s,z,o); if(!p) addCol(x,z,0.5*s,0.5*s); [[1.2,1.3,1.2],[0.95,1.1,1.9],[0.65,0.9,2.55]].forEach(([r,h,y])=>{ cyl(0,r*s,h*s,0x2f7d3b,x,y*s,z,Object.assign({seg:10},o)); if(snow) cyl(0,r*s*0.55,h*s*0.45,0xffffff,x,y*s+h*s*0.28,z,Object.assign({seg:10},o)); }); }
 function tree(x,z,s=1){ cyl(0.18*s,0.24*s,1.4*s,0x7a4a26,x,0.7*s,z); addCol(x,z,0.5*s,0.5*s); sph(1*s,0x4caf50,x,2*s,z); sph(0.75*s,0x5cc160,x+0.5*s,1.7*s,z+0.3*s); }
 function plant(x,z,col=0x4caf50){ cyl(0.25,0.2,0.45,0xc0703a,x,0.22,z,{c:1}); sph(0.38,col,x,0.75,z); }
 function rug(x,z,w,d,col){ flat(w,d,col,x,z,{y:0.012}); }
@@ -741,7 +748,7 @@ const CASES=[
   cyl(0.08,0.08,0.3,0xd9ffd9,22.2,0.08,-1.1,{rz:Math.PI/2}); box(0.5,0.05,0.08,0x777777,21.7,0.03,-0.9,{ry:0.7}); flat(0.15,0.15,0,22,-1,{mat:glow,circle:true,y:0.02});
   // 바깥 풍경
   const poles=[]; for(let i=0;i<14;i++){ const z=i%2?6:-6; const p=new THREE.Group(); p.position.set(-45+i*7,0,z); cyl(0.08,0.08,4,0x555555,0,2,0,{p}); sph(0.25,0xfff3b0,0,4,0,{p,mat:new THREE.MeshBasicMaterial({color:0xfff3b0})}); G.add(p); poles.push(p); }
-  for(let i=0;i<10;i++){ const t=new THREE.Group(); t.position.set(-50+i*11,0,i%2?-11:11); pine(0,0,1.3); G.add(t); poles.push(t); }
+  for(let i=0;i<10;i++){ const t=new THREE.Group(); t.position.set(-50+i*11,0,i%2?-11:11); G.add(t); pine(0,0,1.3,false,t); poles.push(t); }
   cols=cols.filter(c=>Math.abs(c.z0)<5);
   sph(2,0xfffbe0,30,22,-40,{mat:new THREE.MeshBasicMaterial({color:0xfffbe0})});
   anims.push((t,dt)=>{ poles.forEach(p=>{ p.position.x-=22*dt; if(p.position.x<-55) p.position.x+=110; }); });
@@ -1039,7 +1046,10 @@ function loop(){
 }
 
 /* ================= 시작 ================= */
-function boot(){ makeMarkTex(); goHub(); $('loading').remove(); loop(); window.__game={S,CASES,startCase,judge:id=>judge(R.c.suspects.find(s=>s.id===id)),get R(){return R;},P}; }
+function checkOrient(){ document.body.classList.toggle('portrait',isTouch&&innerHeight>innerWidth); }
+addEventListener('resize',checkOrient); addEventListener('orientationchange',()=>setTimeout(checkOrient,200));
+let triedLock=false; addEventListener('pointerdown',()=>{ if(triedLock||!isTouch) return; triedLock=true; try{ const el=document.documentElement; const go=()=>{ try{ screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{}); }catch(e){} }; if(el.requestFullscreen) el.requestFullscreen().then(go).catch(go); else go(); }catch(e){} },{capture:true});
+function boot(){ checkOrient(); makeMarkTex(); goHub(); $('loading').remove(); loop(); window.__game={S,CASES,startCase,judge:id=>judge(R.c.suspects.find(s=>s.id===id)),get R(){return R;},P}; }
 if(document.fonts&&document.fonts.load){ Promise.race([document.fonts.load('40px Jua'),new Promise(r=>setTimeout(r,1500))]).then(boot,boot); } else boot();
 })();
 </script>
