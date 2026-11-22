@@ -7,8 +7,8 @@ let UID=0;
 
 // ---------- 체형 2개 (무료) ----------
 const BODIES={
- round:{name:'동글동글 체형',hr:21,hx:50,hy:20,tx1:39,tx2:61,ty1:38,bx1:32.5,bx2:67.5,ty2:81,tp:97,arm:12.5,sh:44,hand:[[18,76],[81,71]],legs:[[26,50.6],[49.4,72]],ly1:96,ly2:125},
- slim: {name:'날씬날씬 체형',hr:18,hx:50,hy:18,tx1:40,tx2:60,ty1:34,bx1:37,bx2:63,ty2:66,tp:91,arm:11,sh:40,hand:[[22,81],[77,83]],legs:[[28,50.6],[49.4,67]],ly1:90,ly2:125}
+ round:{name:'동글동글 체형',hr:21,hx:50,hy:20,tx1:39,tx2:61,ty1:38,bx1:32.5,bx2:67.5,ty2:81,tp:97,arm:12.5,sh:44,hand:[[18,74],[82,74]],legs:[[27,50.6],[49.4,73]],ly1:96,ly2:125},
+ slim: {name:'날씬날씬 체형',hr:18,hx:50,hy:18,tx1:40,tx2:60,ty1:34,bx1:37,bx2:63,ty2:66,tp:91,arm:11,sh:40,hand:[[22,82],[78,82]],legs:[[31,50.6],[49.4,69]],ly1:90,ly2:125}
 };
 
 // ---------- 특별 색 (그라데이션) ----------
@@ -27,6 +27,7 @@ function defsSvg(){
  ${lg('tav-sky',['#d0ebff','#74c0fc','#4dabf7'],1)}
  ${lg('tav-sunset',['#ffd8a8','#ff8787','#b197fc'],1)}
  <linearGradient id="tav-iris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b5fe0"/><stop offset="1" stop-color="#a5a8ff"/></linearGradient><radialGradient id="tav-blush"><stop offset="0" stop-color="#ff8fab" stop-opacity=".55"/><stop offset="1" stop-color="#ff8fab" stop-opacity="0"/></radialGradient><linearGradient id="tav-shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+ ${[['purple','#5b5fe0','#a5a8ff'],['brown','#6b3f22','#c08a5a'],['blue','#1864ab','#74c0fc'],['green','#2b8a3e','#8ce99a'],['pink','#c2255c','#ffa8c5'],['gold','#c77c00','#ffe066'],['red','#a61e1e','#ff8787'],['mint','#087f5b','#96f2d7'],['gray','#343a40','#adb5bd']].map(([n,a,b])=>lg('tav-ir-'+n,[a,b],1)).join('')}
  <radialGradient id="tav-glow"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
  </defs></svg>`;}
 
@@ -125,12 +126,26 @@ const ACCS=[
  // 펫
  A('a_chick','어깨 위 병아리','pet','chick','#ffe066','#ff922b',60),A('a_kitty','어깨 위 아기 고양이','pet','kitty','#ffd8a8','#ff922b',80),A('a_baby','어깨 위 아기 용','pet','babydragon','#69db7c','#ffe066',300,1)
 ];
-const ITEMS=[...BODY,...HAIR,...TOPS,...BOTS,...SHOES,...ACCS];
+const F=(id,cat,n,s,c,p)=>({id,cat,grp:'face',n,s,c,p});
+const FACE=[
+ F('e_round','eyes','동그란 눈','round','',0),F('e_manga','eyes','순정만화 눈','manga','',0),
+ F('e_smile','eyes','웃는 눈','smile','',10),F('e_droop','eyes','순한 눈','droop','',10),F('e_sleepy','eyes','졸린 눈','sleepy','',10),
+ F('e_cat','eyes','고양이 눈매','cat','',15),F('e_wink','eyes','윙크','wink','',20),F('e_big','eyes','왕방울 눈','big','',20),
+ F('e_cool','eyes','시크한 눈','cool','',25),F('e_star','eyes','별 눈','star','',40),F('e_heart','eyes','하트 눈','heart','',40),
+ F('e_spark','eyes','반짝반짝 눈','sparkle','',60),F('e_galaxy','eyes','은하수 눈','galaxy','',100),
+ F('ec_purple','eyec','보라 눈동자','','purple',0),F('ec_brown','eyec','갈색 눈동자','','brown',0),F('ec_blue','eyec','파란 눈동자','','blue',5),
+ F('ec_green','eyec','초록 눈동자','','green',5),F('ec_gray','eyec','회색 눈동자','','gray',5),F('ec_mint','eyec','민트 눈동자','','mint',10),
+ F('ec_pink','eyec','분홍 눈동자','','pink',10),F('ec_red','eyec','빨간 눈동자','','red',15),F('ec_gold','eyec','황금 눈동자','','gold',20),
+ F('m_smile','mouth','방긋 입','smile','',0),F('m_grin','mouth','활짝 웃는 입','grin','',5),F('m_o','mouth','깜짝 놀란 입','o','',5),
+ F('m_shy','mouth','수줍은 입','shy','',8),F('m_cat','mouth','고양이 입','cat','',10),F('m_tongue','mouth','메롱','tongue','',10),
+ F('m_teeth','mouth','이 보이는 웃음','teeth','',12),F('m_kiss','mouth','뽀뽀 입','kiss','',15)
+];
+const ITEMS=[...BODY,...FACE,...HAIR,...TOPS,...BOTS,...SHOES,...ACCS];
 const BY={};ITEMS.forEach(i=>BY[i.id]=i);
-const CATS=[{k:'body',n:'체형',e:'🧍'},{k:'hair',n:'머리',e:'💇'},{k:'top',n:'상의',e:'👕'},{k:'bottom',n:'하의',e:'👖'},{k:'shoes',n:'신발',e:'👟'},{k:'acc',n:'장신구',e:'💍'}];
+const CATS=[{k:'body',n:'체형',e:'🧍'},{k:'face',n:'얼굴',e:'😊'},{k:'hair',n:'머리',e:'💇'},{k:'top',n:'상의',e:'👕'},{k:'bottom',n:'하의',e:'👖'},{k:'shoes',n:'신발',e:'👟'},{k:'acc',n:'장신구',e:'💍'}];
 const SLOTS={hat:'모자·머리',face:'얼굴',neck:'목',back:'등',tail:'꼬리',hand:'손',aura:'오라',pet:'펫'};
 function rarity(p){return p<=0?{k:0,n:'기본',c:'#868e96'}:p<=20?{k:1,n:'일반',c:'#2b8a3e'}:p<=60?{k:2,n:'희귀',c:'#1971c2'}:p<=120?{k:3,n:'영웅',c:'#7048e8'}:{k:4,n:'전설',c:'#e8590c'};}
-function defaultState(){return {v:1,body:'round',eq:{hair:'h_ys',top:'t_gray',bottom:'b_blue',shoes:'s_white',acc:{}},own:[],spent:0};}
+function defaultState(){return {v:1,body:'round',eq:{hair:'h_ys',top:'t_gray',bottom:'b_blue',shoes:'s_white',eyes:'e_round',eyec:'ec_purple',mouth:'m_smile',acc:{}},own:[],spent:0};}
 const FREE=ITEMS.filter(i=>i.p===0).map(i=>i.id);
 
 // ---------- 그리기 도우미 ----------
@@ -193,7 +208,8 @@ function legD(M,i){const [a,b]=M.legs[i],yT=M.ty2-8,yB=M.ly2,h=yB-yT,w=b-a,mid=(
  // 바깥쪽은 통통하게 둥글고, 안쪽은 아래로 갈수록 살짝 벌어짐
  if(i===0)return `M${f2(a+w*.15)} ${yT}C${f2(a-w*.08)} ${f2(yT+h*.35)} ${f2(a+w*.02)} ${f2(yB-h*.18)} ${f2(a+w*.18)} ${f2(yB-h*.06)}Q${f2(a+w*.35)} ${yB+1} ${f2(mid+w*.05)} ${yB+.6}Q${f2(b-w*.12)} ${yB} ${f2(b-w*.14)} ${f2(yB-h*.12)}C${f2(b-w*.1)} ${f2(yB-h*.45)} ${b} ${f2(yT+h*.25)} ${b} ${yT}Z`;
  return `M${f2(b-w*.15)} ${yT}C${f2(b+w*.08)} ${f2(yT+h*.35)} ${f2(b-w*.02)} ${f2(yB-h*.18)} ${f2(b-w*.18)} ${f2(yB-h*.06)}Q${f2(b-w*.35)} ${yB+1} ${f2(mid-w*.05)} ${yB+.6}Q${f2(a+w*.12)} ${yB} ${f2(a+w*.14)} ${f2(yB-h*.12)}C${f2(a+w*.1)} ${f2(yB-h*.45)} ${a} ${f2(yT+h*.25)} ${a} ${yT}Z`;}
-function legs(M){return P(legD(M,0),SKIN)+P(legD(M,1),SKIN);}
+function mir(M,x){return `<g transform="matrix(-1 0 0 1 ${2*M.hx} 0)">${x}</g>`;}
+function legs(M){const l=P(legD(M,0),SKIN);return l+mir(M,l);}
 function torsoTop(M,it,uid){const c=it.c,c2=it.c2,t=M.ty1,u=M.ty2,cx=M.hx,a=M.bx1,b=M.bx2,w=b-a,ta=M.tx1,tb=M.tx2;
  let ext=0,fl=0;if(it.s==='dress'){ext=10;fl=6;}if(it.s==='princess'){ext=16;fl=11;}if(it.s==='rain'){ext=3;fl=2;}
  const tp=torsoPath(M,ext,fl);let d='';
@@ -223,7 +239,7 @@ function torsoTop(M,it,uid){const c=it.c,c2=it.c2,t=M.ty1,u=M.ty2,cx=M.hx,a=M.bx
 function sleevesHanbok(M,top){if(!top||top.s!=='hanbok')return '';const cols=['#ff6b6b','#ffd43b','#69db7c','#4dabf7','#9775fa'];let s='';
  M.hand.forEach(([hx,hy],i)=>{const sx=i?M.tx2-2:M.tx1+2;const y=M.ty1+M.arm*.55+1.5;for(let k=0;k<5;k++){const t0=.12+k*.15,t1=t0+.15;s+=`<line x1="${f2(sx+(hx-sx)*t0)}" y1="${f2(y+(hy-y)*t0)}" x2="${f2(sx+(hx-sx)*t1)}" y2="${f2(y+(hy-y)*t1)}" stroke="${cols[k]}" stroke-width="${M.arm+1.2}"/>`;}});return s;}
 function bottom(M,it,uid){const c=it.c,c2=it.c2,[[la,lb],[ra,rb]]=M.legs,top=M.ty2-6,y1=M.ly1,y2=M.ly2+3,cx=(la+rb)/2;let s='';
- const pants=(end)=>{end=Math.min(end,M.ly2+2);return `<clipPath id="pc${uid}"><rect x="-20" y="${top-30}" width="140" height="${end-top+30}"/></clipPath><g clip-path="url(#pc${uid})">${P(legD(M,0),c)+P(legD(M,1),c)}<path d="M${f2(la+(lb-la)*.2)} ${top-2}L${f2(rb-(rb-ra)*.2)} ${top-2}L${f2(rb-(rb-ra)*.2)} ${top+8}L${f2(la+(lb-la)*.2)} ${top+8}Z" fill="${c}"/></g>`+(end<M.ly2-1?`<path d="M${la-1.5} ${end}L${lb-1} ${end}M${ra+1} ${end}L${rb+1.5} ${end}" stroke="${OL}" stroke-width="1"/>`:'');};
+ const pants=(end)=>{end=Math.min(end,M.ly2+2);return `<clipPath id="pc${uid}"><rect x="-20" y="${top-30}" width="140" height="${end-top+30}"/></clipPath><g clip-path="url(#pc${uid})">${P(legD(M,0),c)+mir(M,P(legD(M,0),c))}<path d="M${f2(la+(lb-la)*.2)} ${top-2}L${f2(rb-(rb-ra)*.2)} ${top-2}L${f2(rb-(rb-ra)*.2)} ${top+8}L${f2(la+(lb-la)*.2)} ${top+8}Z" fill="${c}"/></g>`+(end<M.ly2-1?`<path d="M${la-1.5} ${end}L${lb-1} ${end}M${ra+1} ${end}L${rb+1.5} ${end}" stroke="${OL}" stroke-width="1"/>`:'');};
  const skirt=(len,fl)=>P(`M${la} ${top}L${rb} ${top}L${rb+fl} ${y1+len}Q${cx} ${y1+len+3} ${la-fl} ${y1+len}Z`,c);
  switch(it.s){
  case 'shorts':s+=pants(y1+9);break;
@@ -242,7 +258,7 @@ function bottom(M,it,uid){const c=it.c,c2=it.c2,[[la,lb],[ra,rb]]=M.legs,top=M.t
  default:s+=pants(y2-4);}
  return s;}
 function shoes(M,it,bot){if(bot&&bot.s==='mermaid')return '';const c=it.c,c2=it.c2;let s='';
- M.legs.forEach(([a0,b0],i)=>{const w0=b0-a0,a=i?a0+w0*.18:a0+w0*.12,b=i?b0-w0*.12:b0-w0*.18,y=M.ly2-1,cx=(a+b)/2,w=b-a+3;const s0=s.length;
+ [M.legs[0]].forEach(([a0,b0],i)=>{const w0=b0-a0,a=i?a0+w0*.18:a0+w0*.12,b=i?b0-w0*.12:b0-w0*.18,y=M.ly2-1,cx=(a+b)/2,w=b-a+3;const s0=s.length;
  switch(it.s){
  case 'sandal':s+=`<rect x="${a-1.5}" y="${y-1}" width="${w}" height="3" rx="1.5" fill="${c}" stroke="${OL}" stroke-width="1.1"/>`+cap(a+1,y-3,b-1,y-1,1.2,c);break;
  case 'mary':s+=P(`M${a-1.5} ${y-3}Q${a-1.5} ${y+3} ${cx} ${y+3}Q${b+1.5} ${y+3} ${b+1.5} ${y-3}Z`,c)+cap(a,y-4.5,b,y-4.5,1,c)+CN(cx-2,y,1,'#fff','opacity=".8"');break;
@@ -256,15 +272,39 @@ function shoes(M,it,bot){if(bot&&bot.s==='mermaid')return '';const c=it.c,c2=it.
  case 'light':s+=P(`M${a-1.5} ${y-3}Q${a-1.5} ${y+3} ${cx} ${y+3}Q${b+1.5} ${y+3} ${b+1.5} ${y-3}Z`,c)+`<rect x="${a-1}" y="${y+1}" width="${w-1}" height="2.2" rx="1" fill="url(#tav-rainbow)"/>`;break;
  default:s+=P(`M${a-1.5} ${y-3}Q${a-1.5} ${y+3.2} ${cx} ${y+3.2}Q${b+2} ${y+3.2} ${b+2} ${y-3}Z`,c)+`<rect x="${a-1.3}" y="${y+1.2}" width="${w-.4}" height="1.8" rx=".9" fill="${c2||'#fff'}"/>`+CN(cx,y-1,.7,OL)+CN(cx+2,y-1,.7,OL);}
  s=s.slice(0,s0)+`<g transform="translate(${f2(cx)} ${f2(y-2)}) scale(1.12) translate(${f2(-cx)} ${f2(-y+2)})">`+s.slice(s0)+'</g>';});
+ s=s+mir(M,s);
  return s;}
-function face(M){const {hx:x,hy:y,hr:r}=M;let s='';const ey=y+r*.2;
- for(const k of [-1,1]){const ex=x+k*r*.4;
-  s+=`<ellipse cx="${f2(x+k*r*.63)}" cy="${f2(y+r*.5)}" rx="${f2(r*.2)}" ry="${f2(r*.12)}" fill="url(#tav-blush)"/>`;
-  s+=`<ellipse cx="${f2(ex)}" cy="${f2(ey)}" rx="${f2(r*.19)}" ry="${f2(r*.21)}" fill="#fff"/>`;
-  s+=`<ellipse cx="${f2(ex)}" cy="${f2(ey+r*.02)}" rx="${f2(r*.15)}" ry="${f2(r*.18)}" fill="url(#tav-iris)"/>`+`<ellipse cx="${f2(ex)}" cy="${f2(ey+r*.03)}" rx="${f2(r*.07)}" ry="${f2(r*.09)}" fill="#2e2a6b"/>`;
-  s+=CN(ex-r*.05,ey-r*.06,r*.055,'#fff')+CN(ex+r*.06,ey+r*.09,r*.025,'#fff');
-  s+=`<path d="M${f2(ex-r*.2)} ${f2(ey-r*.04)}Q${f2(ex)} ${f2(ey-r*.3)} ${f2(ex+r*.2)} ${f2(ey-r*.04)}" fill="none" stroke="#3a2f4f" stroke-width="${f2(r*.055)}" stroke-linecap="round"/>`;}
- s+=`<path d="M${f2(x-r*.1)} ${f2(y+r*.53)}Q${f2(x)} ${f2(y+r*.61)} ${f2(x+r*.1)} ${f2(y+r*.53)}" fill="none" stroke="#d9707f" stroke-width="${f2(r*.045)}" stroke-linecap="round"/>`;
+function face(M,eq){const {hx:x,hy:y,hr:r}=M;eq=eq||{};const es=(BY[eq.eyes]||BY.e_round).s,ic=(BY[eq.eyec]||BY.ec_purple).c,ms=(BY[eq.mouth]||BY.m_smile).s;
+ const IR=`url(#tav-ir-${ic})`,DK='#3a2f4f';let s='';const ey=y+r*.2;
+ const st=(d,w)=>`<path d="${d}" fill="none" stroke="${DK}" stroke-width="${f2(r*w)}" stroke-linecap="round" stroke-linejoin="round"/>`;
+ const p=(a,b)=>f2(a)+' '+f2(b);
+ for(const k of [-1,1])s+=`<ellipse cx="${f2(x+k*r*.63)}" cy="${f2(y+r*.5)}" rx="${f2(r*.2)}" ry="${f2(r*.12)}" fill="url(#tav-blush)"/>`;
+ const roundEye=(ex,big)=>{const sc=big?1.2:1;return `<ellipse cx="${f2(ex)}" cy="${f2(ey)}" rx="${f2(r*.19*sc)}" ry="${f2(r*.21*sc)}" fill="#fff"/><ellipse cx="${f2(ex)}" cy="${f2(ey+r*.02)}" rx="${f2(r*.15*sc)}" ry="${f2(r*.18*sc)}" fill="${IR}"/><ellipse cx="${f2(ex)}" cy="${f2(ey+r*.03)}" rx="${f2(r*.07*sc)}" ry="${f2(r*.09*sc)}" fill="#2e2a6b"/>`+CN(ex-r*.05*sc,ey-r*.06*sc,r*.055*sc,'#fff')+CN(ex+r*.06*sc,ey+r*.09*sc,r*.025*sc,'#fff')+(big?CN(ex+r*.08,ey-r*.09,r*.03,'#fff'):'')+st(`M${p(ex-r*.2*sc,ey-r*.04)}Q${p(ex,ey-r*.3*sc)} ${p(ex+r*.2*sc,ey-r*.04)}`,.055);};
+ for(const k of [-1,1]){const ex=x+k*r*.4,o=k;
+  switch(es){
+  case 'manga':{const w=r*.24;s+=`<path d="M${p(ex-o*w,ey+r*.03)}Q${p(ex,ey-r*.25)} ${p(ex+o*w,ey-r*.04)}Q${p(ex+o*w*.6,ey+r*.24)} ${p(ex-o*w,ey+r*.03)}Z" fill="#fff"/><ellipse cx="${f2(ex)}" cy="${f2(ey+r*.03)}" rx="${f2(r*.13)}" ry="${f2(r*.16)}" fill="${IR}"/><ellipse cx="${f2(ex)}" cy="${f2(ey+r*.04)}" rx="${f2(r*.06)}" ry="${f2(r*.08)}" fill="#2e2a6b"/>`+CN(ex-o*r*.04,ey-r*.04,r*.045,'#fff')+st(`M${p(ex-o*w*1.05,ey+r*.04)}Q${p(ex,ey-r*.27)} ${p(ex+o*w*1.08,ey-r*.06)}`,.07)+st(`M${p(ex+o*w,ey-r*.06)}l${p(o*r*.08,-r*.05)}`,.04)+`<path d="M${p(ex-o*w*.4,ey+r*.18)}Q${p(ex+o*w*.2,ey+r*.21)} ${p(ex+o*w*.7,ey+r*.12)}" fill="none" stroke="#e8a0a0" stroke-width="${f2(r*.025)}" stroke-linecap="round"/>`;break;}
+  case 'smile':s+=st(`M${p(ex-r*.17,ey+r*.05)}Q${p(ex,ey-r*.18)} ${p(ex+r*.17,ey+r*.05)}`,.07);break;
+  case 'wink':s+=k>0?st(`M${p(ex-r*.17,ey+r*.05)}Q${p(ex,ey-r*.18)} ${p(ex+r*.17,ey+r*.05)}`,.07):roundEye(ex);break;
+  case 'big':s+=roundEye(ex,true);break;
+  case 'droop':s+=roundEye(ex).replace(/<path[^>]*\/>$/,'')+st(`M${p(ex-o*r*.2,ey-r*.12)}Q${p(ex+o*r*.02,ey-r*.2)} ${p(ex+o*r*.22,ey+r*.02)}`,.06);break;
+  case 'sleepy':s+=`<path d="M${p(ex-r*.19,ey)}A${f2(r*.19)} ${f2(r*.17)} 0 0 0 ${p(ex+r*.19,ey)}Z" fill="#fff"/><path d="M${p(ex-r*.14,ey)}A${f2(r*.14)} ${f2(r*.14)} 0 0 0 ${p(ex+r*.14,ey)}Z" fill="${IR}"/>`+CN(ex-r*.04,ey+r*.05,r*.035,'#fff')+st(`M${p(ex-r*.21,ey)}L${p(ex+r*.21,ey)}`,.06);break;
+  case 'cat':{const w=r*.23;s+=`<path d="M${p(ex-o*w,ey+r*.06)}Q${p(ex-o*w*.2,ey-r*.2)} ${p(ex+o*w,ey-r*.12)}Q${p(ex+o*w*.4,ey+r*.2)} ${p(ex-o*w,ey+r*.06)}Z" fill="#fff"/><ellipse cx="${f2(ex)}" cy="${f2(ey)}" rx="${f2(r*.13)}" ry="${f2(r*.15)}" fill="${IR}"/><ellipse cx="${f2(ex)}" cy="${f2(ey)}" rx="${f2(r*.03)}" ry="${f2(r*.12)}" fill="#2e2a6b"/>`+CN(ex-o*r*.05,ey-r*.05,r*.035,'#fff')+st(`M${p(ex-o*w*1.05,ey+r*.06)}Q${p(ex-o*w*.2,ey-r*.22)} ${p(ex+o*w*1.15,ey-r*.15)}`,.065);break;}
+  case 'cool':s+=`<path d="M${p(ex-r*.2,ey-r*.03)}L${p(ex+r*.2,ey-r*.03)}Q${p(ex+r*.12,ey+r*.17)} ${p(ex,ey+r*.17)}Q${p(ex-r*.12,ey+r*.17)} ${p(ex-r*.2,ey-r*.03)}Z" fill="#fff"/><path d="M${p(ex-r*.12,ey-r*.03)}A${f2(r*.12)} ${f2(r*.15)} 0 0 0 ${p(ex+r*.12,ey-r*.03)}Z" fill="${IR}"/>`+CN(ex-r*.04,ey+r*.04,r*.03,'#fff')+st(`M${p(ex-r*.22,ey-r*.04)}L${p(ex+r*.22,ey-r*.04)}`,.06);break;
+  case 'star':s+=`<ellipse cx="${f2(ex)}" cy="${f2(ey)}" rx="${f2(r*.19)}" ry="${f2(r*.21)}" fill="#fff"/>`+star(ex,ey+r*.01,r*.17,IR)+CN(ex-r*.05,ey-r*.06,r*.04,'#fff')+st(`M${p(ex-r*.2,ey-r*.04)}Q${p(ex,ey-r*.3)} ${p(ex+r*.2,ey-r*.04)}`,.055);break;
+  case 'heart':s+=heart(ex,ey+r*.02,r*.17,'#ff6b9a')+CN(ex-r*.06,ey-r*.04,r*.04,'#fff');break;
+  case 'sparkle':s+=roundEye(ex,true)+twinkle(ex+r*.05,ey+r*.04,r*.07,'#fff')+twinkle(ex-r*.06,ey+r*.1,r*.04,'#fff');break;
+  case 'galaxy':s+=`<ellipse cx="${f2(ex)}" cy="${f2(ey)}" rx="${f2(r*.2)}" ry="${f2(r*.22)}" fill="#fff"/><ellipse cx="${f2(ex)}" cy="${f2(ey+r*.02)}" rx="${f2(r*.16)}" ry="${f2(r*.19)}" fill="url(#tav-galaxy)"/>`+twinkle(ex-r*.05,ey-r*.06,r*.06,'#fff')+twinkle(ex+r*.06,ey+r*.07,r*.04,'#ffe066')+CN(ex+r*.02,ey-r*.1,r*.015,'#fff')+CN(ex-r*.08,ey+r*.08,r*.015,'#fff')+st(`M${p(ex-r*.21,ey-r*.04)}Q${p(ex,ey-r*.31)} ${p(ex+r*.21,ey-r*.04)}`,.055);break;
+  default:s+=roundEye(ex);}}
+ const my=y+r*.55,MC='#d9707f';
+ switch(ms){
+ case 'grin':s+=`<path d="M${p(x-r*.13,my-r*.03)}Q${p(x,my-r*.02)} ${p(x+r*.13,my-r*.03)}Q${p(x+r*.1,my+r*.16)} ${p(x,my+r*.16)}Q${p(x-r*.1,my+r*.16)} ${p(x-r*.13,my-r*.03)}Z" fill="#c2455a"/><ellipse cx="${f2(x)}" cy="${f2(my+r*.11)}" rx="${f2(r*.06)}" ry="${f2(r*.035)}" fill="#ff8fa3"/>`;break;
+ case 'o':s+=`<ellipse cx="${f2(x)}" cy="${f2(my+r*.03)}" rx="${f2(r*.05)}" ry="${f2(r*.065)}" fill="#c2455a"/>`;break;
+ case 'shy':s+=`<path d="M${p(x-r*.09,my+r*.02)}q${p(r*.045,-r*.04)} ${p(r*.09,0)}q${p(r*.045,r*.04)} ${p(r*.09,0)}" fill="none" stroke="${MC}" stroke-width="${f2(r*.04)}" stroke-linecap="round"/>`;break;
+ case 'cat':s+=`<path d="M${p(x-r*.13,my-r*.01)}q${p(r*.065,r*.09)} ${p(r*.13,0)}q${p(r*.065,r*.09)} ${p(r*.13,0)}" fill="none" stroke="${MC}" stroke-width="${f2(r*.045)}" stroke-linecap="round"/>`;break;
+ case 'tongue':s+=`<path d="M${p(x+r*.0,my+r*.04)}q${p(r*.03,r*.11)} ${p(r*.09,r*.02)}" fill="#ff8fa3" stroke="#e8667f" stroke-width="${f2(r*.02)}"/>`+`<path d="M${p(x-r*.1,my)}Q${p(x,my+r*.08)} ${p(x+r*.12,my)}" fill="none" stroke="${MC}" stroke-width="${f2(r*.045)}" stroke-linecap="round"/>`;break;
+ case 'teeth':s+=`<path d="M${p(x-r*.14,my-r*.03)}L${p(x+r*.14,my-r*.03)}Q${p(x+r*.12,my+r*.15)} ${p(x,my+r*.15)}Q${p(x-r*.12,my+r*.15)} ${p(x-r*.14,my-r*.03)}Z" fill="#c2455a"/><path d="M${p(x-r*.13,my-r*.02)}L${p(x+r*.13,my-r*.02)}L${p(x+r*.12,my+r*.04)}L${p(x-r*.12,my+r*.04)}Z" fill="#fff"/>`;break;
+ case 'kiss':s+=`<path d="M${p(x-r*.02,my-r*.05)}q${p(r*.08,r*.03)} ${p(0,r*.06)}q${p(r*.08,r*.03)} ${p(0,r*.06)}" fill="none" stroke="${MC}" stroke-width="${f2(r*.045)}" stroke-linecap="round"/>`+heart(x+r*.2,my-r*.08,r*.045,'#ff8fab');break;
+ default:s+=`<path d="M${p(x-r*.1,my-r*.02)}Q${p(x,my+r*.06)} ${p(x+r*.1,my-r*.02)}" fill="none" stroke="${MC}" stroke-width="${f2(r*.045)}" stroke-linecap="round"/>`;}
  return s;}
 function acc(M,it,uid,layer){const _o=OL;OL=SEAM;const raw=acc0(M,it,uid);OL=_o;const x=M.hx;
  if(['batwing','fairy','butterfly','angel','dragon'].includes(it.s))return `<g transform="translate(${x} ${M.ty1+6}) scale(1.35) translate(${-x} ${-M.ty1-6})">${raw}</g>`;
@@ -355,7 +395,7 @@ function render(st,opts={}){const uid=++UID;OL='none';st=st||defaultState();cons
  if(A_.neck)s+=acc(M,A_.neck,uid);
  // 머리
  s+=P(`M${M.hx-M.hr} ${M.hy}C${M.hx-M.hr} ${f2(M.hy-M.hr*1.2)} ${M.hx+M.hr} ${f2(M.hy-M.hr*1.2)} ${M.hx+M.hr} ${M.hy}C${M.hx+M.hr} ${f2(M.hy+M.hr*.75)} ${f2(M.hx+M.hr*.45)} ${f2(M.hy+M.hr*.92)} ${M.hx} ${f2(M.hy+M.hr*.92)}C${f2(M.hx-M.hr*.45)} ${f2(M.hy+M.hr*.92)} ${M.hx-M.hr} ${f2(M.hy+M.hr*.75)} ${M.hx-M.hr} ${M.hy}Z`,SKIN);
- s+=face(M);
+ s+=face(M,eq);
  if(A_.face&&A_.face.s!=='glasses'&&A_.face.s!=='mono')s+=acc(M,A_.face,uid);
  if(hair)s+=hairFront(M,hair);
  if(A_.face&&(A_.face.s==='glasses'||A_.face.s==='mono'))s+=acc(M,A_.face,uid);
