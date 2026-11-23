@@ -6,6 +6,7 @@
 <title>그리고 지우세요</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../types/room-shim.js" data-game="draw"></script>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden;background:linear-gradient(#7cc8ff,#d4f1ff);font-family:'Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif;user-select:none;-webkit-user-select:none}
@@ -108,6 +109,18 @@ button:active{transform:translateY(3px);border-bottom-width:2px}
 .again{background:#27ae60}.home{background:#78909c}
 #rotBtn{position:absolute;right:10px;bottom:10px;z-index:50;width:54px;height:54px;padding:0;border-radius:50%;background:#263238;font-size:26px;border:3px solid #fff;border-bottom:5px solid rgba(0,0,0,.4)}
 #rotTip{position:absolute;right:72px;bottom:18px;z-index:50;background:rgba(38,50,56,.9);color:#fff;font-size:20px;padding:8px 14px;border-radius:12px;white-space:nowrap}
+#hubHud{position:absolute;inset:0;pointer-events:none}
+.hubPanel{position:absolute;left:10px;top:10px;width:224px;background:rgba(255,255,255,.93);border:3px solid #263238;border-radius:16px;padding:10px 10px 12px;pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:5px;box-shadow:0 5px 0 rgba(38,50,56,.5)}
+.hubTitle{font-size:25px;white-space:nowrap;line-height:1;text-shadow:0 2px 0 rgba(0,0,0,.12)}.hubTitle .t1{color:#ff4f9a}.hubTitle .t2{color:#2f80ed}
+.hubPanel label{font-size:15px;color:#455a64;margin:2px 0 0}
+.hubPanel #nameIn{width:190px;font-size:19px;padding:4px}
+.hubPanel .coins{margin-top:2px;font-size:20px;padding:2px 12px}
+.hubPanel #eqInfo{font-size:14px;line-height:1.25;min-height:0;width:100%;padding:5px 8px;text-align:center}
+.hubPanel #eqInfo small{font-size:12px}
+.hubPanel #shopBtn{width:100%;font-size:19px;padding:7px 10px;margin:2px 0 0;flex:none}
+#hubMsg{position:absolute;top:12px;left:calc(50% + 110px);transform:translateX(-50%);font-size:21px;background:rgba(38,50,56,.86);color:#fff;padding:8px 18px;border-radius:14px;white-space:nowrap;text-align:center}
+#hubMsg b{color:#ffe066;font-weight:normal}
+#hubNet{position:absolute;right:12px;bottom:12px;font-size:16px;background:rgba(255,255,255,.92);padding:4px 12px;border-radius:12px;color:#263238;border:2px solid #263238}
 #err{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:24px;color:#263238;background:#fff;text-align:center;padding:40px}
 </style>
 </head>
@@ -128,15 +141,26 @@ button:active{transform:translateY(3px);border-bottom-width:2px}
     <div id="joy" class="hidden"><div id="knob"></div></div>
   </div>
 
-  <div id="lobby" class="screen">
+  <div id="hubHud" class="hidden">
+    <div class="hubPanel">
+      <div class="hubTitle"><span class="t1">그리고</span> <span class="t2">지우세요</span></div>
+      <label>✏️ 닉네임 (10글자까지)</label>
+      <input id="nameIn" maxlength="10" autocomplete="off">
+      <div class="coins">🪙 <b id="coinL">0</b></div>
+      <div id="eqInfo"></div>
+      <button id="shopBtn" class="shop">🛒 상점</button>
+    </div>
+    <div id="hubMsg"></div>
+    <div id="hubNet"></div>
+  </div>
+
+  <div id="lobby" class="screen hidden">
     <div class="title"><span class="t1">그리고</span> <span class="t2">지우세요</span></div>
     <div class="sub">🖌️ 칠하는 팀 vs 지우는 팀 🧽 · 40초 동안 더 많이 차지하면 승리!</div>
     <div class="lobbyRow">
       <div class="panel left">
         <canvas id="preview" width="400" height="400"></canvas>
-        <label>✏️ 닉네임 (10글자까지)</label>
-        <input id="nameIn" maxlength="10" autocomplete="off">
-        <div class="coins">🪙 <b id="coinL">0</b></div>
+
       </div>
       <div class="panel right">
         <div class="lbl">1. 팀 고르기</div>
@@ -150,15 +174,12 @@ button:active{transform:translateY(3px);border-bottom-width:2px}
           <button class="opt" data-mode="2">2 : 2</button>
           <button class="opt" data-mode="3">3 : 3</button>
         </div>
-        <div class="lbl">3. 지금 내 도구</div>
-        <div id="eqInfo"></div>
         <div class="btnRow">
-          <button id="shopBtn" class="big shop">🛒 상점</button>
           <button id="playBtn" class="big go">▶ 매칭 시작!</button>
         </div>
       </div>
     </div>
-    <div class="help">조작: 방향키 / WASD · 화면을 누른 채로 끌면 그쪽으로 움직여요 · 휠로 확대 · 이기면 🪙30</div>
+    
   </div>
 
   <div id="shop" class="screen hidden">
@@ -294,8 +315,10 @@ let grid=new Uint8Array(TOTAL),painted=0,dirty=true;
 const WHITE_IDX=ci('#ffffff');
 function setCell(i,v){grid[i]=v;pctx.fillStyle=v?COLORS[v]:PAPER;pctx.fillRect((i%GW)*CS,((i/GW)|0)*CS,CS,CS);
   if(!v||v===WHITE_IDX){pctx.strokeStyle=v?'rgba(120,150,180,.25)':'rgba(38,50,56,.07)';pctx.strokeRect((i%GW)*CS+.5,((i/GW)|0)*CS+.5,CS-1,CS-1);}dirty=true;}
-function initBoard(){
-  const r=()=>Math.random()*6.28,f=()=>.08+Math.random()*.12;
+function mkRng(seed){let a=seed>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function initBoard(seed){
+  const rg=mkRng(seed==null?(Math.random()*1e9)|0:seed);
+  const r=()=>rg()*6.28,f=()=>.08+rg()*.12;
   const P=[r(),r(),r(),r(),r()],F=[f(),f(),f(),f()];
   const vals=new Float32Array(TOTAL);
   for(let y=0;y<GH;y++)for(let x=0;x<GW;x++)
@@ -454,7 +477,7 @@ function textSprite(text,col,w=6){
 const iceGeo=new THREE.BoxGeometry(3.6,6,2.2),iceMat=new THREE.MeshLambertMaterial({color:'#bfeaff',transparent:true,opacity:.55,emissive:'#7fd3ff',emissiveIntensity:.3});
 
 // ---------- 상태 ----------
-let state='lobby',chars=[],player=null,timeLeft=GAME_TIME,countT=0,endT=0,bannerT=0,joy=null,camDist=1,lobbyAng=0;
+let state='hub',chars=[],player=null,game=null,timeLeft=GAME_TIME,countT=0,endT=0,bannerT=0,joy=null,camDist=1,lobbyAng=0;
 const keys={};
 function pickBotSkin(){return Math.random()<.5?'none':SKINS[1+((Math.random()*(SKINS.length-1))|0)].id;}
 function pickBotItem(team){const L=ITEMS[team];return Math.random()<.5?L[0]:L[1+((Math.random()*3)|0)];}
@@ -503,15 +526,16 @@ function refreshLobby(){
   const it=itemById(save.eq[save.team]);
   const S=SKIN[save.skin[save.team]]||SKIN.none;
   $('eqInfo').innerHTML=`${save.team==='draw'?'🖌️':'🧽'} <b>${it.name}</b> · ${S.emo} ${S.name} 스킨<br><small>${it.desc}</small>`;
+  if(state!=='lobby')return;
   if(pModel)pScene.remove(pModel.root);
   pModel=makeNoob(it,save.team,paintFor(save.team==='draw'?save.skin.draw:'none',TEAM_COLS[0]),save.skin[save.team]);pModel.armR.rotation.x=-.9;pScene.add(pModel.root);
 }
-$('shopBtn').onclick=()=>{beep(520);show('shop');renderShop();};
-$('shopClose').onclick=()=>{beep(440);show('lobby');refreshLobby();};
+$('shopBtn').onclick=()=>{beep(520);nameIn.blur();show('shop');renderShop();};
+$('shopClose').onclick=()=>{beep(440);show('none');refreshLobby();if(state==='hub')rebuildHubPlayer();};
 $('playBtn').onclick=()=>{if(!nameIn.value.trim()){nameIn.value='뉴비';save.name='뉴비';persist();}startMatch();};
-$('againBtn').onclick=()=>startMatch();
-$('homeBtn').onclick=()=>{state='lobby';clearChars();show('lobby');$('hud').classList.add('hidden');refreshLobby();};
-function show(id){['lobby','shop','match','result'].forEach(s=>$(s).classList.toggle('hidden',s!==id));}
+$('againBtn').onclick=()=>{const p=game&&PADS.find(q=>q.mode===game.mode&&q.team===(player?player.team:'draw'));hubSpawn(p?p.x:480,p?p.y:300);};
+$('homeBtn').onclick=()=>hubSpawn(480,300);
+function show(id){['lobby','shop','match','result'].forEach(s=>$(s).classList.toggle('hidden',s!==id));$('hubHud').classList.toggle('hidden',!(state==='hub'&&id==='none'));}
 
 // ---------- 상점 (3D 아이콘) ----------
 const iconR=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});
@@ -584,38 +608,32 @@ function renderShop(){
 // ---------- 매칭 ----------
 let matchTimers=[];
 function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function startMatch(){
+function startMatch(){hubSpawn(480,300);}
+function enterMatch(S){
   matchTimers.forEach(clearTimeout);matchTimers=[];
+  playedG.add(S.g);
   state='match';clearChars();show('match');$('hud').classList.add('hidden');
-  const n=save.mode,my=save.team,opp=my==='draw'?'erase':'draw';
-  const names=BOT_NAMES.slice().sort(()=>Math.random()-.5);
-  const pName=(nameIn.value.trim()||'뉴비').slice(0,10);
-  const roster={draw:[],erase:[]};
-  roster[my].push({name:pName,isPlayer:true,item:itemById(save.eq[my]),skin:save.skin[my]});
-  for(let i=1;i<n;i++)roster[my].push({name:names.pop(),isPlayer:false,item:pickBotItem(my),skin:pickBotSkin()});
-  for(let i=0;i<n;i++)roster[opp].push({name:names.pop(),isPlayer:false,item:pickBotItem(opp),skin:pickBotSkin()});
-  $('mTitle').textContent='🔍 매칭 중...';
-  const md=$('mDraw'),me=$('mErase');
-  const slotHtml=p=>`<div class="slot${p.isPlayer?' me':''}"><span>${p.isPlayer?'⭐ ':''}${esc(p.name)}</span><small>${p.item.name}</small></div>`;
-  md.innerHTML=roster.draw.map(()=>'<div class="slot wait">기다리는 중...</div>').join('');
-  me.innerHTML=roster.erase.map(()=>'<div class="slot wait">기다리는 중...</div>').join('');
-  const order=[];roster[my].forEach((p,i)=>order.push([my,i,p]));roster[opp].forEach((p,i)=>order.push([opp,i,p]));
-  order.forEach(([team,i,p],k)=>matchTimers.push(setTimeout(()=>{
-    (team==='draw'?md:me).children[i].outerHTML=slotHtml(p);beep(500+k*80,.1);
-  },350+k*380+(p.isPlayer?0:Math.random()*250))));
-  const done=350+order.length*380+300;
-  matchTimers.push(setTimeout(()=>{$('mTitle').textContent='✅ 매칭 완료!';tune([523,659,784]);},done));
-  matchTimers.push(setTimeout(()=>startGame(roster),done+1100));
+  $('mTitle').textContent='✅ 매칭 완료!';tune([523,659,784]);
+  const slotHtml=e=>{const it=itemById(e.it)||ITEMS[e.t][0],me=e.id===NET.me;return `<div class="slot${me?' me':''}"><span>${me?'⭐ ':e.bot?'':'👤 '}${esc(e.n)}</span><small>${it.name}</small></div>`;};
+  $('mDraw').innerHTML=S.r.filter(e=>e.t==='draw').map(slotHtml).join('');
+  $('mErase').innerHTML=S.r.filter(e=>e.t==='erase').map(slotHtml).join('');
+  matchTimers.push(setTimeout(()=>startGame(S),1700));
 }
 
 // ---------- 게임 ----------
 let lastCount=4;
-function startGame(roster){
-  initBoard();clearChars();
-  ['draw','erase'].forEach(team=>roster[team].forEach((p,i)=>{
-    const c=makeChar(p,team,i,roster[team].length);chars.push(c);if(p.isPlayer)player=c;
-  }));
+function startGame(S){
+  initBoard(S.s);clearChars();
+  game={gid:S.g,mode:S.m,roster:S.r,hostRes:null,startClearT:4};
+  const cnt={draw:0,erase:0},tot={draw:0,erase:0};S.r.forEach(e=>tot[e.t]++);
+  let bi=0;
+  S.r.forEach(e=>{
+    const p={name:e.n,isPlayer:e.id===NET.me,item:itemById(e.it)||ITEMS[e.t][0],skin:e.sk||'none'};
+    const c=makeChar(p,e.t,cnt[e.t]++,tot[e.t]);c.peer=e.bot?null:e.id;c.bot=!!e.bot;if(c.bot)c.bi=bi++;
+    chars.push(c);if(p.isPlayer)player=c;
+  });
   timeLeft=GAME_TIME;countT=3.99;state='count';lastCount=4;show('none');
+  netSet({st:'game',gid:S.g,pad:null,q:null,x:player.x|0,y:player.y|0,t:player.team,it:player.item.id,sk:player.skin});
   $('hud').classList.remove('hidden');$('timer').textContent=GAME_TIME;$('timer').classList.remove('hurry');
   $('myTeam').classList.remove('hidden');
   $('myTeam').textContent=player.team==='draw'?'⭐ 나는 🖌️ 그리기 팀! 빈 곳을 칠해요':'⭐ 나는 🧽 지우기 팀! 색칠된 곳을 지워요';
@@ -691,6 +709,10 @@ function playerInput(){
 
 function update(dt){
   if(bannerT>0){bannerT-=dt;if(bannerT<=0)$('banner').classList.remove('show');}
+  const nowMs=performance.now();netFlush(nowMs);
+  if(state==='hub'){hubUpdate(dt);return;}
+  if(state==='match')return;
+  if(game&&(state==='count'||state==='play'||state==='end'))gameNet(dt);
   if(state==='count'){
     countT-=dt;const n=Math.ceil(countT-1);
     if(n!==lastCount){lastCount=n;$('count').textContent=n>0?n:'시작!';$('count').style.color=n>0?'#fff':'#f2c94c';if(n>0)beep(600,.15);else beep(1000,.35);}
@@ -708,21 +730,25 @@ function update(dt){
     if(c.hypno>0)c.hypno-=dt;
     if(c.item.ab){c.abilT-=dt;if(c.abilT<=0){c.abilT=ABIL_CD;useAbility(c);}}
     let mx=0,my=0;
+    if(c.isPlayer||(c.bot&&amHost())){
     if(c.frozen<=0)[mx,my]=c.isPlayer?playerInput():botThink(c,dt);
     c.moving=Math.hypot(mx,my)>.1;
     if(c.moving){c.walk+=dt*11;c.targetAng=Math.atan2(mx,my);}
     c.x=Math.max(8,Math.min(W-8,c.x+mx*c.speed*dt));
     c.y=Math.max(8,Math.min(H-8,c.y+my*c.speed*dt));
+    }else netFollow(c,dt);
     if(c.frozen<=0){applyTool(c);stamp(c);}
   }
   if(player.item.ab){const s=Math.ceil(player.abilT);$('abil').textContent=player.item.ab==='ice'?`🧊 얼음 발사까지 ${s}초`:`🌀 최면술까지 ${s}초`;}
   updateBar();
-  if(timeLeft<=0){state='end';endT=1.4;banner('⏰ 끝!');tune([784,659,523]);$('abil').classList.add('hidden');chars.forEach(c=>c.moving=false);}
+  if(timeLeft<=0){state='end';endT=1.6;if(amHost())netSet({res:[+(painted/TOTAL).toFixed(4)]});banner('⏰ 끝!');tune([784,659,523]);$('abil').classList.add('hidden');chars.forEach(c=>c.moving=false);}
 }
 function showResult(){
   state='result';
-  const d=painted/TOTAL*100;
-  const winner=painted*2>TOTAL?'draw':painted*2<TOTAL?'erase':'tie';
+  let frac=painted/TOTAL;const hr=hostPres();if(!amHost()&&hr&&hr.res)frac=hr.res[0];
+  const d=frac*100;
+  const winner=frac>.5?'draw':frac<.5?'erase':'tie';
+  netSet({b:null,tl:null});
   const win=winner===player.team;
   if(win){save.coins+=WIN_COIN;save.wins=(save.wins||0)+1;persist();tune([523,659,784,1046],.14);}
   else beep(330,.4,'triangle',.06);
@@ -734,6 +760,149 @@ function showResult(){
   const list=chars.slice().sort((a,b)=>b.stat-a.stat);
   $('rank').innerHTML=list.map((c,i)=>`<div class="rk${c.isPlayer?' me':''}"><span>${i===0?'👑':(i+1)+'.'} ${c.team==='draw'?'🖌️':'🧽'} ${esc(c.name)}${c.isPlayer?' (나)':''}</span><span>${c.stat}칸 ${c.team==='draw'?'칠함':'지움'}</span></div>`).join('');
   show('result');
+}
+
+
+// ---------- 같이 하기 (온라인) + 걸어 다니는 로비 ----------
+const NET={room:null,me:'solo',peers:[],pres:{},patch:{},lastSend:0,dirty:true};
+const playedG=new Set();
+function netInit(){(async()=>{try{
+  if(!window.claude||!window.claude.use)return;
+  const room=await window.claude.use('room');if(!room)return;NET.room=room;
+  room.onPeers(ch=>{const L=Array.isArray(ch)?ch:((ch&&ch.peers)||[]);NET.peers=L;const me=L.find(p=>p.isMe&&p.sameTab);if(me)NET.me=me.peer;});
+  if(room.onConnection)room.onConnection(c=>{NET.conn=c;});
+  NET.dirty=true;
+}catch(e){console.log('[온라인 꺼짐]',e);}})();}
+function netSet(patch){for(const k in patch){if(patch[k]===null)delete NET.pres[k];else NET.pres[k]=patch[k];NET.patch[k]=patch[k];}NET.dirty=true;}
+function netFlush(now){
+  if(!NET.room)return;
+  if((NET.dirty&&now-NET.lastSend>120)||now-NET.lastSend>1500){
+    const out=Object.assign({},NET.patch,NET.pres);NET.patch={};NET.dirty=false;NET.lastSend=now;
+    try{const r=NET.room.presence(out);if(r&&r.catch)r.catch(()=>{});}catch(e){}
+  }
+}
+function others(){const out=[];for(const x of NET.peers){if(x.isMe&&x.sameTab)continue;if(x.kind&&x.kind!=='viewer')continue;if(!x.presence||!x.presence.st)continue;out.push({peer:x.peer,p:x.presence});}return out;}
+function presOf(id){if(id===NET.me)return NET.pres;const o=others().find(q=>q.peer===id);return o?o.p:null;}
+// 게임 안에서 지금 있는 사람 중 아이디가 가장 작은 사람이 컴퓨터 친구를 움직이고 시간을 맞춰요
+function amHost(){return hostId()===NET.me;}
+function hostId(){if(!game)return NET.me;let best=NET.me;for(const e of game.roster){if(e.bot||!e.id||e.id===NET.me)continue;const p=presOf(e.id);if(p&&p.gid===game.gid&&e.id<best)best=e.id;}return best;}
+function hostPres(){return presOf(hostId());}
+function netFollow(c,dt){
+  let tx=null;
+  if(c.peer){const p=presOf(c.peer);if(p&&p.gid===game.gid&&p.x!=null){tx=p.x;c.ty=p.y;c.targetAng=p.a;c.moving=!!p.m;c.frozenNet=p.f;}else c.moving=false;}
+  else if(c.bot){const h=hostPres();const b=h&&h.gid===game.gid&&h.b&&h.b[c.bi];if(b){tx=b[0];c.ty=b[1];c.targetAng=b[2];c.moving=!!b[3];}else c.moving=false;}
+  if(tx!=null){c.tx=tx;}
+  if(c.tx!=null){const k=Math.min(1,dt*10);c.x+=(c.tx-c.x)*k;c.y+=(c.ty-c.y)*k;}
+  if(c.moving)c.walk+=dt*11;
+}
+function gameNet(dt){
+  if(!player)return;
+  const pat={x:player.x|0,y:player.y|0,a:+(player.targetAng||0).toFixed(2),m:player.moving?1:0};
+  if(game.startClearT>0){game.startClearT-=dt;if(game.startClearT<=0)pat.start=null;}
+  if(amHost()){pat.b=chars.filter(c=>c.bot).map(c=>[c.x|0,c.y|0,+(c.targetAng||0).toFixed(2),c.moving?1:0]);pat.tl=+timeLeft.toFixed(1);}
+  else{const h=hostPres();if(h&&h.gid===game.gid&&typeof h.tl==='number'&&state==='play'&&Math.abs(h.tl-timeLeft)>.6)timeLeft=h.tl;if(NET.pres.b)pat.b=null;}
+  const p0=NET.pres;if(p0.x!==pat.x||p0.y!==pat.y||p0.m!==pat.m||pat.b||pat.start===null||p0.a!==pat.a)netSet(pat);
+}
+
+// ----- 로비: 도화지 위를 걸어 다니다가 매칭 칸에 들어가요 -----
+const PADS=[];[1,2,3].forEach((m,i)=>{PADS.push({id:'d'+m,team:'draw',mode:m,x:220+i*260,y:132,w:212,h:132});PADS.push({id:'e'+m,team:'erase',mode:m,x:220+i*260,y:468,w:212,h:132});});
+function padAt(x,y){return PADS.find(p=>Math.abs(x-p.x)<p.w/2&&Math.abs(y-p.y)<p.h/2)||null;}
+let hubSig='',curPad=null,cdMine={},hubRemote=new Map();
+function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+function drawHub(info){
+  const g=pctx;g.fillStyle=PAPER;g.fillRect(0,0,W,H);
+  g.strokeStyle='rgba(38,50,56,.06)';g.lineWidth=1;for(let x=0;x<=W;x+=CS){g.beginPath();g.moveTo(x+.5,0);g.lineTo(x+.5,H);g.stroke();}for(let y=0;y<=H;y+=CS){g.beginPath();g.moveTo(0,y+.5);g.lineTo(W,y+.5);g.stroke();}
+  g.textAlign='center';g.textBaseline='middle';
+  g.font='30px Jua, sans-serif';g.fillStyle='rgba(38,50,56,.55)';g.fillText('위는 🖌️ 그리기 팀 · 아래는 🧽 지우기 팀',W/2,H/2-18);
+  g.font='22px Jua, sans-serif';g.fillStyle='rgba(38,50,56,.4)';g.fillText('칸에 들어가면 매칭이 시작돼요!',W/2,H/2+18);
+  for(const p of PADS){
+    const I=info[p.id]||{n:0,cd:null},col=p.team==='draw'?'#ff5c9e':'#3d8bfd',lite=p.team==='draw'?'#ffd3e6':'#d4e6ff';
+    rr(g,p.x-p.w/2,p.y-p.h/2,p.w,p.h,22);g.fillStyle=I.n?col:lite;g.fill();g.lineWidth=6;g.strokeStyle=col;g.stroke();
+    g.fillStyle=I.n?'#fff':col;g.font='34px Jua, sans-serif';g.fillText(`${p.team==='draw'?'🖌️':'🧽'} ${p.mode} : ${p.mode}`,p.x,p.y-30);
+    g.font='22px Jua, sans-serif';g.fillText(p.team==='draw'?'그리기 팀':'지우기 팀',p.x,p.y+4);
+    g.font='20px Jua, sans-serif';g.fillText(I.cd!=null?`⏱️ ${I.cd}초 뒤 시작!`:I.n?`👤 ${I.n}명 기다려요`:'들어와요!',p.x,p.y+38);
+  }
+  dirty=true;
+}
+function hubSpawn(x,y){
+  matchTimers.forEach(clearTimeout);matchTimers=[];
+  state='hub';game=null;clearChars();initBoardBlank();curPad=null;cdMine={};hubRemote=new Map();hubSig='';
+  $('hud').classList.add('hidden');$('count').classList.add('hidden');show('none');
+  player=makeHubChar({name:(save.name||'뉴비'),isPlayer:true},save.team,save.eq[save.team],save.skin[save.team]);
+  player.x=x;player.y=y;chars=[player];refreshLobby();
+  netSet({st:'hub',gid:null,b:null,tl:null,res:null,start:null,q:null,pad:null,n:save.name||'뉴비',t:save.team,it:save.eq[save.team],sk:save.skin[save.team],x:x|0,y:y|0,a:0,m:0});
+  snapCam();
+}
+function initBoardBlank(){grid=new Uint8Array(TOTAL);painted=0;}
+function makeHubChar(p,team,itemId,skin){const c=makeChar({name:p.name,isPlayer:!!p.isPlayer,item:itemById(itemId)||ITEMS[team][0],skin:skin||'none'},team,0,1);c.speed=210;c.ring.visible=false;c.disc.visible=false;return c;}
+function rebuildHubPlayer(team){
+  if(!player||state!=='hub')return;team=team||player.team;
+  const x=player.x,y=player.y,a=player.ang;scene.remove(player.m.root,player.ring,player.disc);
+  const np=makeHubChar({name:save.name||'뉴비',isPlayer:true},team,save.eq[team],save.skin[team]);np.x=x;np.y=y;np.ang=a;np.targetAng=a;
+  chars[chars.indexOf(player)]=np;player=np;netSet({t:team,it:save.eq[team],sk:save.skin[team],n:save.name||'뉴비'});
+}
+function hubMembers(m){
+  const L=[];
+  if(curPad&&curPad.mode===m)L.push({id:NET.me,t:curPad.team,n:save.name||'뉴비',it:save.eq[curPad.team],sk:save.skin[curPad.team]});
+  for(const o of others()){const p=o.p;if(p.st!=='hub'||!p.pad||+p.pad[1]!==m)continue;const t=p.pad[0]==='d'?'draw':'erase';L.push({id:o.peer,t,n:String(p.n||'친구').slice(0,10),it:itemById(p.it)&&itemById(p.it).id||ITEMS[t][0].id,sk:p.sk||'none'});}
+  return L.sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0);
+}
+function hubUpdate(dt){
+  if(!player)return;
+  const shopOpen=!$('shop').classList.contains('hidden');
+  let [mx,my]=shopOpen?[0,0]:playerInput();
+  player.moving=Math.hypot(mx,my)>.1;
+  if(player.moving){player.walk+=dt*11;player.targetAng=Math.atan2(mx,my);}
+  player.x=Math.max(10,Math.min(W-10,player.x+mx*player.speed*dt));player.y=Math.max(10,Math.min(H-10,player.y+my*player.speed*dt));
+  // 칸 확인
+  const pad=padAt(player.x,player.y);
+  if(pad!==curPad){curPad=pad;if(pad){beep(700,.1);if(pad.team!==player.team){save.team=pad.team;persist();rebuildHubPlayer(pad.team);refreshLobby();}}netSet({pad:pad?pad.id:null});}
+  const pat={x:player.x|0,y:player.y|0,a:+(player.targetAng||0).toFixed(2),m:player.moving?1:0};
+  if(NET.pres.x!==pat.x||NET.pres.y!==pat.y||NET.pres.m!==pat.m)netSet(pat);
+  // 다른 사람들
+  const seen=new Set();
+  for(const o of others()){const p=o.p;if(p.st!=='hub'||p.x==null)continue;seen.add(o.peer);
+    let c=hubRemote.get(o.peer);const t=p.t==='erase'?'erase':'draw';const key=t+'|'+p.it+'|'+p.sk+'|'+p.n;
+    if(!c||c.key!==key){if(c){scene.remove(c.m.root,c.ring,c.disc);chars.splice(chars.indexOf(c),1);}c=makeHubChar({name:String(p.n||'친구').slice(0,10)},t,p.it,p.sk);c.key=key;c.x=p.x;c.y=p.y;hubRemote.set(o.peer,c);chars.push(c);}
+    c.tx=p.x;c.ty=p.y;c.targetAng=p.a;c.moving=!!p.m;const k=Math.min(1,dt*10);c.x+=(c.tx-c.x)*k;c.y+=(c.ty-c.y)*k;if(c.moving)c.walk+=dt*11;}
+  for(const [id,c] of hubRemote)if(!seen.has(id)){scene.remove(c.m.root,c.ring,c.disc);chars.splice(chars.indexOf(c),1);hubRemote.delete(id);}
+  // 매칭: 같은 모드 칸에 있는 사람 중 아이디가 가장 작은 사람이 시작 신호를 보내요
+  const now=performance.now(),info={};
+  for(const m of [1,2,3]){
+    const L=hubMembers(m);
+    L.forEach(e=>{const id=(e.t==='draw'?'d':'e')+m;info[id]=info[id]||{n:0,cd:null};info[id].n++;});
+    if(!L.length){delete cdMine[m];continue;}
+    const leader=L[0].id;let cd=null;
+    if(leader===NET.me){
+      if(!cdMine[m])cdMine[m]=now+6000;
+      const full=L.filter(e=>e.t==='draw').length>=m&&L.filter(e=>e.t==='erase').length>=m;
+      if(full)cdMine[m]=Math.min(cdMine[m],now+2000);
+      cd=Math.max(0,Math.ceil((cdMine[m]-now)/1000));
+      if(NET.pres.q==null||NET.pres.q[0]!==m||NET.pres.q[1]!==cd)netSet({q:[m,cd]});
+      if(now>=cdMine[m]){delete cdMine[m];launchMatch(m,L);return;}
+    }else{delete cdMine[m];const lp=presOf(leader);if(lp&&lp.q&&lp.q[0]===m)cd=lp.q[1];}
+    if(cd!=null)PADS.filter(p=>p.mode===m).forEach(p=>{info[p.id]=info[p.id]||{n:0,cd:null};info[p.id].cd=cd;});
+  }
+  if(NET.pres.q!=null&&!(curPad&&L0(curPad.mode)))netSet({q:null});
+  // 누가 나를 넣어서 시작했는지 확인
+  if(curPad)for(const o of others()){const S=o.p.start;if(S&&S.g&&!playedG.has(S.g)&&Array.isArray(S.r)&&S.r.some(e=>e.id===NET.me)){enterMatch(S);return;}}
+  const sig=JSON.stringify(info);if(sig!==hubSig){hubSig=sig;drawHub(info);}
+  // 안내
+  const online=others().length;
+  $('hubNet').textContent=NET.room?`🌐 같이 접속한 친구 ${online}명`:'🌐 혼자 하기 (컴퓨터 친구)';
+  let msg='🚶 걸어서 <b>매칭 칸</b>에 들어가 보세요!';
+  if(curPad){const I=info[curPad.id]||{};msg=`${curPad.team==='draw'?'🖌️ 그리기':'🧽 지우기'} 팀 ${curPad.mode}:${curPad.mode} 칸! `+(I.cd!=null?`<b>${I.cd}초 뒤 시작</b>`:'잠깐만 기다려요')+' · 빈자리는 컴퓨터 친구가 채워요';}
+  if($('hubMsg').innerHTML!==msg)$('hubMsg').innerHTML=msg;
+}
+function L0(m){const L=hubMembers(m);return L.length&&L[0].id===NET.me;}
+function launchMatch(m,L){
+  const draws=L.filter(e=>e.t==='draw').slice(0,m),erases=L.filter(e=>e.t==='erase').slice(0,m);
+  const taken=new Set(L.map(e=>e.n));const names=BOT_NAMES.filter(n=>!taken.has(n)).sort(()=>Math.random()-.5);
+  const bot=t=>({id:null,bot:1,n:names.pop()||'뉴비봇',t,it:pickBotItem(t).id,sk:pickBotSkin()});
+  const r=[];draws.forEach(e=>r.push({id:e.id,n:e.n,t:'draw',it:e.it,sk:e.sk}));while(r.filter(e=>e.t==='draw').length<m)r.push(bot('draw'));
+  erases.forEach(e=>r.push({id:e.id,n:e.n,t:'erase',it:e.it,sk:e.sk}));while(r.filter(e=>e.t==='erase').length<m)r.push(bot('erase'));
+  const S={g:NET.me+'-'+Date.now().toString(36),s:(Math.random()*1e9)|0,m,r};
+  netSet({start:S,q:null});enterMatch(S);
 }
 
 // ---------- 3D 그리기 ----------
@@ -772,7 +941,8 @@ function drawMini(){
 }
 function render(dt){
   if(dirty){boardTex.needsUpdate=true;dirty=false;}
-  if(state==='lobby'||state==='match'||state==='shop'||!player){
+  if(state==='hub'&&player){camWanted();const k=Math.min(1,dt*6);camera.position.lerp(camPos,k);lookNow.lerp(camTarget,k);camera.lookAt(lookNow);syncChars(dt);}
+  else if(state==='lobby'||state==='match'||state==='shop'||state==='result'||!player){
     lobbyAng+=dt*.08;
     camera.position.set(Math.sin(lobbyAng)*70,45,Math.cos(lobbyAng)*55);camera.lookAt(0,0,0);
   }else{
@@ -811,7 +981,7 @@ const glc=renderer.domElement;
 function pt(e){const r=glc.getBoundingClientRect();if(rotated==='cw')return[(e.clientY-r.top)/r.height*W,(r.right-e.clientX)/r.width*H];if(rotated==='ccw')return[(r.bottom-e.clientY)/r.height*W,(e.clientX-r.left)/r.width*H];return[(e.clientX-r.left)/r.width*W,(e.clientY-r.top)/r.height*H];}
 function showJoy(){const j=$('joy');if(!joy){j.classList.add('hidden');return;}j.classList.remove('hidden');j.style.left=joy.sx+'px';j.style.top=joy.sy+'px';
   let dx=joy.cx-joy.sx,dy=joy.cy-joy.sy;const d=Math.hypot(dx,dy);if(d>50){dx=dx/d*50;dy=dy/d*50;}$('knob').style.transform=`translate(${dx}px,${dy}px)`;}
-glc.addEventListener('pointerdown',e=>{if(state!=='play'&&state!=='count')return;const[x,y]=pt(e);joy={sx:x,sy:y,cx:x,cy:y,id:e.pointerId};try{glc.setPointerCapture(e.pointerId);}catch(_){}showJoy();});
+glc.addEventListener('pointerdown',e=>{if(state!=='play'&&state!=='count'&&state!=='hub')return;if(document.activeElement===nameIn)nameIn.blur();const[x,y]=pt(e);joy={sx:x,sy:y,cx:x,cy:y,id:e.pointerId};try{glc.setPointerCapture(e.pointerId);}catch(_){}showJoy();});
 glc.addEventListener('pointermove',e=>{if(joy&&e.pointerId===joy.id){const[x,y]=pt(e);joy.cx=x;joy.cy=y;showJoy();}});
 const endJoy=e=>{if(joy&&e.pointerId===joy.id){joy=null;showJoy();}};
 glc.addEventListener('pointerup',endJoy);glc.addEventListener('pointercancel',endJoy);
@@ -820,7 +990,8 @@ glc.addEventListener('wheel',e=>{e.preventDefault();camDist=Math.max(.6,Math.min
 // ---------- 루프 ----------
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);render(dt);requestAnimationFrame(loop);}
-initBoard();refreshLobby();
+refreshLobby();hubSpawn(480,300);netInit();
+window.__de={get player(){return player;},get state(){return state;},get NET(){return NET;},get chars(){return chars;},get painted(){return painted;},get game(){return game;},skip(t){timeLeft=t;}};
 requestAnimationFrame(loop);
 })();
 </script>
