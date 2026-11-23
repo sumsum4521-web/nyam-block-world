@@ -9,6 +9,8 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;background:#111;font-family:'Jua',sans-serif;user-select:none;-webkit-user-select:none;touch-action:none;color:#222}
 canvas{display:block;touch-action:none}
+#app{position:fixed;left:0;top:0;width:100%;height:100%;overflow:hidden}
+html.rot #app{transform-origin:0 0;transform:rotate(90deg)}
 .hidden{display:none!important}
 button{font-family:inherit;cursor:pointer;border:3px solid #222;border-radius:12px;background:#fff;font-size:16px;padding:6px 12px;box-shadow:0 3px 0 #222}
 button:active{transform:translateY(2px);box-shadow:0 1px 0 #222}
@@ -124,6 +126,7 @@ body.touch #chatLog{bottom:224px}
 </style>
 </head>
 <body>
+<div id="app">
 
 <div id="title" class="overlay">
  <div id="mainMenu">
@@ -329,7 +332,7 @@ const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));
 renderer.setSize(innerWidth,innerHeight);
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-document.body.prepend(renderer.domElement);
+document.getElementById('app').prepend(renderer.domElement);
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x8fd8ff);
 scene.fog=new THREE.Fog(0x8fd8ff,70,170);
@@ -339,7 +342,14 @@ const sun=new THREE.DirectionalLight(0xffffff,0.85);sun.castShadow=true;sun.shad
 Object.assign(sun.shadow.camera,{left:-35,right:35,top:35,bottom:-35,near:1,far:150});scene.add(sun);scene.add(sun.target);
 const fireLights=[];for(let i=0;i<4;i++){const l=new THREE.PointLight(0xffa040,0,16,1.6);scene.add(l);fireLights.push(l);}
 const lanLight=new THREE.PointLight(0xfff0a0,0,12,1.5);scene.add(lanLight);
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+// 휴대폰을 세로로 들고 있으면 게임 화면 전체를 90도 돌려서 가로로 보여 줘요
+let ROT=false;
+function resize(){ROT=!!window.isTouch&&innerHeight>innerWidth;document.documentElement.classList.toggle('rot',ROT);
+ const Wd=ROT?innerHeight:innerWidth,Hd=ROT?innerWidth:innerHeight,app=document.getElementById('app');
+ app.style.width=Wd+'px';app.style.height=Hd+'px';app.style.left=ROT?innerWidth+'px':'0px';
+ camera.aspect=Wd/Hd;camera.updateProjectionMatrix();renderer.setSize(Wd,Hd);}
+addEventListener('resize',()=>setTimeout(resize,60));addEventListener('orientationchange',()=>setTimeout(resize,250));
+function tryLandscape(){if(!window.isTouch)return;try{const el=document.documentElement;const pr=el.requestFullscreen?el.requestFullscreen():(el.webkitRequestFullscreen?el.webkitRequestFullscreen():null);const lock=()=>{try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{});}catch(e){}};if(pr&&pr.then)pr.then(lock).catch(()=>{});else lock();}catch(e){}}
 
 const matCache={},geoCache={};
 function mat(c,em){const k=c+'_'+(em||0);if(!matCache[k])matCache[k]=new THREE.MeshLambertMaterial({color:c,emissive:em?c:0,emissiveIntensity:em||0});return matCache[k];}
@@ -608,15 +618,16 @@ addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=e.ke
 addEventListener('keyup',e=>{const k=e.key.toLowerCase();keys[k]=false;if(e.code==='Space')keys[' ']=false;if(k==='e')actHeld=false;});
 const cv=renderer.domElement;let drag=null;
 cv.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,moved:0,id:e.pointerId};try{cv.setPointerCapture(e.pointerId);}catch(_){}});
-cv.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.moved+=Math.abs(dx)+Math.abs(dy);drag.x=e.clientX;drag.y=e.clientY;camYaw-=dx*0.006;camPitch=Math.min(1.2,Math.max(0.08,camPitch+dy*0.004));});
+cv.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;let dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(ROT){const t=dx;dx=dy;dy=-t;}drag.moved+=Math.abs(dx)+Math.abs(dy);drag.x=e.clientX;drag.y=e.clientY;camYaw-=dx*0.006;camPitch=Math.min(1.2,Math.max(0.08,camPitch+dy*0.004));});
 cv.addEventListener('pointerup',e=>{if(drag&&drag.moved<8&&mode==='game')doAction();drag=null;});
 cv.addEventListener('wheel',e=>{camDist=Math.min(20,Math.max(5,camDist+e.deltaY*0.01));},{passive:true});
 const joy={x:0,y:0,id:null};
 if('ontouchstart' in window||navigator.maxTouchPoints>0){const J=$('joy'),K=$('joyK');
  J.addEventListener('pointerdown',e=>{joy.id=e.pointerId;J.setPointerCapture(e.pointerId);mv(e);});J.addEventListener('pointermove',e=>{if(e.pointerId===joy.id)mv(e);});
  const end=()=>{joy.id=null;joy.x=joy.y=0;K.style.left='40px';K.style.top='40px';};J.addEventListener('pointerup',end);J.addEventListener('pointercancel',end);
- function mv(e){const r=J.getBoundingClientRect();let dx=e.clientX-r.left-65,dy=e.clientY-r.top-65;const d=Math.hypot(dx,dy),m=50;if(d>m){dx*=m/d;dy*=m/d;}joy.x=dx/m;joy.y=-dy/m;K.style.left=(40+dx)+'px';K.style.top=(40+dy)+'px';}
+ function mv(e){const r=J.getBoundingClientRect();let dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2;if(ROT){const t=dx;dx=dy;dy=-t;}const d=Math.hypot(dx,dy),m=50;if(d>m){dx*=m/d;dy*=m/d;}joy.x=dx/m;joy.y=-dy/m;K.style.left=(40+dx)+'px';K.style.top=(40+dy)+'px';}
  window.isTouch=true;document.body.classList.add('touch');}
+resize();
 function showTouchUI(on){$('joy').classList.toggle('hidden',!(on&&window.isTouch));$('jumpBtn').classList.toggle('hidden',!(on&&window.isTouch));}
 function hold(btn,fn){let iv=null;const el=$(btn);el.addEventListener('pointerdown',e=>{e.preventDefault();fn();iv=setInterval(fn,380);});const st=()=>{clearInterval(iv);iv=null;};el.addEventListener('pointerup',st);el.addEventListener('pointerleave',st);el.addEventListener('pointercancel',st);}
 $('jumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();keys[' ']=true;setTimeout(()=>keys[' ']=false,160);});
@@ -1071,7 +1082,7 @@ loop();
  try{const n=localStorage.getItem('island_name');if(n)$('nameIn').value=n;}catch(e){}
  const chk=()=>{$('enterBtn').disabled=!$('nameIn').value.trim();};$('nameIn').addEventListener('input',chk);chk();
  $('nameIn').addEventListener('keydown',e=>{if(e.key==='Enter'&&!$('enterBtn').disabled)$('enterBtn').click();});
- $('playBtn').onclick=()=>{$('mainMenu').classList.add('hidden');$('nameCard').classList.remove('hidden');setTimeout(()=>$('nameIn').focus(),50);};
+ $('playBtn').onclick=()=>{tryLandscape();$('mainMenu').classList.add('hidden');$('nameCard').classList.remove('hidden');setTimeout(()=>$('nameIn').focus(),50);};
  $('backBtn').onclick=()=>{$('nameCard').classList.add('hidden');$('mainMenu').classList.remove('hidden');};
  $('mHelp').onclick=()=>togglePanel('help');$('mBadge').onclick=()=>{renderBadges();togglePanel('badgeP');};
  $('homeBtn').onclick=()=>{mode='title';clearBots();botVisMode='';partyReal.clear();partyBots.clear();renderParty();if(myAvatar){scene.remove(myAvatar);myAvatar=null;}$('lobbyHud').classList.add('hidden');showTouchUI(false);$('qcPanel').classList.add('hidden');for(const[,o]of others)scene.remove(o.g);others.clear();myPad=-1;myPres={};if(room&&connected)room.presence({m:'title',pad:-1,p:null}).catch(()=>{});$('title').classList.remove('hidden');$('nameCard').classList.add('hidden');$('mainMenu').classList.remove('hidden');};
@@ -1079,5 +1090,6 @@ loop();
   $('title').classList.add('hidden');if(myAvatar)scene.remove(myAvatar);myAvatar=makeAvatar(myColor);scene.add(myAvatar);mode='lobby';$('lobbyHud').classList.remove('hidden');showTouchUI(true);P.x=0;P.z=10;P.face=Math.PI;camYaw=0;
   toast(`🌸 ${myName}님, 환영해요!`);};})();
 </script>
+</div>
 </body>
 </html>
