@@ -316,6 +316,7 @@ const WHITE_IDX=ci('#ffffff');
 function setCell(i,v){grid[i]=v;pctx.fillStyle=v?COLORS[v]:PAPER;pctx.fillRect((i%GW)*CS,((i/GW)|0)*CS,CS,CS);
   if(!v||v===WHITE_IDX){pctx.strokeStyle=v?'rgba(120,150,180,.25)':'rgba(38,50,56,.07)';pctx.strokeRect((i%GW)*CS+.5,((i/GW)|0)*CS+.5,CS-1,CS-1);}dirty=true;}
 function mkRng(seed){let a=seed>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+let DELTA=[];function setC(i,v){setCell(i,v);DELTA.push(i,v);}
 function initBoard(seed){
   const rg=mkRng(seed==null?(Math.random()*1e9)|0:seed);
   const r=()=>rg()*6.28,f=()=>.08+rg()*.12;
@@ -624,7 +625,7 @@ function enterMatch(S){
 let lastCount=4;
 function startGame(S){
   initBoard(S.s);clearChars();
-  game={gid:S.g,mode:S.m,roster:S.r,hostRes:null,startClearT:4};
+  game={gid:S.g,mode:S.m,roster:S.r,hostRes:null,startClearT:4};DELTA=[];
   const cnt={draw:0,erase:0},tot={draw:0,erase:0};S.r.forEach(e=>tot[e.t]++);
   let bi=0;
   S.r.forEach(e=>{
@@ -654,8 +655,8 @@ function applyTool(c){
   for(let gy=y0;gy<=y1;gy++)for(let gx=x0;gx<=x1;gx++){
     const dx=gx*CS+5-c.x,dy=gy*CS+5-c.y;if(dx*dx+dy*dy>r2)continue;
     const i=gy*GW+gx,v=grid[i];
-    if(pt0){if(v===0){setCell(i,paintVal(pt0,gx,gy));painted++;c.stat++;}}
-    else if(v!==0){setCell(i,0);painted--;c.stat++;}
+    if(pt0){if(v===0){setC(i,paintVal(pt0,gx,gy));painted++;c.stat++;}}
+    else if(v!==0){setC(i,0);painted--;c.stat++;}
   }
 }
 function stamp(c){
@@ -670,7 +671,7 @@ function stamp(c){
     const gx=gx0+i,gy=gy0+j;if(gx<0||gy<0||gx>=GW||gy>=GH)continue;
     const k=gy*GW+gx,v=grid[k];if(v===p.main)continue;
     if(v===0){painted++;c.stat++;}
-    setCell(k,p.main);
+    setC(k,p.main);
   }
 }
 function useAbility(c){
@@ -719,7 +720,7 @@ function update(dt){
     if(countT<=1){state='play';setTimeout(()=>$('count').classList.add('hidden'),600);}
     return;
   }
-  if(state==='end'){endT-=dt;if(endT<=0)showResult();return;}
+  if(state==='end'){endT-=dt;if(game&&amHost()&&endT<1&&!game.resSent){game.resSent=1;netSet({res:[+(painted/TOTAL).toFixed(4)]});}if(endT<=0)showResult();return;}
   if(state!=='play')return;
   timeLeft-=dt;
   if(GAME_TIME-timeLeft>3)$('myTeam').classList.add('hidden');
@@ -737,15 +738,17 @@ function update(dt){
     c.x=Math.max(8,Math.min(W-8,c.x+mx*c.speed*dt));
     c.y=Math.max(8,Math.min(H-8,c.y+my*c.speed*dt));
     }else netFollow(c,dt);
-    if(c.frozen<=0){applyTool(c);stamp(c);}
+    if(c.frozen<=0&&(c.isPlayer||(c.bot&&amHost()))){applyTool(c);stamp(c);}
   }
   if(player.item.ab){const s=Math.ceil(player.abilT);$('abil').textContent=player.item.ab==='ice'?`🧊 얼음 발사까지 ${s}초`:`🌀 최면술까지 ${s}초`;}
   updateBar();
-  if(timeLeft<=0){state='end';endT=1.6;if(amHost())netSet({res:[+(painted/TOTAL).toFixed(4)]});banner('⏰ 끝!');tune([784,659,523]);$('abil').classList.add('hidden');chars.forEach(c=>c.moving=false);}
+  if(timeLeft<=0){state='end';endT=1.8;banner('⏰ 끝!');tune([784,659,523]);$('abil').classList.add('hidden');chars.forEach(c=>c.moving=false);}
 }
 function showResult(){
   state='result';
-  let frac=painted/TOTAL;const hr=hostPres();if(!amHost()&&hr&&hr.res)frac=hr.res[0];
+  let frac=painted/TOTAL;const hr=hostPres();
+  if(!amHost()&&!(hr&&hr.res)&&(game.waitRes=(game.waitRes||0)+1)<80){state='end';endT=.05;return;}
+  if(!amHost()&&hr&&hr.res)frac=hr.res[0];
   const d=frac*100;
   const winner=frac>.5?'draw':frac<.5?'erase':'tie';
   netSet({b:null,tl:null});
@@ -790,18 +793,30 @@ function hostPres(){return presOf(hostId());}
 function netFollow(c,dt){
   let tx=null;
   if(c.peer){const p=presOf(c.peer);if(p&&p.gid===game.gid&&p.x!=null){tx=p.x;c.ty=p.y;c.targetAng=p.a;c.moving=!!p.m;c.frozenNet=p.f;}else c.moving=false;}
-  else if(c.bot){const h=hostPres();const b=h&&h.gid===game.gid&&h.b&&h.b[c.bi];if(b){tx=b[0];c.ty=b[1];c.targetAng=b[2];c.moving=!!b[3];}else c.moving=false;}
+  else if(c.bot){const h=hostPres();const b=h&&h.gid===game.gid&&h.b&&h.b[c.bi];if(b){tx=b[0];c.ty=b[1];c.targetAng=b[2];c.moving=!!b[3];if(typeof b[4]==='number')c.stat=b[4];}else c.moving=false;}
   if(tx!=null){c.tx=tx;}
   if(c.tx!=null){const k=Math.min(1,dt*10);c.x+=(c.tx-c.x)*k;c.y+=(c.ty-c.y)*k;}
   if(c.moving)c.walk+=dt*11;
 }
 function gameNet(dt){
   if(!player)return;
-  const pat={x:player.x|0,y:player.y|0,a:+(player.targetAng||0).toFixed(2),m:player.moving?1:0};
+  const pat={x:player.x|0,y:player.y|0,a:+(player.targetAng||0).toFixed(2),m:player.moving?1:0,s:player.stat};
+  // 내가 바꾼 칸을 친구들에게 보내요 (최근 6묶음을 같이 보내서 놓쳐도 따라잡아요)
+  const now=performance.now();
+  if(DELTA.length&&now-(game.lastD||0)>140){game.lastD=now;let str='';for(let k=0;k<DELTA.length;k+=2)str+=DELTA[k].toString(36).padStart(3,'0')+DELTA[k+1].toString(36).padStart(2,'0');DELTA=[];
+    game.dseq=(game.dseq||0)+1;game.batches=(game.batches||[]).concat([[game.dseq,str]]).slice(-6);pat.d=game.batches;}
+  // 친구들이 바꾼 칸을 내 도화지에 그려요
+  game.seen=game.seen||{};
+  for(const e of game.roster){if(e.bot||!e.id||e.id===NET.me)continue;const p=presOf(e.id);if(!p||p.gid!==game.gid)continue;
+    const c=chars.find(q=>q.peer===e.id);if(c&&typeof p.s==='number')c.stat=p.s;
+    if(!Array.isArray(p.d))continue;const last=game.seen[e.id]||0;let mx=last;
+    for(const bt of p.d){if(!Array.isArray(bt)||bt[0]<=last)continue;mx=Math.max(mx,bt[0]);const str=String(bt[1]);
+      for(let k=0;k+5<=str.length;k+=5){const i=parseInt(str.slice(k,k+3),36),v=parseInt(str.slice(k+3,k+5),36);if(!(i>=0&&i<TOTAL)||!(v>=0&&v<COLORS.length))continue;const o=grid[i];if(o===v)continue;if(!o&&v)painted++;else if(o&&!v)painted--;setCell(i,v);}}
+    game.seen[e.id]=mx;}
   if(game.startClearT>0){game.startClearT-=dt;if(game.startClearT<=0)pat.start=null;}
-  if(amHost()){pat.b=chars.filter(c=>c.bot).map(c=>[c.x|0,c.y|0,+(c.targetAng||0).toFixed(2),c.moving?1:0]);pat.tl=+timeLeft.toFixed(1);}
+  if(amHost()){pat.b=chars.filter(c=>c.bot).map(c=>[c.x|0,c.y|0,+(c.targetAng||0).toFixed(2),c.moving?1:0,c.stat]);pat.tl=+timeLeft.toFixed(1);}
   else{const h=hostPres();if(h&&h.gid===game.gid&&typeof h.tl==='number'&&state==='play'&&Math.abs(h.tl-timeLeft)>.6)timeLeft=h.tl;if(NET.pres.b)pat.b=null;}
-  const p0=NET.pres;if(p0.x!==pat.x||p0.y!==pat.y||p0.m!==pat.m||pat.b||pat.start===null||p0.a!==pat.a)netSet(pat);
+  const p0=NET.pres;if(p0.x!==pat.x||p0.y!==pat.y||p0.m!==pat.m||pat.b||pat.d||pat.start===null||p0.a!==pat.a||p0.s!==pat.s)netSet(pat);
 }
 
 // ----- 로비: 도화지 위를 걸어 다니다가 매칭 칸에 들어가요 -----
@@ -830,7 +845,7 @@ function hubSpawn(x,y){
   $('hud').classList.add('hidden');$('count').classList.add('hidden');show('none');
   player=makeHubChar({name:(save.name||'뉴비'),isPlayer:true},save.team,save.eq[save.team],save.skin[save.team]);
   player.x=x;player.y=y;chars=[player];refreshLobby();
-  netSet({st:'hub',gid:null,b:null,tl:null,res:null,start:null,q:null,pad:null,n:save.name||'뉴비',t:save.team,it:save.eq[save.team],sk:save.skin[save.team],x:x|0,y:y|0,a:0,m:0});
+  netSet({st:'hub',gid:null,b:null,tl:null,res:null,start:null,q:null,pad:null,d:null,s:null,n:save.name||'뉴비',t:save.team,it:save.eq[save.team],sk:save.skin[save.team],x:x|0,y:y|0,a:0,m:0});
   snapCam();
 }
 function initBoardBlank(){grid=new Uint8Array(TOTAL);painted=0;}
