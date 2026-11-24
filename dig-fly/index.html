@@ -15,6 +15,8 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block}
 #equip b{color:#ffe066;font-weight:normal}
 #alt{top:12px;right:12px;background:rgba(20,24,40,.72);color:#fff;padding:8px 12px;border-radius:12px;font-size:15px;text-align:right;line-height:1.45;border:2px solid rgba(255,255,255,.25);min-width:130px}
 #alt .big{font-size:26px;color:#7ff3ff}
+#mpBox{top:112px;right:12px;background:rgba(20,24,40,.72);color:#fff;padding:6px 12px;border-radius:12px;font-size:14px;line-height:1.5;border:2px solid rgba(255,255,255,.25);max-width:220px;display:none;pointer-events:none}
+#mpBox b{color:#ffe066;font-weight:normal}
 #bar{height:10px;background:rgba(255,255,255,.2);border-radius:6px;overflow:hidden;margin-top:4px}
 #barIn{height:100%;width:0;background:linear-gradient(90deg,#ffe066,#ff7b54);transition:width .1s}
 #msg{top:78px;left:50%;transform:translateX(-50%);color:#fff;font-size:22px;text-align:center;text-shadow:0 2px 0 #000,0 0 8px #000;pointer-events:none;width:92%;transition:opacity .4s}
@@ -64,6 +66,7 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block}
 <div id="equip" class="ui"></div>
 <div id="alt" class="ui"><div class="big" id="altNow">0m</div><div id="altInfo"></div><div id="bar"><div id="barIn"></div></div></div>
 <div id="msg" class="ui"></div>
+<div id="mpBox" class="ui"></div>
 <div id="run" class="ui"></div>
 <div id="btns" class="ui">
   <button id="btnShop" class="bigbtn">🛒 상점</button>
@@ -87,6 +90,7 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../types/room-shim.js" data-game="dig"></script>
 <script>
 // ================== 데이터 ==================
 const DRILLS=[
@@ -124,6 +128,7 @@ const skyReward=k=>Math.ceil(k/2)*2; // 하늘 링 (k = 높이/5)
 // ================== 저장 ==================
 let S={money:0,dOwn:0,wOwn:0,dEq:0,wEq:0,bestD:0,bestH:0};
 try{const t=JSON.parse(localStorage.getItem('digUpWings_v1'));if(t)Object.assign(S,t);}catch(e){}
+if(!S.name){let n='뉴비';try{const a=JSON.parse(localStorage.getItem('types_account')||'null');if(a&&a.id)n=String(a.id).slice(0,12);}catch(e){}S.name=n;}
 function save(){try{localStorage.setItem('digUpWings_v1',JSON.stringify(S));}catch(e){}}
 const fmt=n=>Math.floor(n).toLocaleString('ko-KR');
 
@@ -268,7 +273,7 @@ const C={};
   C.wingMount=new THREE.Group();C.wingMount.position.set(0,1.78,-.3);player.add(C.wingMount);
   C.drillHold=new THREE.Group();player.add(C.drillHold);
   C.extra=new THREE.Group();player.add(C.extra);
-  const tag=label('뉴비',{size:40,bg:'rgba(0,0,0,.45)'});tag.scale.multiplyScalar(.55);tag.position.y=3.25;player.add(tag);C.tag=tag;
+  const tag=label(String(S.name||'뉴비').slice(0,12),{size:40,bg:'rgba(0,0,0,.45)'});tag.scale.multiplyScalar(.55);tag.position.y=3.25;player.add(tag);C.tag=tag;
 })();
 
 // ================== 드릴 모델 ==================
@@ -657,11 +662,76 @@ function update(dt){
   $('money').textContent='💰 '+fmt(S.money);
   updParts(dt);
 }
-function loop(){requestAnimationFrame(loop);const dt=Math.min(.05,clock.getDelta());update(dt);renderer.render(scene,camera);}
+
+// ================== 친구랑 같이 하기 ==================
+// 같은 방에 들어온 친구가 걸어 다니고, 땅을 파고, 날아오르는 모습이 보여요 (각자 자기 구멍·돈은 따로)
+const MP={room:null,me:'',others:new Map(),last:0,lastSig:''};
+function makeRemote(name){
+  const g=new THREE.Group();scene.add(g);const Y='#f5cd30',B='#1e6fd9',G='#8fbf3a',o={g};
+  o.legL=new THREE.Group();o.legL.position.set(-.25,1,0);g.add(o.legL);box(.48,1,.48,lam(G),0,-.5,0,o.legL);
+  o.legR=new THREE.Group();o.legR.position.set(.25,1,0);g.add(o.legR);box(.48,1,.48,lam(G),0,-.5,0,o.legR);
+  box(1,1,.5,lam(B),0,1.5,0,g);
+  o.armL=new THREE.Group();o.armL.position.set(-.74,1.95,0);g.add(o.armL);box(.48,1,.48,lam(Y),0,-.45,0,o.armL);
+  o.armR=new THREE.Group();o.armR.position.set(.74,1.95,0);g.add(o.armR);box(.48,1,.48,lam(Y),0,-.45,0,o.armR);
+  const head=new THREE.Mesh(new THREE.CylinderGeometry(.37,.37,.6,28),[C.head.material[0],lam(Y),lam(Y)]);head.position.y=2.33;head.rotation.y=Math.PI;g.add(head);
+  const cap=new THREE.Mesh(new THREE.SphereGeometry(.37,24,12),lam(Y));cap.scale.set(1,.28,1);cap.position.y=2.63;g.add(cap);const cap2=cap.clone();cap2.position.y=2.03;g.add(cap2);
+  o.wingMount=new THREE.Group();o.wingMount.position.set(0,1.78,-.3);g.add(o.wingMount);
+  o.drillHold=new THREE.Group();g.add(o.drillHold);
+  o.tagHold=new THREE.Group();o.tagHold.position.y=3.25;g.add(o.tagHold);
+  o.x=0;o.y=0;o.z=9;o.face=0;o.walkT=0;o.name=name;o.w=-1;o.d=-1;o.tagTxt='';
+  return o;}
+function setRemoteTag(o,txt){if(o.tagTxt===txt)return;o.tagTxt=txt;o.tagHold.clear();const t=label(txt,{size:40,bg:'rgba(255,120,40,.8)'});t.scale.multiplyScalar(.55);o.tagHold.add(t);}
+function dropRemote(o){scene.remove(o.g);}
+function mpPeers(ch){
+  const L=Array.isArray(ch)?ch:((ch&&ch.peers)||[]);const me=L.find(p=>p.isMe&&p.sameTab);if(me)MP.me=me.peer;
+  const seen=new Set();
+  for(const p of L){if(p.isMe&&p.sameTab)continue;if(p.kind&&p.kind!=='viewer')continue;const d=p.presence;if(!d||typeof d.x!=='number')continue;seen.add(p.peer);
+    let o=MP.others.get(p.peer);if(!o){o=makeRemote(d.n);o.x=d.x;o.y=d.y;o.z=d.z;MP.others.set(p.peer,o);}
+    o.d_=d;}
+  for(const [id,o] of MP.others)if(!seen.has(id)){dropRemote(o);MP.others.delete(id);}
+}
+async function mpStart(){try{if(!window.claude||!window.claude.use)return;const room=await window.claude.use('room');if(!room)return;MP.room=room;
+  room.onPeers(mpPeers);try{mpPeers(room.peers());}catch(e){}}catch(e){console.log('[혼자 하기]',e);}}
+const ST_CODE={walk:0,dig:1,ready:2,fly:3,top:4,fall:5},ST_NAME=['walk','dig','ready','fly','top','fall'];
+function mpTick(dt){
+  if(!MP.room)return;
+  const now=performance.now();
+  const pres={n:String(S.name||'뉴비').slice(0,12),x:+P.x.toFixed(1),y:+P.y.toFixed(1),z:+P.z.toFixed(1),f:+P.face.toFixed(2),s:ST_CODE[state]||0,w:S.wEq,d:S.dEq,g:P.onGround?1:0};
+  const sig=JSON.stringify(pres);
+  if((sig!==MP.lastSig&&now-MP.last>130)||now-MP.last>2000){MP.last=now;MP.lastSig=sig;try{const r=MP.room.presence(pres);if(r&&r.catch)r.catch(()=>{});}catch(e){}}
+  let idx=0;const rows=[];
+  for(const o of MP.others.values()){const d=o.d_;if(!d)continue;idx++;
+    const st=ST_NAME[d.s]||'walk';
+    // 구멍 쪽(파기·날기)에서는 친구마다 조금씩 옆으로 비켜서 보여 줘요
+    const holeSt=st!=='walk';const ang=idx*2.4;const ox=holeSt?Math.cos(ang)*2.6:0,oz=holeSt?Math.sin(ang)*2.6:0;
+    const tx=d.x+ox,tz=d.z+oz;const k=Math.min(1,dt*10);
+    const moved=Math.hypot(tx-o.x,tz-o.z);
+    o.x+=(tx-o.x)*k;o.z+=(tz-o.z)*k;o.y+=(d.y-o.y)*Math.min(1,dt*(st==='fly'?6:10));
+    let df=d.f-o.face;df=Math.atan2(Math.sin(df),Math.cos(df));o.face+=df*Math.min(1,dt*12);
+    if(o.w!==d.w&&WINGS[d.w]){o.w=d.w;o.wingMount.clear();o.wing=makeWings(d.w);o.wingMount.add(o.wing);}
+    if(o.d!==d.d&&DRILLS[d.d]){o.d=d.d;o.drillHold.clear();o.drill=makeDrill(d.d);o.drillHold.add(o.drill);}
+    const under=o.y<-.6;
+    o.g.visible=!under;o.g.position.set(o.x,Math.max(o.y,under?0:o.y),o.z);o.g.rotation.y=o.face;
+    if(st==='walk'&&moved>.02&&d.g)o.walkT+=dt*14;
+    const sw=Math.sin(o.walkT)*.7*(st==='walk'?1:0);
+    if(st==='walk'&&!d.g){o.legL.rotation.x=.3;o.legR.rotation.x=-.3;o.armL.rotation.set(0,0,-.5);o.armR.rotation.set(0,0,.5);}
+    else if(st==='dig'||st==='ready'){o.legL.rotation.x=o.legR.rotation.x=0;o.armL.rotation.set(-.4,0,.25);o.armR.rotation.set(-.4,0,-.25);}
+    else if(st==='fly'||st==='top'||st==='fall'){o.legL.rotation.x=.25;o.legR.rotation.x=.15;o.armL.rotation.set(0,0,-.9);o.armR.rotation.set(0,0,.9);}
+    else{o.legL.rotation.x=sw;o.legR.rotation.x=-sw;o.armL.rotation.set(-sw,0,0);o.armR.rotation.set(sw,0,0);}
+    if(st==='dig'||st==='ready'){o.drillHold.position.set(0,.85,0);o.drillHold.rotation.set(Math.PI,0,0);}else{o.drillHold.position.set(0,1.05,.42);o.drillHold.rotation.set(Math.PI/2,0,0);}
+    if(o.drill)o.drill.userData.bit.rotation.y+=dt*(st==='dig'?20:2);
+    if(o.wing){const u=o.wing.userData;const a=st==='fly'?.35+Math.sin(T*14+idx)*.55:st==='top'?.35+Math.sin(T*6)*.4:st==='fall'?.15+Math.sin(T*4)*.1:.45+Math.sin(T*2+idx)*.12;u.R.rotation.y=a;u.L.rotation.y=-a;}
+    const hv=Math.round(Math.abs(d.y));const nm=String(d.n||'친구').slice(0,12);
+    setRemoteTag(o,st==='walk'?nm:`${nm} ${d.y<-.5?'⬇️':'⬆️'}${hv>=1000?(hv/1000).toFixed(1)+'k':Math.round(hv/5)*5}m`);
+    rows.push(`<div><b>${nm.replace(/[<>&]/g,'')}</b> · ${st==='walk'?'🚶 걷는 중':st==='dig'||st==='ready'?'⛏️ '+hv+'m':'🪽 '+fmt(hv)+'m'}</div>`);
+  }
+  const box_=$('mpBox');if(rows.length){box_.style.display='block';const h='👥 같이 하는 친구 '+rows.length+'명'+rows.slice(0,5).join('');if(box_.innerHTML!==h)box_.innerHTML=h;}else box_.style.display='none';
+}
+function loop(){requestAnimationFrame(loop);const dt=Math.min(.05,clock.getDelta());update(dt);mpTick(dt);renderer.render(scene,camera);}
 
 // 시작
-equipDrill();equipWings();updHUD();
-msg('👋 안녕, 뉴비! 가운데 <b>노란 구멍</b>으로 가서 <b>⛏️ 땅 파기</b>를 눌러요!',6);
+equipDrill();equipWings();updHUD();mpStart();
+msg('👋 안녕, '+String(S.name||'뉴비').replace(/[<>&]/g,'')+'! 가운데 <b>노란 구멍</b>으로 가서 <b>⛏️ 땅 파기</b>를 눌러요!',6);
 loop();
 </script>
 </body>

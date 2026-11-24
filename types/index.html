@@ -253,7 +253,7 @@ const GAMES=[
   desc:'도망가는 발판, 가짜 체크포인트, 거짓말하는 화살표! 스테이지마다 다른 트롤 함정을 뚫고 40스테이지 결승선까지 가요. 마지막엔 트로피 추격전이 있어요.'},
  {id:'draw',name:'그리고 지우세요',sub:'칠하기 대결',url:'../draw-erase/',scary:'약함',players:'친구랑 같이 (1:1~3:3)',nick:true,room:true,
   desc:'그리기 팀은 도화지를 칠하고, 지우기 팀은 지워요! 40초 뒤 칠해진 곳이 반보다 많으면 그리기 팀 승리. 코인으로 왕·스피드·아이스 지우개, 최면술 붓, 귀여운 스킨을 살 수 있어요.'},
- {id:'dig',name:'땅 파고 올라가기',sub:'드릴 & 날개',url:'../dig-fly/',scary:'약함',players:'혼자',nick:false,
+ {id:'dig',name:'땅 파고 올라가기',sub:'드릴 & 날개',url:'../dig-fly/',scary:'약함',players:'친구랑 같이',nick:true,room:true,
   desc:'드릴로 땅을 깊이 파고, 날개를 달고 하늘 높이 슝! 링을 지날 때마다 돈을 벌어서 더 좋은 드릴 8단계와 날개 14단계를 사요. 마지막 해킹된 날개는 5000m까지!'}
 ];
 const G=id=>GAMES.find(g=>g.id===id);
@@ -363,6 +363,7 @@ function applyNick(id,name){
   if(id==='shrink'){const d=LS.get('shrinkSim_v1',null)||{};let n=name.replace(/[^A-Za-z0-9_가-힣]/g,'').slice(0,16);if(n.length<2)n=(n+'__').slice(0,2);d.name=n;d.named=true;LS.set('shrinkSim_v1',d);}
   if(id==='troll'){const d=LS.get('trollJumpMap_v1',null)||{};d.nick=name.slice(0,10);LS.set('trollJumpMap_v1',d);}
   if(id==='island'){LS.setRaw('island_name',name.slice(0,10));}
+  if(id==='dig'){const d=LS.get('digUpWings_v1',null)||{};d.name=name.slice(0,12);LS.set('digUpWings_v1',d);}
   if(id==='draw'){const d=LS.get('drawErase_v1',null)||{};d.name=name.slice(0,10);LS.set('drawErase_v1',d);}
  }catch(e){}
 }
