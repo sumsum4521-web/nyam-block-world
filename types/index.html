@@ -252,11 +252,21 @@ const GAMES=[
  {id:'troll',name:'트롤 점프맵',sub:'40스테이지 오비',url:'../troll/',scary:'약함',players:'친구랑 같이',nick:true,room:true,
   desc:'도망가는 발판, 가짜 체크포인트, 거짓말하는 화살표! 스테이지마다 다른 트롤 함정을 뚫고 40스테이지 결승선까지 가요. 마지막엔 트로피 추격전이 있어요.'},
  {id:'draw',name:'그리고 지우세요',sub:'칠하기 대결',url:'../draw-erase/',scary:'약함',players:'친구랑 같이 (1:1~3:3)',nick:true,room:true,
-  desc:'그리기 팀은 도화지를 칠하고, 지우기 팀은 지워요! 40초 뒤 칠해진 곳이 반보다 많으면 그리기 팀 승리. 코인으로 왕·스피드·아이스 지우개, 최면술 붓, 귀여운 스킨을 살 수 있어요.'}
+  desc:'그리기 팀은 도화지를 칠하고, 지우기 팀은 지워요! 40초 뒤 칠해진 곳이 반보다 많으면 그리기 팀 승리. 코인으로 왕·스피드·아이스 지우개, 최면술 붓, 귀여운 스킨을 살 수 있어요.'},
+ {id:'dig',name:'땅 파고 올라가기',sub:'드릴 & 날개',url:'../dig-fly/',scary:'약함',players:'혼자',nick:false,
+  desc:'드릴로 땅을 깊이 파고, 날개를 달고 하늘 높이 슝! 링을 지날 때마다 돈을 벌어서 더 좋은 드릴 8단계와 날개 14단계를 사요. 마지막 해킹된 날개는 5000m까지!'}
 ];
 const G=id=>GAMES.find(g=>g.id===id);
 function thumb(id){
  const S={
+  dig:`<rect width="320" height="200" fill="#8fd3ff"/><rect y="120" width="320" height="80" fill="#8b5a2b"/><rect y="112" width="320" height="12" fill="#6fcf5a"/>
+   <rect x="140" y="112" width="40" height="88" fill="#3b2412"/><ellipse cx="160" cy="114" rx="22" ry="5" fill="#ffd43b"/>
+   <ellipse cx="160" cy="62" rx="26" ry="8" fill="none" stroke="#ffd43b" stroke-width="5"/><ellipse cx="160" cy="26" rx="20" ry="6" fill="none" stroke="#ffd43b" stroke-width="4"/>
+   <path d="M150 74 Q110 52 104 84 Q124 80 150 86Z" fill="#fff" stroke="#9ad0ff" stroke-width="2"/><path d="M170 74 Q210 52 216 84 Q196 80 170 86Z" fill="#fff" stroke="#9ad0ff" stroke-width="2"/>
+   <rect x="150" y="54" width="20" height="18" rx="4" fill="#f5cd30"/><rect x="147" y="72" width="26" height="22" rx="4" fill="#4c6ef5"/><rect x="149" y="94" width="10" height="14" fill="#51cf66"/><rect x="161" y="94" width="10" height="14" fill="#51cf66"/>
+   <circle cx="155" cy="62" r="2" fill="#222"/><circle cx="165" cy="62" r="2" fill="#222"/>
+   <path d="M40 150 l18 -6 l4 10 z" fill="#adb5bd"/><rect x="24" y="146" width="20" height="10" rx="3" fill="#ff922b"/>
+   <circle cx="250" cy="160" r="6" fill="#ffe066"/><circle cx="270" cy="175" r="5" fill="#ffe066"/><circle cx="60" cy="180" r="5" fill="#ffe066"/>`,
   draw:`<rect width="320" height="200" fill="#bfe8ff"/><rect y="150" width="320" height="50" fill="#7bd36b"/>
    <path d="M40 60 L280 60 L300 165 L20 165 Z" fill="#fff8e7"/><path d="M40 60 L160 60 L160 165 L20 165 Z" fill="#ff8fab"/>
    <path d="M60 80 q30 -14 60 4 q20 12 34 -6" stroke="#ff5c8a" stroke-width="10" fill="none" stroke-linecap="round"/>
@@ -501,6 +511,9 @@ function computeBadges(){const out=[];
  const de=LS.get('detectiveSquirrel_v1',{})||{},sv=Object.keys(de.solved||{}).length;
  out.push({g:'detective',color:'#a0693c',extra:sv?`해결한 사건 ${sv}개`:'',items:[
   {n:'첫 사건 해결',d:'사건 1개 해결',l:'1',got:sv>=1},{n:'믿음직한 탐정',d:'사건 4개 해결',l:'4',got:sv>=4},{n:'명탐정',d:'사건 8개 모두 해결',l:'8',shape:'trophy',got:sv>=8}]});
+ // 땅 파고 올라가기
+ const dg=LS.get('digUpWings_v1',{})||{},bd=+dg.bestD||0,bh=+dg.bestH||0;
+ out.push({g:'dig',color:'#c77d3a',extra:(bd||bh)?`땅 ${bd|0}m · 하늘 ${bh|0}m`:'',items:[{n:'땅속 탐험가',d:'땅을 50m 파기',l:'50m',got:bd>=50},{n:'땅 끝까지',d:'땅을 100m 끝까지 파기',l:'100m',got:bd>=100},{n:'구름 위로',d:'하늘 500m 날기',l:'500',got:bh>=500},{n:'우주 비행사',d:'하늘 2000m 날기',l:'2000',got:bh>=2000},{n:'해킹된 하늘',d:'하늘 5000m 끝까지 날기',l:'5000',shape:'trophy',got:bh>=5000}]});
  // 그리고 지우세요
  const dr=LS.get('drawErase_v1',{})||{},dw=+dr.wins||0;
  out.push({g:'draw',color:'#ff5c8a',extra:dw?`승리 ${dw}번`:'',items:[{n:'첫 승리',d:'대결에서 처음 이기기',l:'1',got:dw>=1},{n:'칠하기 고수',d:'대결에서 10번 이기기',l:'10',got:dw>=10},{n:'도화지의 전설',d:'대결에서 30번 이기기',l:'30',shape:'trophy',got:dw>=30}]});
@@ -516,7 +529,7 @@ function refreshBadges(){if(view!=='badges')return;const data=computeBadges();le
 // ================= 🪙 타입터 (타입스 게임머니) =================
 // 배지를 얻을 때마다 받아요: 쉬움 10 · 보통 15 · 어려움 20
 const TY_VAL=[0,10,15,20],TY_LV=['','쉬움','보통','어려움'];
-const LVS={island:[1,1,2,2,3,3],troll:[1,2,2,3],shrink:[1,2,1,2,3,3],nyam:[1,2,2,3],detective:[1,2,3],draw:[1,2,3]};
+const LVS={island:[1,1,2,2,3,3],troll:[1,2,2,3],shrink:[1,2,1,2,3,3],nyam:[1,2,2,3],detective:[1,2,3],draw:[1,2,3],dig:[1,2,1,2,3]};
 function typerSvg(sz){return `<svg viewBox="0 0 32 32" width="${sz}" height="${sz}" class="tsvg" aria-label="타입터">
 <use href="#tyShape" fill="#1b1f3a" transform="translate(0 1.8)"/>
 <use href="#tyShape" fill="url(#tyGL)" clip-path="url(#tyL)"/><use href="#tyShape" fill="url(#tyGR)" clip-path="url(#tyR)"/>
@@ -604,6 +617,7 @@ const SAVES={
  troll:{keys:['trollJumpMap_v1'],score:d=>{const S=j(d.trollJumpMap_v1)||{};return (S.cleared?1e6:0)+(S.max||0)*1000+(S.coins||0)/100;}},
  detective:{keys:['detectiveSquirrel_v1'],score:d=>{const S=j(d.detectiveSquirrel_v1)||{};return Object.keys(S.solved||{}).length*1e4+(S.tokens||0);}},
  island:{keys:['island_name','island_badges','island_best','island_pol'],score:d=>((j(d.island_badges)||[]).length)*1e5+(+d.island_best||0)},
+ dig:{keys:['digUpWings_v1'],score:d=>{const S=j(d.digUpWings_v1)||{};return (S.wOwn||0)*1e9+(S.dOwn||0)*1e8+(S.bestH||0)*1e3+(S.bestD||0);}},
  draw:{keys:['drawErase_v1'],score:d=>{const S=j(d.drawErase_v1)||{};return (S.wins||0)*1e4+(S.coins||0);}},
  types:{get keys(){return ['types_av_'+(ME?ME.idl:'')];},score:d=>{const v=j(Object.values(d)[0])||{};return (+v.spent||0)*1000+((v.own||[]).length);}}
 };
